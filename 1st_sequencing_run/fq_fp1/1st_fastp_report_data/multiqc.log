@@ -1,0 +1,23 @@
+[2023-04-28 15:51:14,475] multiqc                                            [DEBUG  ]  This is MultiQC v1.13
+[2023-04-28 15:51:14,476] multiqc                                            [DEBUG  ]  Found command line config: {'max_table_rows': 3000}
+[2023-04-28 15:51:14,476] multiqc                                            [DEBUG  ]  New config: {'max_table_rows': 3000}
+[2023-04-28 15:51:14,477] multiqc                                            [DEBUG  ]  Command used: /opt/conda/bin/multiqc -v -p -ip -f --data-dir --data-format tsv --cl-config max_table_rows: 3000 --filename 1st_fastp_report --outdir fq_p1 fq_p1
+[2023-04-28 15:51:14,619] multiqc                                            [WARNING]  MultiQC Version v1.14 now available!
+[2023-04-28 15:51:14,619] multiqc                                            [DEBUG  ]  Working dir : /home/e1garcia/shotgun_PIRE/pire_lcwgs_data_processing/chromis_viridis/1st_sequencing_run
+[2023-04-28 15:51:14,619] multiqc                                            [DEBUG  ]  Template    : default
+[2023-04-28 15:51:14,619] multiqc                                            [DEBUG  ]  Running Python 3.9.12 (main, Aug 29 2022, 00:54:58)  [GCC 11.2.0]
+[2023-04-28 15:51:14,620] multiqc                                            [DEBUG  ]  Analysing modules: custom_content, ccs, ngsderive, purple, conpair, lima, peddy, somalier, methylQA, mosdepth, phantompeakqualtools, qualimap, preseq, quast, qorts, rna_seqc, rockhopper, rsem, rseqc, busco, bustools, goleft_indexcov, gffcompare, disambiguate, supernova, deeptools, sargasso, verifybamid, mirtrace, happy, mirtop, sambamba, homer, hops, macs2, theta2, snpeff, gatk, htseq, bcftools, featureCounts, fgbio, dragen, dedup, pbmarkdup, damageprofiler, biobambam2, jcvi, mtnucratio, picard, vep, sentieon, prokka, qc3C, nanostat, samblaster, samtools, sexdeterrmine, eigenstratdatabasetools, bamtools, jellyfish, vcftools, longranger, stacks, varscan2, snippy, bbmap, bismark, biscuit, hicexplorer, hicup, hicpro, salmon, kallisto, slamdunk, star, hisat2, tophat, bowtie2, bowtie1, snpsplit, odgi, pangolin, kat, leehom, adapterRemoval, clipandmerge, cutadapt, flexbar, kaiju, kraken, malt, trimmomatic, sickle, skewer, sortmerna, biobloomtools, fastq_screen, afterqc, fastp, fastqc, pychopper, pycoqc, minionqc, multivcfanalyzer, clusterflow, checkqc, bcl2fastq, bclconvert, interop, ivar, flash, seqyclean, optitype, whatshap
+[2023-04-28 15:51:14,620] multiqc                                            [DEBUG  ]  Using temporary directory for creating report: /tmp/tmpm0abp1uo
+[2023-04-28 15:51:14,769] multiqc                                            [INFO   ]  Search path : /home/e1garcia/shotgun_PIRE/pire_lcwgs_data_processing/chromis_viridis/1st_sequencing_run/fq_p1
+[2023-04-28 15:51:29,881] multiqc                                            [DEBUG  ]  Summary of files that were skipped by the search: [skipped_module_specific_max_filesize: 624] // [skipped_no_match: 520] // [skipped_ignore_pattern: 416]
+[2023-04-28 15:51:30,305] multiqc.plots.bargraph                             [DEBUG  ]  Using matplotlib version 3.1.2
+[2023-04-28 15:51:30,307] multiqc.plots.linegraph                            [DEBUG  ]  Using matplotlib version 3.1.2
+[2023-04-28 15:51:30,308] multiqc                                            [DEBUG  ]  No samples found: custom_content
+[2023-04-28 15:51:30,765] multiqc.modules.fastp.fastp                        [INFO   ]  Found 104 reports
+[2023-04-28 15:52:11,156] multiqc                                            [INFO   ]  Compressing plot data
+[2023-04-28 15:52:19,382] multiqc                                            [INFO   ]  Report      : fq_p1/1st_fastp_report.html
+[2023-04-28 15:52:19,382] multiqc                                            [INFO   ]  Data        : fq_p1/1st_fastp_report_data
+[2023-04-28 15:52:19,382] multiqc                                            [DEBUG  ]  Moving data file from '/tmp/tmpm0abp1uo/multiqc_data' to 'fq_p1/1st_fastp_report_data'
+[2023-04-28 15:52:20,197] multiqc                                            [INFO   ]  Plots       : fq_p1/1st_fastp_report_plots
+[2023-04-28 15:52:20,197] multiqc                                            [DEBUG  ]  Moving plots directory from '/tmp/tmpm0abp1uo/multiqc_plots' to 'fq_p1/1st_fastp_report_plots'
+[2023-04-28 15:52:20,583] multiqc                                            [INFO   ]  MultiQC complete

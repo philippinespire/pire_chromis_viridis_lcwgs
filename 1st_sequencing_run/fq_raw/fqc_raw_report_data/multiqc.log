@@ -1,0 +1,751 @@
+[2023-04-28 14:55:32,994] multiqc                                            [DEBUG  ]  No MultiQC config found: /opt/conda/lib/python3.7/site-packages/multiqc_config.yaml
+[2023-04-28 14:55:32,995] multiqc                                            [DEBUG  ]  No MultiQC config found: /home/hpc-0289/.multiqc_config.yaml
+[2023-04-28 14:55:32,995] multiqc                                            [DEBUG  ]  No MultiQC config found: multiqc_config.yaml
+[2023-04-28 14:55:32,996] multiqc                                            [DEBUG  ]  Found command line config: {'max_table_rows': 3000}
+[2023-04-28 14:55:32,996] multiqc                                            [DEBUG  ]  New config 'max_table_rows': 3000
+[2023-04-28 14:55:32,996] multiqc                                            [DEBUG  ]  Command used: /opt/conda/bin/multiqc -v -p -ip -f --data-dir --data-format tsv --cl-config max_table_rows: 3000 --filename fqc_raw_report --outdir fq_raw fq_raw
+[2023-04-28 14:55:33,061] multiqc                                            [DEBUG  ]  Could not connect to multiqc.info for version check: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: certificate has expired (_ssl.c:1076)>
+[2023-04-28 14:55:33,062] multiqc                                            [INFO   ]  This is MultiQC v1.9
+[2023-04-28 14:55:33,062] multiqc                                            [DEBUG  ]  Command     : /opt/conda/bin/multiqc -v -p -ip -f --data-dir --data-format tsv --cl-config max_table_rows: 3000 --filename fqc_raw_report --outdir fq_raw fq_raw
+[2023-04-28 14:55:33,062] multiqc                                            [DEBUG  ]  Working dir : /home/e1garcia/shotgun_PIRE/pire_lcwgs_data_processing/chromis_viridis/1st_sequencing_run
+[2023-04-28 14:55:33,062] multiqc                                            [INFO   ]  Template    : default
+[2023-04-28 14:55:33,062] multiqc                                            [DEBUG  ]  Running Python 3.7.7 (default, Jun 26 2020, 05:10:03)  [GCC 7.3.0]
+[2023-04-28 14:55:33,062] multiqc                                            [INFO   ]  Searching   : /home/e1garcia/shotgun_PIRE/pire_lcwgs_data_processing/chromis_viridis/1st_sequencing_run/fq_raw
+[2023-04-28 14:55:33,063] multiqc                                            [DEBUG  ]  Analysing modules: custom_content, conpair, peddy, somalier, methylQA, mosdepth, phantompeakqualtools, qualimap, preseq, quast, qorts, rna_seqc, rockhopper, rsem, rseqc, busco, goleft_indexcov, disambiguate, supernova, deeptools, sargasso, verifybamid, mirtrace, happy, mirtop, homer, macs2, theta2, snpeff, gatk, htseq, bcftools, featureCounts, fgbio, dragen, dedup, damageprofiler, biobambam2, mtnucratio, picard, prokka, samblaster, samtools, sexdeterrmine, bamtools, jellyfish, vcftools, longranger, stacks, varscan2, bbmap, bismark, biscuit, hicexplorer, hicup, hicpro, salmon, kallisto, slamdunk, star, hisat2, tophat, bowtie2, bowtie1, snpsplit, kat, leehom, adapterRemoval, clipandmerge, cutadapt, flexbar, kaiju, kraken, malt, trimmomatic, sickle, skewer, sortmerna, biobloomtools, fastq_screen, afterqc, fastp, fastqc, pycoqc, minionqc, multivcfanalyzer, clusterflow, bcl2fastq, interop, ivar, flash, seqyclean
+[2023-04-28 14:55:33,063] multiqc                                            [DEBUG  ]  Using temporary directory for creating report: /tmp/tmpmbsa8do8
+[2023-04-28 14:55:33,246] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi_LCWGS-TestLane_SequenceNameDecode.tsv
+[2023-04-28 14:55:33,252] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi_LCWGS-TestLane_SequenceNameDecode.tsv
+[2023-04-28 14:55:33,279] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_033-Ex1-4H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:33,284] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_033-Ex1-4H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:33,325] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_034-Ex1-5A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:33,325] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_035-Ex1-5B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:33,338] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_010-Ex1-2B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,343] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_010-Ex1-2B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,395] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_005-Ex1-1E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:33,400] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_005-Ex1-1E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:33,443] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_048-Ex1-5H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:33,455] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_039-Ex1-5F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,461] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_039-Ex1-5F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,513] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_030-Ex1-4B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:33,518] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_030-Ex1-4B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:33,559] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_072-Ex1-1A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:33,560] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_023-Ex1-3G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:33,571] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: tamucc_files.txt
+[2023-04-28 14:55:33,576] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: tamucc_files.txt
+[2023-04-28 14:55:33,590] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_022-Ex1-3F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:33,591] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_072-Ex1-1A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:33,592] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_013-Ex1-2E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:33,592] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_061-Ex1-7E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:33,593] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_031-Ex1-4C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:33,593] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_031-Ex1-4C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:33,593] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_009-Ex1-2A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:33,605] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_031-Ex1-4F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,611] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_031-Ex1-4F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,653] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_021-Ex1-3E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:33,653] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_012-Ex1-2D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:33,653] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_062-Ex1-7F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:33,666] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_009-Ex1-2A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,672] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_009-Ex1-2A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,727] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_069-Ex1-8E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,732] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_069-Ex1-8E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,786] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_067-Ex1-8C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,793] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_067-Ex1-8C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,838] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_006-Ex1-2A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:33,850] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_015-Ex1-2G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:33,856] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_015-Ex1-2G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:33,901] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_046-Ex1-5F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:33,901] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_070-Ex1-8F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:33,913] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_036-Ex1-5C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,919] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_036-Ex1-5C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,972] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_002-Ex1-1B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:33,978] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_002-Ex1-1B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,031] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_018-Ex1-3B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,037] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_018-Ex1-3B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,081] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_051-Ex1-6C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:34,093] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_046-Ex1-5F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,099] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_046-Ex1-5F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,142] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_022-Ex1-3F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:34,155] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_006-Ex1-1F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,161] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_006-Ex1-1F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,215] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_019-Ex1-3B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,221] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_019-Ex1-3B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,264] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_033-Ex1-4H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,277] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_007-Ex1-1G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,282] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_007-Ex1-1G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,335] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_013-Ex1-2E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,341] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_013-Ex1-2E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,384] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_018-Ex1-3A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,384] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_019-Ex1-3B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:34,384] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_020-Ex1-3C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,384] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_030-Ex1-4E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,397] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_009-Ex1-2C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,403] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_009-Ex1-2C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,457] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_028-Ex1-4C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,463] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_028-Ex1-4C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,517] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_003-Ex1-1F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,523] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_003-Ex1-1F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,577] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_054-Ex1-6F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,583] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_054-Ex1-6F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,623] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_003-Ex1-1C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,623] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_021-Ex1-3E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:34,636] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_030-Ex1-4E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,642] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_030-Ex1-4E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,685] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_059-Ex1-7C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,686] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_005-Ex1-1H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:34,686] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_027-Ex1-4B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,701] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_043-Ex1-5C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,706] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_043-Ex1-5C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,759] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_030-Ex1-4B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,765] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_030-Ex1-4B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,808] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_066-Ex1-8B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,809] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_040-Ex1-5G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,809] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_002-Ex1-1E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,809] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_027-Ex1-4B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:34,822] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_035-Ex1-5B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,827] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_035-Ex1-5B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,869] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_012-Ex1-2D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,882] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_036-Ex1-4H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,887] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_036-Ex1-4H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:34,928] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_001-Ex1-1D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:34,940] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: origFileNames.txt
+[2023-04-28 14:55:34,946] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: origFileNames.txt
+[2023-04-28 14:55:34,971] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_049-Ex1-6A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:34,976] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_049-Ex1-6A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,018] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_020-Ex1-3C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:35,031] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_020-Ex1-3C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,037] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_020-Ex1-3C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,078] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_026-Ex1-4A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:35,079] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_049-Ex1-6A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:35,094] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_008-Ex1-2B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,100] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_008-Ex1-2B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,142] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_034-Ex1-4F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:35,142] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_071-Ex1-8G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:35,154] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_004-Ex1-1G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,160] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_004-Ex1-1G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,214] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_050-Ex1-6B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,220] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_050-Ex1-6B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,261] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_002-Ex1-1E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:35,274] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_022-Ex1-3E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,279] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_022-Ex1-3E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,334] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_069-Ex1-8E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,339] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_069-Ex1-8E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,379] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_049-Ex1-6A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:35,379] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_017-Ex1-3A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:35,380] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_093-Ex1-1C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:35,393] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_006-Ex1-2A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,399] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_006-Ex1-2A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,455] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_016-Ex1-2H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,460] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_016-Ex1-2H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,503] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_015-Ex1-2G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:35,503] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_015-Ex1-2G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:35,503] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_014-Ex1-2F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:35,503] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_024-Ex1-3G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:35,503] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_019-Ex1-3C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:35,517] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_024-Ex1-3H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,523] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_024-Ex1-3H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,564] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_059-Ex1-7C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:35,577] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_035-Ex1-5B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,582] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_035-Ex1-5B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,638] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_024-Ex1-3G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,643] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_024-Ex1-3G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,698] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_009-Ex1-2C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,704] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_009-Ex1-2C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,761] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_023-Ex1-3G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,767] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_023-Ex1-3G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,822] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_024-Ex1-3H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,828] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_024-Ex1-3H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,872] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_028-Ex1-4C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:35,884] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_003-Ex1-1F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,889] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_003-Ex1-1F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:35,930] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_007-Ex1-1G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:35,930] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_029-Ex1-4A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:35,943] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_008-Ex1-1H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:35,948] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_008-Ex1-1H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,005] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_036-Ex1-4H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,011] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_036-Ex1-4H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,052] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_007-Ex1-1G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:36,052] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_029-Ex1-5H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:36,052] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_087-Ex1-1B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:36,065] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_026-Ex1-4A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,071] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_026-Ex1-4A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,114] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_071-Ex1-8G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:36,128] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_035-Ex1-4G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,133] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_035-Ex1-4G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,175] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_017-Ex2-4D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:36,175] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_047-Ex1-5G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:36,188] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_052-Ex1-6D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,194] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_052-Ex1-6D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,236] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_044-Ex1-5D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:36,249] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_042-Ex1-5B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,254] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_042-Ex1-5B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,296] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_036-Ex1-5C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:36,308] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_057-Ex1-7A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,313] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_057-Ex1-7A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,368] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_012-Ex1-2D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,373] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_012-Ex1-2D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,427] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_011-Ex1-2C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,433] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_011-Ex1-2C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,488] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_055-Ex1-6G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,494] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_055-Ex1-6G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,548] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_017-Ex2-4D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,553] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_017-Ex2-4D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,596] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_056-Ex1-6H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:36,610] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_068-Ex1-8D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,616] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_068-Ex1-8D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,670] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_041-Ex1-5A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,675] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_041-Ex1-5A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,719] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_015-Ex1-2G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:36,731] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_039-Ex1-5F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,736] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_039-Ex1-5F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:36,791] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_053-Ex1-6E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,797] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_053-Ex1-6E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,838] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_014-Ex1-2F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:36,838] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_062-Ex1-7F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:36,838] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_006-Ex1-1F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:36,850] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_006-Ex1-2A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,856] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_006-Ex1-2A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,911] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_044-Ex1-5D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,917] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_044-Ex1-5D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,972] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_019-Ex1-3C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:36,977] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_019-Ex1-3C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,021] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_037-Ex1-5D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:37,021] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_033-Ex1-4E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:37,021] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_050-Ex1-6B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:37,034] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_004-Ex1-1D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,039] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_004-Ex1-1D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,083] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_036-Ex1-4H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:37,095] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_060-Ex1-7D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,101] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_060-Ex1-7D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,155] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_051-Ex1-6C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,161] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_051-Ex1-6C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,218] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_062-Ex1-7F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,224] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_062-Ex1-7F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,276] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_010-Ex1-2B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,281] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_010-Ex1-2B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,337] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_023-Ex1-3F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,342] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_023-Ex1-3F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,400] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_021-Ex1-3E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,405] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_021-Ex1-3E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,465] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_032-Ex1-4G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,471] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_032-Ex1-4G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,514] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_035-Ex1-4G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:37,527] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_064-Ex1-7H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,533] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_064-Ex1-7H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,576] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_023-Ex1-3F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:37,577] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_052-Ex1-6D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:37,589] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_051-Ex1-6C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,595] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_051-Ex1-6C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,635] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_055-Ex1-6G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:37,649] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_034-Ex1-4F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,654] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_034-Ex1-4F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,697] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_024-Ex1-3H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:37,697] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_093-Ex1-1C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:37,711] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_072-Ex1-1A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,717] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_072-Ex1-1A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,772] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_004-Ex1-1G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,777] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_004-Ex1-1G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,831] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_033-Ex1-4H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,837] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_033-Ex1-4H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,891] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_036-Ex1-5C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,896] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_036-Ex1-5C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:37,952] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_052-Ex1-6D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:37,957] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_052-Ex1-6D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,011] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_002-Ex1-1E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,017] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_002-Ex1-1E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,070] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_031-Ex1-4C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,075] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_031-Ex1-4C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,116] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_060-Ex1-7D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:38,117] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_052-Ex1-6D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:38,117] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_001-Ex1-1A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:38,117] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_056-Ex1-6H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:38,117] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_034-Ex1-4F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:38,131] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_021-Ex1-3D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,136] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_021-Ex1-3D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,192] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_063-Ex1-7G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,198] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_063-Ex1-7G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,239] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_016-Ex1-2H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:38,240] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_006-Ex1-1F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:38,253] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_029-Ex1-5H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,258] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_029-Ex1-5H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,300] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_046-Ex1-5F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:38,312] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_017-Ex2-4D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,317] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_017-Ex2-4D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,371] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_058-Ex1-7B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,377] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_058-Ex1-7B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,430] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_005-Ex1-1H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,436] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_005-Ex1-1H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,489] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_002-Ex1-1E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,495] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_002-Ex1-1E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,537] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_031-Ex1-4F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:38,537] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_063-Ex1-7G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:38,550] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_015-Ex1-2G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,555] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_015-Ex1-2G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,598] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_054-Ex1-6F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:38,598] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_069-Ex1-8E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:38,610] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_018-Ex1-3B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,615] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_018-Ex1-3B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,675] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: newFileNames.txt
+[2023-04-28 14:55:38,700] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_001-Ex1-1A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,705] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_001-Ex1-1A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,758] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_017-Ex1-3A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,764] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_017-Ex1-3A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,805] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_014-Ex1-2F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:38,805] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_008-Ex1-2B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:38,818] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_015-Ex1-2G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,822] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_015-Ex1-2G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,867] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_030-Ex1-4E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:38,867] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_053-Ex1-6E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:38,878] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_031-Ex1-4C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,884] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_031-Ex1-4C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:38,938] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_062-Ex1-7F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,945] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_062-Ex1-7F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:38,986] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_044-Ex1-5D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:38,986] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_065-Ex1-8A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:38,999] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_016-Ex1-2H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,005] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_016-Ex1-2H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,049] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_058-Ex1-7B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:39,062] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_001-Ex1-1D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,067] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_001-Ex1-1D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,108] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_003-Ex1-1C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:39,108] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_002-Ex1-1B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:39,121] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_003-Ex1-1C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,127] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_003-Ex1-1C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,170] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_037-Ex1-5D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:39,183] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_032-Ex1-4G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,189] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_032-Ex1-4G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,244] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_058-Ex1-7B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,250] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_058-Ex1-7B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,293] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_041-Ex1-5A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:39,307] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_038-Ex1-5E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,313] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_038-Ex1-5E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,354] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_020-Ex1-3D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:39,368] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_033-Ex1-4E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,374] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_033-Ex1-4E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,418] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_021-Ex1-3D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:39,431] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_060-Ex1-7D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,437] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_060-Ex1-7D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,480] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_069-Ex1-8E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:39,480] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_038-Ex1-5E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:39,493] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_014-Ex1-2F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,498] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_014-Ex1-2F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,542] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_004-Ex1-1G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:39,555] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_041-Ex1-5A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,560] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_041-Ex1-5A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,603] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_004-Ex1-1G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:39,603] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_003-Ex1-1F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:39,604] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_022-Ex1-3E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:39,605] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_050-Ex1-6B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:39,618] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_001-Ex1-1A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,624] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_001-Ex1-1A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,683] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_008-Ex1-1H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,689] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_008-Ex1-1H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,733] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_008-Ex1-1H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:39,747] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_013-Ex1-2E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,752] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_013-Ex1-2E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,795] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_060-Ex1-7D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:39,808] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_072-Ex1-1A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,814] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_072-Ex1-1A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:39,855] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_005-Ex1-1E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:39,869] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_002-Ex1-1B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,875] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_002-Ex1-1B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,931] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_011-Ex1-2D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,937] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_011-Ex1-2D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:39,978] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_029-Ex1-4A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:39,995] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_071-Ex1-8G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,000] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_071-Ex1-8G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,055] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_061-Ex1-7E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,061] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_061-Ex1-7E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,102] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_020-Ex1-3D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,116] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_011-Ex1-2C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,122] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_011-Ex1-2C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,178] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_059-Ex1-7C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,183] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_059-Ex1-7C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,225] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_009-Ex1-2C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:40,238] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_005-Ex1-1E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,244] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_005-Ex1-1E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,286] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_058-Ex1-7B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,286] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_010-Ex1-2B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,287] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_079-Ex1-8H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,299] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_066-Ex1-8B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,304] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_066-Ex1-8B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,361] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_031-Ex1-4F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,366] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_031-Ex1-4F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,421] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_053-Ex1-6E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,426] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_053-Ex1-6E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,467] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_068-Ex1-8D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,480] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_071-Ex1-8G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,487] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_071-Ex1-8G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,540] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_035-Ex1-4G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,546] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_035-Ex1-4G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,588] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_009-Ex1-2C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,588] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_061-Ex1-7E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:40,590] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_025-Ex1-3H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:40,590] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_022-Ex1-3E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:40,604] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_056-Ex1-6H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,610] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_056-Ex1-6H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,653] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_041-Ex1-5A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,666] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_021-Ex1-3E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,673] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_021-Ex1-3E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,730] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_093-Ex1-1C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,735] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_093-Ex1-1C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,777] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_047-Ex1-5G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,791] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: old_new_filenames.log
+[2023-04-28 14:55:40,796] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: old_new_filenames.log
+[2023-04-28 14:55:40,811] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_065-Ex1-8A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,825] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_037-Ex1-5D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,830] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_037-Ex1-5D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,872] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_011-Ex1-2C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:40,872] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_019-Ex1-3C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,885] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_001-Ex1-1D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,891] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_001-Ex1-1D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:40,933] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_013-Ex1-2E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:40,947] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_054-Ex1-6F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,954] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_054-Ex1-6F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:40,996] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_015-Ex1-2G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,996] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_043-Ex1-5C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:40,997] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_003-Ex1-1F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,009] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_048-Ex1-5H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,015] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_048-Ex1-5H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,056] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_019-Ex1-3B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,057] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_068-Ex1-8D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,057] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_042-Ex1-5B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:41,057] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_017-Ex2-4D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,071] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_030-Ex1-4E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,077] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_030-Ex1-4E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,120] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_043-Ex1-5C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,134] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_025-Ex1-3H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,140] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_025-Ex1-3H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,194] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_012-Ex1-2D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,200] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_012-Ex1-2D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,257] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_033-Ex1-4E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,264] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_033-Ex1-4E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,308] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_033-Ex1-4E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:41,322] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_015-Ex1-2G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,328] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_015-Ex1-2G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,386] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_004-Ex1-1D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,391] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_004-Ex1-1D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,433] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_032-Ex1-4G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:41,447] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_025-Ex1-3H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,454] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_025-Ex1-3H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,498] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_008-Ex1-1H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,498] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_008-Ex1-2B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:41,498] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_054-Ex1-6F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:41,498] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_006-Ex1-2A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,498] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_018-Ex1-3B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,498] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_031-Ex1-4F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,499] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_032-Ex1-4D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,512] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_070-Ex1-8F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,518] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_070-Ex1-8F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,574] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_020-Ex1-3D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,580] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_020-Ex1-3D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,622] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_013-Ex1-2E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:41,635] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_040-Ex1-5G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,641] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_040-Ex1-5G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,696] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_067-Ex1-8C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,702] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_067-Ex1-8C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,755] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_065-Ex1-8A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,760] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_065-Ex1-8A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,800] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_042-Ex1-5B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,800] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_004-Ex1-1D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:41,801] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_014-Ex1-2F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,801] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_087-Ex1-1B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:41,801] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_025-Ex1-3H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:41,812] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_087-Ex1-1B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,817] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_087-Ex1-1B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:41,855] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_045-Ex1-5E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,855] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_009-Ex1-2A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,866] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_021-Ex1-3D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,871] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_021-Ex1-3D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,912] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_067-Ex1-8C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:41,912] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_011-Ex1-2D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:41,923] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_009-Ex1-2A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,928] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_009-Ex1-2A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,978] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_055-Ex1-6G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:41,983] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_055-Ex1-6G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,034] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_006-Ex1-1F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,039] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_006-Ex1-1F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,090] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_048-Ex1-5H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,095] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_048-Ex1-5H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,134] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_016-Ex1-2H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:42,146] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_070-Ex1-8F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,151] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_070-Ex1-8F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,193] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_034-Ex1-5A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:42,204] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_066-Ex1-8B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,209] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_066-Ex1-8B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,261] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_005-Ex1-1H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,266] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_005-Ex1-1H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,316] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_028-Ex1-4C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,321] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_028-Ex1-4C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,373] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_014-Ex1-2F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,378] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_014-Ex1-2F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,430] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_014-Ex1-2F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,435] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_014-Ex1-2F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,476] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_036-Ex1-4H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:42,476] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_038-Ex1-5E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:42,477] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_067-Ex1-8C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:42,489] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_020-Ex1-3C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,494] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_020-Ex1-3C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,535] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_053-Ex1-6E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:42,535] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_013-Ex1-2E-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:42,548] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_011-Ex1-2D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,553] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_011-Ex1-2D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,605] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_032-Ex1-4D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,610] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_032-Ex1-4D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,662] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_050-Ex1-6B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,667] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_050-Ex1-6B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,717] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_019-Ex1-3B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,722] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_019-Ex1-3B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,774] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_034-Ex1-4F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,780] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_034-Ex1-4F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,833] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_042-Ex1-5B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,838] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_042-Ex1-5B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,889] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_023-Ex1-3G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,894] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_023-Ex1-3G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:42,934] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_005-Ex1-1H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:42,946] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_087-Ex1-1B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,951] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_087-Ex1-1B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:42,989] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_016-Ex1-2H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:43,000] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_018-Ex1-3A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,005] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_018-Ex1-3A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,046] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_032-Ex1-4G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:43,046] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_018-Ex1-3A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:43,047] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_030-Ex1-4B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:43,059] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_045-Ex1-5E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,065] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_045-Ex1-5E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,104] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_005-Ex1-1E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:43,116] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_007-Ex1-1G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,122] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_007-Ex1-1G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,162] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_066-Ex1-8B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:43,163] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_004-Ex1-1D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:43,174] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_029-Ex1-4A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,180] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_029-Ex1-4A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,221] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_051-Ex1-6C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:43,222] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_018-Ex1-3B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:43,222] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_017-Ex1-3A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:43,222] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_035-Ex1-4G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:43,222] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_001-Ex1-1D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:43,222] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_057-Ex1-7A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:43,223] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_024-Ex1-3H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:43,234] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_068-Ex1-8D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,239] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_068-Ex1-8D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,279] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_033-Ex1-4H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:43,291] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_079-Ex1-8H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,296] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_079-Ex1-8H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,347] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_024-Ex1-3G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,352] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_024-Ex1-3G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,405] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_064-Ex1-7H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,410] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_064-Ex1-7H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,462] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_037-Ex1-5D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,467] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_037-Ex1-5D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,510] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_001-Ex1-1A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:43,521] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_045-Ex1-5E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,527] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_045-Ex1-5E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,580] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_017-Ex1-3A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,585] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_017-Ex1-3A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,628] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_011-Ex1-2D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:43,628] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_035-Ex1-5B-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:43,641] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_016-Ex1-2H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,647] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_016-Ex1-2H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,699] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_029-Ex1-5H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,704] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_029-Ex1-5H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,757] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_027-Ex1-4B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,762] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_027-Ex1-4B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,805] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_039-Ex1-5F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:43,805] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_024-Ex1-3G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:43,816] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_093-Ex1-1C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,821] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_093-Ex1-1C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,861] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_028-Ex1-4C-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:43,873] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_023-Ex1-3F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,877] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_023-Ex1-3F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:43,930] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_013-Ex1-2E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,935] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_013-Ex1-2E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,978] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_023-Ex1-3F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:43,991] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_065-Ex1-8A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:43,996] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_065-Ex1-8A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,034] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_057-Ex1-7A-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:44,048] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_022-Ex1-3F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,053] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_022-Ex1-3F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,104] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_038-Ex1-5E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,109] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_038-Ex1-5E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,162] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_027-Ex1-4B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,166] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_027-Ex1-4B-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,219] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_034-Ex1-5A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,225] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_034-Ex1-5A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,278] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: decode_sedlist.txt
+[2023-04-28 14:55:44,283] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: decode_sedlist.txt
+[2023-04-28 14:55:44,295] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_064-Ex1-7H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:44,306] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_056-Ex1-6H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,311] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_056-Ex1-6H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,351] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_036-Ex1-5C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:44,352] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_023-Ex1-3G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:44,352] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_070-Ex1-8F-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:44,352] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_045-Ex1-5E-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:44,365] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_016-Ex1-2H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,369] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_016-Ex1-2H-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,423] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_049-Ex1-6A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,428] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_049-Ex1-6A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,480] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_019-Ex1-3C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,486] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_019-Ex1-3C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,527] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_021-Ex1-3D-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:44,527] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_040-Ex1-5G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:44,539] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_063-Ex1-7G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,544] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_063-Ex1-7G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,594] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_013-Ex1-2E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,600] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_013-Ex1-2E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,652] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_040-Ex1-5G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,658] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_040-Ex1-5G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,709] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_034-Ex1-5A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,714] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_034-Ex1-5A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,766] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_032-Ex1-4D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,771] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_032-Ex1-4D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:44,813] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_055-Ex1-6G-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:44,825] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_014-Ex1-2F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,830] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_014-Ex1-2F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,882] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_020-Ex1-3D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,887] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_020-Ex1-3D-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,938] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_008-Ex1-2B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,943] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_008-Ex1-2B-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:44,984] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_030-Ex1-4B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:44,996] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_022-Ex1-3E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,001] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_022-Ex1-3E-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,054] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_044-Ex1-5D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,060] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_044-Ex1-5D-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,111] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_079-Ex1-8H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,116] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_079-Ex1-8H-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,156] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_032-Ex1-4D-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:45,168] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_057-Ex1-7A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,173] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_057-Ex1-7A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,224] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_003-Ex1-1C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,230] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_003-Ex1-1C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,284] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_046-Ex1-5F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,289] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_046-Ex1-5F-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,339] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_026-Ex1-4A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,344] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_026-Ex1-4A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,385] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_048-Ex1-5H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:45,386] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_010-Ex1-2B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:45,401] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_061-Ex1-7E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,406] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_061-Ex1-7E-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,456] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_043-Ex1-5C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,461] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_043-Ex1-5C-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,502] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_016-Ex1-2H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:45,514] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_059-Ex1-7C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,519] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_059-Ex1-7C-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,559] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_011-Ex1-2C-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:45,559] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_026-Ex1-4A-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:45,559] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_079-Ex1-8H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:45,571] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_029-Ex1-4A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,576] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_029-Ex1-4A-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,615] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_063-Ex1-7G-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:45,627] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-APal_018-Ex1-3A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,632] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-APal_018-Ex1-3A-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,686] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_047-Ex1-5G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,691] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_047-Ex1-5G-lcwgs-1-T.2_fastqc.html
+[2023-04-28 14:55:45,733] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-CPal_064-Ex1-7H-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:45,733] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_002-Ex1-1B-lcwgs-1-T.1.fq.gz
+[2023-04-28 14:55:45,744] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_047-Ex1-5G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,750] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_047-Ex1-5G-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,789] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_039-Ex1-5F-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:45,790] multiqc                                            [DEBUG  ]  Ignoring file as matched an ignore pattern: Cvi-APal_029-Ex1-5H-lcwgs-1-T.2.fq.gz
+[2023-04-28 14:55:45,801] multiqc                                            [DEBUG  ]  File ignored by hicexplorer because it exceeded search pattern filesize limit: Cvi-CPal_022-Ex1-3F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:45,806] multiqc                                            [DEBUG  ]  File ignored by longranger/invocation because it exceeded search pattern filesize limit: Cvi-CPal_022-Ex1-3F-lcwgs-1-T.1_fastqc.html
+[2023-04-28 14:55:46,300] multiqc.plots.bargraph                             [DEBUG  ]  Using matplotlib version 3.1.2
+[2023-04-28 14:55:46,301] multiqc.plots.linegraph                            [DEBUG  ]  Using matplotlib version 3.1.2
+[2023-04-28 14:55:46,302] multiqc                                            [DEBUG  ]  No samples found: custom_content
+[2023-04-28 14:55:46,306] multiqc                                            [DEBUG  ]  No samples found: conpair
+[2023-04-28 14:55:46,311] multiqc                                            [DEBUG  ]  No samples found: peddy
+[2023-04-28 14:55:46,315] multiqc                                            [DEBUG  ]  No samples found: somalier
+[2023-04-28 14:55:46,320] multiqc                                            [DEBUG  ]  No samples found: methylQA
+[2023-04-28 14:55:46,326] multiqc                                            [DEBUG  ]  No samples found: mosdepth
+[2023-04-28 14:55:46,330] multiqc                                            [DEBUG  ]  No samples found: phantompeakqualtools
+[2023-04-28 14:55:46,333] multiqc                                            [DEBUG  ]  No samples found: qualimap
+[2023-04-28 14:55:46,337] multiqc                                            [DEBUG  ]  No samples found: preseq
+[2023-04-28 14:55:46,341] multiqc                                            [DEBUG  ]  No samples found: quast
+[2023-04-28 14:55:46,345] multiqc                                            [DEBUG  ]  No samples found: qorts
+[2023-04-28 14:55:46,348] multiqc                                            [DEBUG  ]  No samples found: rna_seqc
+[2023-04-28 14:55:46,352] multiqc                                            [DEBUG  ]  No samples found: rockhopper
+[2023-04-28 14:55:46,356] multiqc                                            [DEBUG  ]  No samples found: rsem
+[2023-04-28 14:55:46,361] multiqc                                            [DEBUG  ]  No samples found: rseqc
+[2023-04-28 14:55:46,365] multiqc                                            [DEBUG  ]  No samples found: busco
+[2023-04-28 14:55:46,369] multiqc                                            [DEBUG  ]  No samples found: goleft_indexcov
+[2023-04-28 14:55:46,374] multiqc                                            [DEBUG  ]  No samples found: disambiguate
+[2023-04-28 14:55:46,378] multiqc                                            [DEBUG  ]  No samples found: supernova
+[2023-04-28 14:55:46,385] multiqc                                            [DEBUG  ]  No samples found: deeptools
+[2023-04-28 14:55:46,389] multiqc                                            [DEBUG  ]  No samples found: sargasso
+[2023-04-28 14:55:46,393] multiqc                                            [DEBUG  ]  No samples found: verifybamid
+[2023-04-28 14:55:46,397] multiqc                                            [DEBUG  ]  No samples found: mirtrace
+[2023-04-28 14:55:46,402] multiqc                                            [DEBUG  ]  No samples found: happy
+[2023-04-28 14:55:46,407] multiqc                                            [DEBUG  ]  No samples found: mirtop
+[2023-04-28 14:55:46,411] multiqc                                            [DEBUG  ]  No samples found: homer
+[2023-04-28 14:55:46,414] multiqc                                            [DEBUG  ]  No samples found: macs2
+[2023-04-28 14:55:46,418] multiqc                                            [DEBUG  ]  No samples found: theta2
+[2023-04-28 14:55:46,423] multiqc                                            [DEBUG  ]  No samples found: snpeff
+[2023-04-28 14:55:46,427] multiqc                                            [DEBUG  ]  No samples found: gatk
+[2023-04-28 14:55:46,431] multiqc                                            [DEBUG  ]  No samples found: htseq
+[2023-04-28 14:55:46,436] multiqc                                            [DEBUG  ]  No samples found: bcftools
+[2023-04-28 14:55:46,440] multiqc                                            [DEBUG  ]  No samples found: featureCounts
+[2023-04-28 14:55:46,443] multiqc                                            [DEBUG  ]  No samples found: fgbio
+[2023-04-28 14:55:46,450] multiqc                                            [DEBUG  ]  No samples found: dragen
+[2023-04-28 14:55:46,454] multiqc                                            [DEBUG  ]  No samples found: dedup
+[2023-04-28 14:55:46,458] multiqc                                            [DEBUG  ]  No samples found: damageprofiler
+[2023-04-28 14:55:46,468] multiqc                                            [DEBUG  ]  No samples found: biobambam2
+[2023-04-28 14:55:46,472] multiqc                                            [DEBUG  ]  No samples found: mtnucratio
+[2023-04-28 14:55:46,475] multiqc                                            [DEBUG  ]  No samples found: picard
+[2023-04-28 14:55:46,479] multiqc                                            [DEBUG  ]  No samples found: prokka
+[2023-04-28 14:55:46,483] multiqc                                            [DEBUG  ]  No samples found: samblaster
+[2023-04-28 14:55:46,487] multiqc                                            [DEBUG  ]  No samples found: samtools
+[2023-04-28 14:55:46,491] multiqc                                            [DEBUG  ]  No samples found: sexdeterrmine
+[2023-04-28 14:55:46,495] multiqc                                            [DEBUG  ]  No samples found: bamtools
+[2023-04-28 14:55:46,499] multiqc                                            [DEBUG  ]  No samples found: jellyfish
+[2023-04-28 14:55:46,504] multiqc                                            [DEBUG  ]  No samples found: vcftools
+[2023-04-28 14:55:46,508] multiqc                                            [DEBUG  ]  No samples found: longranger
+[2023-04-28 14:55:46,513] multiqc                                            [DEBUG  ]  No samples found: stacks
+[2023-04-28 14:55:46,517] multiqc                                            [DEBUG  ]  No samples found: varscan2
+[2023-04-28 14:55:46,523] multiqc                                            [DEBUG  ]  No samples found: bbmap
+[2023-04-28 14:55:46,528] multiqc                                            [DEBUG  ]  No samples found: bismark
+[2023-04-28 14:55:46,532] multiqc                                            [DEBUG  ]  No samples found: biscuit
+[2023-04-28 14:55:46,536] multiqc                                            [DEBUG  ]  No samples found: hicexplorer
+[2023-04-28 14:55:46,540] multiqc                                            [DEBUG  ]  No samples found: hicup
+[2023-04-28 14:55:46,543] multiqc                                            [DEBUG  ]  No samples found: hicpro
+[2023-04-28 14:55:46,547] multiqc                                            [DEBUG  ]  No samples found: salmon
+[2023-04-28 14:55:46,551] multiqc                                            [DEBUG  ]  No samples found: kallisto
+[2023-04-28 14:55:46,555] multiqc                                            [DEBUG  ]  No samples found: slamdunk
+[2023-04-28 14:55:46,559] multiqc                                            [DEBUG  ]  No samples found: star
+[2023-04-28 14:55:46,563] multiqc                                            [DEBUG  ]  No samples found: hisat2
+[2023-04-28 14:55:46,567] multiqc                                            [DEBUG  ]  No samples found: tophat
+[2023-04-28 14:55:46,570] multiqc                                            [DEBUG  ]  No samples found: bowtie2
+[2023-04-28 14:55:46,574] multiqc                                            [DEBUG  ]  No samples found: bowtie1
+[2023-04-28 14:55:46,578] multiqc                                            [DEBUG  ]  No samples found: snpsplit
+[2023-04-28 14:55:46,582] multiqc                                            [DEBUG  ]  No samples found: kat
+[2023-04-28 14:55:46,585] multiqc                                            [DEBUG  ]  No samples found: leehom
+[2023-04-28 14:55:46,589] multiqc                                            [DEBUG  ]  No samples found: adapterRemoval
+[2023-04-28 14:55:46,593] multiqc                                            [DEBUG  ]  No samples found: clipandmerge
+[2023-04-28 14:55:46,598] multiqc                                            [DEBUG  ]  No samples found: cutadapt
+[2023-04-28 14:55:46,602] multiqc                                            [DEBUG  ]  No samples found: flexbar
+[2023-04-28 14:55:46,606] multiqc                                            [DEBUG  ]  No samples found: kaiju
+[2023-04-28 14:55:46,609] multiqc                                            [DEBUG  ]  No samples found: kraken
+[2023-04-28 14:55:46,613] multiqc                                            [DEBUG  ]  No samples found: malt
+[2023-04-28 14:55:46,617] multiqc                                            [DEBUG  ]  No samples found: trimmomatic
+[2023-04-28 14:55:46,621] multiqc                                            [DEBUG  ]  No samples found: sickle
+[2023-04-28 14:55:46,624] multiqc                                            [DEBUG  ]  No samples found: skewer
+[2023-04-28 14:55:46,628] multiqc                                            [DEBUG  ]  No samples found: sortmerna
+[2023-04-28 14:55:46,632] multiqc                                            [DEBUG  ]  No samples found: biobloomtools
+[2023-04-28 14:55:46,637] multiqc                                            [DEBUG  ]  No samples found: fastq_screen
+[2023-04-28 14:55:46,641] multiqc                                            [DEBUG  ]  No samples found: afterqc
+[2023-04-28 14:55:46,645] multiqc                                            [DEBUG  ]  No samples found: fastp
+[2023-04-28 14:55:50,298] multiqc.modules.fastqc.fastqc                      [INFO   ]  Found 208 reports
+[2023-04-28 14:56:34,290] multiqc                                            [DEBUG  ]  No samples found: pycoqc
+[2023-04-28 14:56:34,295] multiqc                                            [DEBUG  ]  No samples found: minionqc
+[2023-04-28 14:56:34,300] multiqc                                            [DEBUG  ]  No samples found: multivcfanalyzer
+[2023-04-28 14:56:34,305] multiqc                                            [DEBUG  ]  No samples found: clusterflow
+[2023-04-28 14:56:34,309] multiqc                                            [DEBUG  ]  No samples found: bcl2fastq
+[2023-04-28 14:56:34,313] multiqc                                            [DEBUG  ]  No samples found: interop
+[2023-04-28 14:56:34,316] multiqc                                            [DEBUG  ]  No samples found: ivar
+[2023-04-28 14:56:34,320] multiqc                                            [DEBUG  ]  No samples found: flash
+[2023-04-28 14:56:34,324] multiqc                                            [DEBUG  ]  No samples found: seqyclean
+[2023-04-28 14:56:34,605] multiqc                                            [INFO   ]  Compressing plot data
+[2023-04-28 14:56:38,476] multiqc                                            [INFO   ]  Report      : fq_raw/fqc_raw_report.html
+[2023-04-28 14:56:38,476] multiqc                                            [INFO   ]  Data        : fq_raw/fqc_raw_report_data
+[2023-04-28 14:56:38,476] multiqc                                            [DEBUG  ]  Moving data file from '/tmp/tmpmbsa8do8/multiqc_data' to 'fq_raw/fqc_raw_report_data'
+[2023-04-28 14:56:38,691] multiqc                                            [INFO   ]  Plots       : fq_raw/fqc_raw_report_plots
+[2023-04-28 14:56:38,691] multiqc                                            [DEBUG  ]  Moving plots directory from '/tmp/tmpmbsa8do8/multiqc_plots' to 'fq_raw/fqc_raw_report_plots'
+[2023-04-28 14:56:39,078] multiqc                                            [INFO   ]  MultiQC complete
