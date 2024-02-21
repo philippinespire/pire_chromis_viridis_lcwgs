@@ -1,0 +1,10 @@
+Looking to launch executable "/opt/conda/bin/bwa-meme_mode3.avx512bw", simd = _mode3.avx512bw
+Launching executable "/opt/conda/bin/bwa-meme_mode3.avx512bw"
+[M::bwa_idx_build_Learned_index] Building Index for bwa-meme...
+[Build-Index-MEME] pac2nt function...
+[Build-Index-MEME] ref seq len = 1654032310
+[Build-Index-MEME] padded ref len = 1654032346
+[Build-Index-MEME] Building Suffix array with sais library
+[Build-Index-MEME] Building Suffix array with sais library took 297.27 sec
+[Build-Index-MEME] Writing pos_packed file and suffixarray file took 10124.02 sec
+Total time taken: 827.3109
