@@ -1,0 +1,24 @@
+Wed Feb 21 10:58:40 AM EST 2024
+Comparing directories dir1 and dir2 using 'md5sum' and 'wc -c'
+dir1 = /home/e1garcia/shotgun_PIRE/pire_lcwgs_data_processing/chromis_viridis
+dir2 = /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs
+Some files were found to exist only in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs. These have been listed in dir2_only_files_20240221_110040.txt
+For tracking purposes, the name of the output file(s) end with date (yearmonthday) and time (hourminutesecond) stamps in their names.
+Wed Feb 21 11:00:40 AM EST 2024
+
+###########################################3
+
+Comparing directories dir1 and dir2 using 'diff -r -q'
+dir1 = /home/e1garcia/shotgun_PIRE/pire_lcwgs_data_processing/chromis_viridis
+dir2 = /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs
+diff will print results in this slurm out files. diff does not print anything If no differences were found
+
+Only in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs: compar_dirs_2970674.txt
+Only in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs: dir2_only_files_20240221_110040.txt
+Only in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs: .git
+Only in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs: .gitignore
+Only in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs: rsync_output_2901541.txt
+
+diff has finished
+
+Wed Feb 21 11:39:36 PM EST 2024
