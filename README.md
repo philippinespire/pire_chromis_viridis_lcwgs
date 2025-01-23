@@ -202,3 +202,18 @@ Graphs showed information on depth of coverage for both Albatross & Contemporary
 ---
 ## 6. GenErode
 
+```
+find /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/modern -maxdepth 1 -type f -name 'Cvi-CPal_*' -printf '%f\n' | cut -c 10-12 | sort | uniq | wc -l
+
+ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/results/modern/mapping/reference.ssl.Cvi20k_rename/*.merged.rmdup.merged.realn.bam | wc -l
+
+ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/results/modern/mapping/reference.ssl.Cvi20k_rename/*.merged.rmdup.merged.realn.bai | wc -l
+
+find /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/historical -maxdepth 1 -type f -name 'Cvi-APal_*' -printf '%f\n' | cut -c 10-12 | sort | uniq | wc -l
+
+ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/results/historical/mapping/reference.ssl.Cvi20k_rename/*.merged.rmdup.merged.realn.rescaled.bam | wc -l
+
+ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/results/historical/mapping/reference.ssl.Cvi20k_rename/*.merged.rmdup.merged.realn.rescaled.bam.bai | wc -l
+
+ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/results/gerp/reference.ssl.Cvi20k_rename.ancestral.rates.gz | wc -l
+```
