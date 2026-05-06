@@ -1,0 +1,20 @@
+PCAngsd v1.21
+Time: 16/02/2025 21:18:25
+Directory: /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/angsd_analysis
+Options:
+	--beagle angsd_depth1_15_notrans_snplist.beagle.gz
+	--threads 16
+	--out angsd_admix_notrans_snps_pca_it500
+	--maf 0.001
+	--iter 500
+	--admix
+
+Loaded 1595951 sites and 88 individuals.
+Number of sites after MAF filtering (0.001): 1573038
+
+PCAngsd converged in 322 iterations using 1 eigenvectors.
+Saved covariance matrix as angsd_admix_notrans_snps_pca_it500.cov
+Saved admixture proportions as angsd_admix_notrans_snps_pca_it500.admix.2.Q
+Saved ancestral allele frequencies proportions as angsd_admix_notrans_snps_pca_it500.admix.2.P
+
+Total elapsed time: 19m15s
