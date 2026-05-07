@@ -1,0 +1,14 @@
+name: trimming
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - fastp=0.23.4
+  - seqtk=1.4
+  - bwa=0.7.17
+  - samtools=1.19
+  - fastqc=0.11.9
+  - openjdk=11
+  - fontconfig
+  - freetype
