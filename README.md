@@ -221,9 +221,11 @@ ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenE
 
 ## 7. NextFlow Trimming
 Malin working here, 2026-05.
-Cloned the nf-piplines repo
+Cloned the nf-piplines repo and removed it's status as a git repo.
 ```
 git clone https://github.com/mariannedehasque/nf-pipelines.git
+rm -rf nf-pipelines/.git
+rm nf-pipelines/.gitignore
 ```
 Made directories per instructions in [nf-trim-merged-unmerged](https://github.com/mariannedehasque/nf-pipelines/tree/main/nf-trim-merged-unmerged).
 
