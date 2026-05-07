@@ -246,11 +246,11 @@ ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/G
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.fasta.* ./data/reference/
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.repma.bed ./data/reference/
 ```
-Downloading some files missing from clone of repo (why?)
+Downloading some files missing from clone of repo (why were they missing?)
 ```
 wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/main/nf-trim-merged-unmerged/main.nf
 wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/main/nf-trim-merged-unmerged/environment.yml
-wget https://github.com/mariannedehasque/nf-pipelines/blob/main/nf-trim-merged-unmerged/nextflow.config
+wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/main/nf-trim-merged-unmerged/nextflow.config
 ```
 Added entries from nf-pipelines/.gitignore to this repo's .gitignore.
 Edited main.nf with reference name and length of historical reads (121 bp). Length derived from [Jem's MultiQC report](https://github.com/philippinespire/pire_chromis_viridis_lcwgs/blob/main/2nd_sequencing_run/fq_fp1_clmp_fp2_fqscrn_rprd/fqc_rprd_report.html)
