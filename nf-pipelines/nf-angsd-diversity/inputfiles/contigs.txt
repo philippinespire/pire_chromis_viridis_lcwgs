@@ -1,0 +1,5 @@
+NODE_1_length_252063_cov_9.325685
+NODE_2_length_239382_cov_8.332042
+NODE_3_length_231765_cov_8.835328
+NODE_4_length_230498_cov_7.838988
+NODE_5_length_218340_cov_8.853657

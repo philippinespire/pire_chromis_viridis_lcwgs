@@ -1,0 +1,10 @@
+name: nf-angsd-diversity
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - angsd=0.940
+  - ngs-tools=1.8.6
+  - r-base=4.5.2
+  - pcangsd=1.36.4
