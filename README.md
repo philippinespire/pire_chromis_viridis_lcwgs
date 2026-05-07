@@ -202,6 +202,7 @@ Graphs showed information on depth of coverage for both Albatross & Contemporary
 ---
 ## 6. GenErode
 
+Jem ran this, and then ANGSD. No details available right now.
 ```
 find /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/modern -maxdepth 1 -type f -name 'Cvi-CPal_*' -printf '%f\n' | cut -c 10-12 | sort | uniq | wc -l
 
@@ -216,4 +217,24 @@ ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenE
 ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/results/historical/mapping/reference.ssl.Cvi20k_rename/*.merged.rmdup.merged.realn.rescaled.bam.bai | wc -l
 
 ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/results/gerp/reference.ssl.Cvi20k_rename.ancestral.rates.gz | wc -l
+```
+
+## 7. NextFlow Trimming
+Malin working here, 2026-05.
+Cloned the nf-piplines repo
+```
+git clone https://github.com/mariannedehasque/nf-pipelines.git
+```
+Made directories per instructions in [nf-trim-merged-unmerged](https://github.com/mariannedehasque/nf-pipelines/tree/main/nf-trim-merged-unmerged).
+
+Made symlinks for NextFlow to re-paired files and renamed the symlinks (works from within ```bash```)
+```
+for f in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_fp1_clmp_fp2_fqscrn_rprd/Cvi-[AC]Pal_*-Ex*-*-lcwgs-*-*.clmp.fp2_repr.R*.fq.gz; do
+  newname=$(basename "$f" | sed -E 's/^Cvi-([AC]Pal)_([0-9]{3})-Ex([0-9]+)-[^-]+-lcwgs-[0-9]+-[0-9]+\.clmp\.fp2_repr\.R([12])\.fq\.gz$/Cvi\1\2_Ex\3_L4_R\4.fq.gz/')
+  ln -s "$f" "data/symlinks/$newname"
+done
+```
+Created the list of filenames
+```
+ls ./data/symlinks/*fq.gz | xargs -n1 basename | cut -d "_" -f1,2,3 | uniq > ./inputfiles/fastq_filenames.txt
 ```
