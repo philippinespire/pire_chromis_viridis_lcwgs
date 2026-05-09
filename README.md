@@ -229,16 +229,16 @@ rm nf-pipelines/.gitignore
 ```
 Made directories per instructions in [nf-trim-merged-unmerged](https://github.com/mariannedehasque/nf-pipelines/tree/main/nf-trim-merged-unmerged).
 
-Made symlinks for NextFlow to re-paired files and renamed the symlinks (works from within ```bash```)
+Made symlinks for NextFlow to re-paired files and renamed the symlinks (works from within ```bash``` when in nf-trim-merged-unmerged/)
 ```
-for f in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_fp1_clmp_fp2_fqscrn_rprd/Cvi-[AC]Pal_*-Ex*-*-lcwgs-*-*.clmp.fp2_repr.R*.fq.gz; do
-  newname=$(basename "$f" | sed -E 's/^Cvi-([AC]Pal)_([0-9]{3})-Ex([0-9]+)-[^-]+-lcwgs-[0-9]+-[0-9]+\.clmp\.fp2_repr\.R([12])\.fq\.gz$/Cvi\1\2_Ex\3_L4_R\4.fq.gz/')
+for f in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_raw/Cvi-[AC]Pal_*-Ex*-*-lcwgs-*-*.?.fq.gz; do
+  newname=$(basename "$f" | sed -E 's/^Cvi-([AC]Pal)_([0-9]{3})-Ex([0-9]+)-[^-]+-lcwgs-[0-9]+-[0-9]+\.([12])\.fq\.gz$/Cvi\1\2_Ex\3_L4_R\4.fastq.gz/')
   ln -s "$f" "data/symlinks/$newname"
 done
 ```
 Created the list of filenames
 ```
-ls ./data/symlinks/*fq.gz | xargs -n1 basename | cut -d "_" -f1,2,3 | uniq > ./inputfiles/fastq_filenames.txt
+ls ./data/symlinks/*fastq.gz | xargs -n1 basename | cut -d "_" -f1,2,3 | uniq > ./inputfiles/fastq_filenames.txt
 ```
 Softlinks to reference and repma file
 ```
