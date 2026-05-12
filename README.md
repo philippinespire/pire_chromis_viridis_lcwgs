@@ -254,3 +254,15 @@ wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/
 ```
 Added entries from nf-pipelines/.gitignore to this repo's .gitignore.
 Edited main.nf with reference name and length of historical reads (121 bp). Length derived from [Jem's MultiQC report](https://github.com/philippinespire/pire_chromis_viridis_lcwgs/blob/main/2nd_sequencing_run/fq_fp1_clmp_fp2_fqscrn_rprd/fqc_rprd_report.html)
+
+Edited main.nf to use `bwa mem` for reads >80bp, and existing `bwa aln` for shorter reads. Slightly edited nextflow.config to match.
+
+Added mapdamage step to main.nf. Not sure if this will work.
+
+Run it!
+```
+tmux new -s nextflow
+module load container_env
+module load nextflow
+nextflow run main.nf -profile standard -resume
+```

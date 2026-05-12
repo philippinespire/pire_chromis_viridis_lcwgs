@@ -12,6 +12,7 @@ params.amber_script = "/home/mdehasqu/TOOLS/AMBER/AMBER" // Ignore this.
 params.bwa_threads  = 4
 params.bam_q        = 1 // Mapping quality. Currently set to 1 simply to remove unmapped reads. 
 params.trimlength   = 121 // length of historical reads
+params.run_mapdamage = false // change to true to run mapDamage (optional, can be time-consuming)
 
 // --- Input Channel ---
 // Reads the file line by line (e.g., TzoCMta031_1_22CVWFLT3L3)
@@ -151,7 +152,7 @@ process QC_UNMERGED {
     """
 }
 
-process BWA_MERGED {
+process BWAALN_MERGED {
     tag "$sample_id"
 
     input:
@@ -178,7 +179,7 @@ process BWA_MERGED {
     """
 }
 
-process BWA_UNMERGED {
+process BWAALN_UNMERGED {
     tag "$sample_id"
 
     input:
@@ -200,6 +201,54 @@ process BWA_UNMERGED {
     bwa sampe \
         -r "@RG\\tID:${rg}\\tSM:${name}\\tPL:ILLUMINA\\tLB:${name}_${lib}\\tPU:${rg}" \
         ${params.reference} ${sample_id}_R1.sai ${sample_id}_R2.sai ${r1} ${r2} \
+        | samtools view -q${params.bam_q} -F 4 -@ ${task.cpus} -bSh - \
+        | samtools sort -m 4G -o ${sample_id}.L${params.trimlength}.sorted.bam -T ${sample_id}.sorting -@ ${task.cpus} -
+    """
+}
+
+process BWAMEM_MERGED {
+    tag "$sample_id"
+
+    input:
+    tuple val(sample_id), path(merged_fq)
+
+    output:
+    tuple val(sample_id), path("${sample_id}_trimmed_merged.L${params.trimlength}.sorted.bam")
+
+    script:
+    def fields = sample_id.split('_')
+    def name = fields[0]
+    def lib  = fields[1]
+    def rg   = fields[2]
+    
+    """
+    bwa mem -M -t ${task.cpus} \
+        -R "@RG\\tID:${rg}\\tSM:${name}\\tPL:ILLUMINA\\tLB:${name}_${lib}\\tPU:${rg}" \
+        ${params.reference} ${merged_fq} \
+        | samtools view -q${params.bam_q} -F 4 -@ ${task.cpus} -bSh - \
+        | samtools sort -m 4G -o ${sample_id}_trimmed_merged.L${params.trimlength}.sorted.bam -T ${sample_id}.sorting -@ ${task.cpus} -
+    """
+}
+
+process BWAMEM_UNMERGED {
+    tag "$sample_id"
+
+    input:
+    tuple val(sample_id), path(r1), path(r2)
+
+    output:
+    tuple val(sample_id), path("${sample_id}.L${params.trimlength}.sorted.bam")
+
+    script:
+    def fields = sample_id.split('_')
+    def name = fields[0]
+    def lib  = fields[1]
+    def rg   = fields[2]
+
+    """
+    bwa mem -M -t ${task.cpus} \
+        -R "@RG\\tID:${rg}\\tSM:${name}\\tPL:ILLUMINA\\tLB:${name}_${lib}\\tPU:${rg}" \
+        ${params.reference} ${r1} ${r2} \
         | samtools view -q${params.bam_q} -F 4 -@ ${task.cpus} -bSh - \
         | samtools sort -m 4G -o ${sample_id}.L${params.trimlength}.sorted.bam -T ${sample_id}.sorting -@ ${task.cpus} -
     """
@@ -316,6 +365,24 @@ process BAM_QC {
     """
 }
 
+process MAPDAMAGE {
+    tag "$sample_name"
+    publishDir "${params.outdir}/results/stats/mapdamage", mode: 'copy'
+    module 'container_env:mapdamage2' // not sure this is needed, but it doesn't hurt to load the module
+
+    input:
+    tuple val(sample_name), path(bam), path(bai)
+    path ref
+
+    output:
+    path("${sample_name}.mapdamage")
+
+    script:
+    """
+    crun mapDamage -i ${bam} -r ${ref} --folder ${sample_name}.mapdamage --no-stats
+    """
+}
+
 process AMBER_PREP {
     tag "$sample_name"
     
@@ -365,12 +432,24 @@ workflow {
     QC_UNMERGED(SEQTK_TRIM.out)
     
     // 3. Mapping (Per Lane)
-    BWA_MERGED(SPLIT_MERGED.out)
-    BWA_UNMERGED(SEQTK_TRIM.out)
+    def merged_mapped_ch
+    def unmerged_mapped_ch
+
+    if (params.trimlength <= 80) { // Use BWA-ALN for shorter reads, BWA-MEM for longer reads
+        BWAALN_MERGED(SPLIT_MERGED.out)
+        BWAALN_UNMERGED(SEQTK_TRIM.out)
+        merged_mapped_ch = BWAALN_MERGED.out
+        unmerged_mapped_ch = BWAALN_UNMERGED.out
+    } else {
+        BWAMEM_MERGED(SPLIT_MERGED.out)
+        BWAMEM_UNMERGED(SEQTK_TRIM.out)
+        merged_mapped_ch = BWAMEM_MERGED.out
+        unmerged_mapped_ch = BWAMEM_UNMERGED.out
+    }
 
     // 4. Mark Duplicates (Split Processes)
-    MARKDUP_MERGED(BWA_MERGED.out)
-    MARKDUP_UNMERGED(BWA_UNMERGED.out)
+    MARKDUP_MERGED(merged_mapped_ch)
+    MARKDUP_UNMERGED(unmerged_mapped_ch)
 
     // 5. Merge BAMs (Per Biological Sample)
     // Mix both streams (merged & unmerged), convert Lane ID to Sample Name, then Group
@@ -395,6 +474,11 @@ workflow {
     
     // Run Depth QC
     BAM_QC(INDEX_REALIGNED.out)
+
+    // Optional mapDamage
+    if (params.run_mapdamage) {
+        MAPDAMAGE(INDEX_REALIGNED.out, ref_ch)
+    }
 
     // Run AMBER (Prep -> Run)
     // AMBER_PREP(INDEX_REALIGNED.out)
