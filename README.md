@@ -259,7 +259,7 @@ Edited main.nf to use `bwa mem` for reads >80bp, and existing `bwa aln` for shor
 
 Added mapdamage step to main.nf. Not sure if this will work.
 
-Run it!
+Run it! From within `nf-trim-merged-unmerged/`
 ```
 tmux new -s nextflow
 module load container_env

@@ -169,8 +169,6 @@ process BWAALN_MERGED {
     
     """
     bwa aln -l 16500 -n 0.01 -o 2  -t ${task.cpus} ${params.reference} ${merged_fq} > ${sample_id}.sai
-    //bwa mem -M -t ${task.cpus} -R $(cat {input.rg}) {input.ref} {input.fastq_mod_R1} {input.fastq_mod_R2} // under development
-
     
     bwa samse -r "@RG\\tID:${rg}\\tSM:${name}\\tPL:ILLUMINA\\tLB:${name}_${lib}\\tPU:${rg}" \
         ${params.reference} ${sample_id}.sai ${merged_fq} \
