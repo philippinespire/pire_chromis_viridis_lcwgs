@@ -12,7 +12,7 @@ params.amber_script = "/home/mdehasqu/TOOLS/AMBER/AMBER" // Ignore this.
 params.bwa_threads  = 4
 params.bam_q        = 1 // Mapping quality. Currently set to 1 simply to remove unmapped reads. 
 params.trimlength   = 121 // length of historical reads
-params.run_mapdamage = false // change to true to run mapDamage (optional, can be time-consuming)
+params.run_mapdamage = true // change to true to run mapDamage (optional, can be time-consuming)
 
 // --- Input Channel ---
 // Reads the file line by line (e.g., TzoCMta031_1_22CVWFLT3L3)

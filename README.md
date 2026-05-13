@@ -280,7 +280,7 @@ echo "Wrote: $out_tsv"
 BASH
 ```
 
-Then used this TSV file to fix the symlinks by running ```fix_symlinks.sh```. Deleted CviAPal032_Ex1_L4_R1. Manually removed the symlink for R1:
+Then used this TSV file to fix the symlinks by running ```fix_symlinks.sh```. It also checks that the R1 and R2 symlinks both point to the same directory (either raw or repaired). It deleted CviAPal032_Ex1_L4_R1, so I manually removed the symlink for R2:
 ```
 rm data/symlinks/CviAPal032_Ex1_L4_R2.fastq.gz
 ```
@@ -312,6 +312,7 @@ Added mapdamage step to main.nf. Not sure if this will work.
 
 Run it! From within `nf-trim-merged-unmerged/`
 ```
+bash
 tmux new -s nextflow
 module load container_env
 module load nextflow
