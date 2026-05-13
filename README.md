@@ -280,7 +280,10 @@ echo "Wrote: $out_tsv"
 BASH
 ```
 
-Then used this TSV file to fix the symlinks by running ```fix_symlinks.sh```.
+Then used this TSV file to fix the symlinks by running ```fix_symlinks.sh```. Deleted CviAPal032_Ex1_L4_R1. Manually removed the symlink for R1:
+```
+rm data/symlinks/CviAPal032_Ex1_L4_R2.fastq.gz
+```
 
 Created the list of filenames:
 ```
