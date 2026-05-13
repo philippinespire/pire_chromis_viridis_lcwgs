@@ -229,30 +229,78 @@ rm nf-pipelines/.gitignore
 ```
 Made directories per instructions in [nf-trim-merged-unmerged](https://github.com/mariannedehasque/nf-pipelines/tree/main/nf-trim-merged-unmerged).
 
-Made symlinks for NextFlow to re-paired files and renamed the symlinks (works from within ```bash``` when in nf-trim-merged-unmerged/)
+Made symlinks for NextFlow to the raw fastq files and renamed the symlinks (works from within ```bash``` when in the ```nf-trim-merged-unmerged/``` directory).
 ```
 for f in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_raw/Cvi-[AC]Pal_*-Ex*-*-lcwgs-*-*.?.fq.gz; do
   newname=$(basename "$f" | sed -E 's/^Cvi-([AC]Pal)_([0-9]{3})-Ex([0-9]+)-[^-]+-lcwgs-[0-9]+-[0-9]+\.([12])\.fq\.gz$/Cvi\1\2_Ex\3_L4_R\4.fastq.gz/')
   ln -s "$f" "data/symlinks/$newname"
 done
 ```
-Created the list of filenames
+
+Some of the raw fastq files are corrupted (see ```2026-05-12_corrupt_fastq_report.txt```) as output by
+```
+for f in nf-pipelines/nf-trim-merged-unmerged/data/symlinks/*.fastq.gz; do gzip -t "$f" 2>/dev/null || echo "CORRUPT: $f"; done >> 2026-05-12_corrupt_fastq_report.txt
+```
+
+Next, identify their uncorrupted versions in ```fq_fp1_clmp_fp2_fqscrn_rprd``` , if they exist, and write to ```2026-05-13_corrupt_symlink_target_similarity_check.tsv```.
+```
+bash <<'BASH'
+repo_root=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs
+report="$repo_root/2026-05-12_corrupt_fastq_report.txt"
+search_dir=/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_fp1_clmp_fp2_fqscrn_rprd
+out_tsv="$repo_root/2026-05-13_corrupt_symlink_target_similarity_check.tsv"
+
+{
+  printf 'symlink_in_report\tresolved_target\tsimilarity_pattern\tmatching_files\n'
+
+  sed -n 's/^CORRUPT: //p' "$report" |
+  while IFS= read -r rel; do
+    link="$repo_root/$rel"
+    target=$(readlink -f "$link" 2>/dev/null || echo 'MISSING_LINK_TARGET')
+    base=$(basename "$rel")
+
+    if [[ "$base" =~ ^Cvi([AC]Pal)([0-9]{3})_Ex([0-9]+)_L[0-9]+_R([12])\.fastq\.gz$ ]]; then
+      grp=${BASH_REMATCH[1]}
+      num=${BASH_REMATCH[2]}
+      ex=${BASH_REMATCH[3]}
+      readn=${BASH_REMATCH[4]}
+      pattern="Cvi-${grp}_${num}-Ex${ex}-*.R${readn}_*"
+      matches=$(find "$search_dir" -maxdepth 1 -type f -name "$pattern" -printf '%f\n' | sort | paste -sd ';' -)
+      [[ -z "$matches" ]] && matches='NO_SIMILAR_FILE'
+    else
+      pattern='UNPARSED_NAME'
+      matches='NO_SIMILAR_FILE'
+    fi
+
+    printf '%s\t%s\t%s\t%s\n' "$rel" "$target" "$pattern" "$matches"
+  done
+} > "$out_tsv"
+
+echo "Wrote: $out_tsv"
+BASH
+```
+
+Then used this TSV file to fix the symlinks by running ```fix_symlinks.sh```.
+
+Created the list of filenames:
 ```
 ls ./data/symlinks/*fastq.gz | xargs -n1 basename | cut -d "_" -f1,2,3 | uniq > ./inputfiles/fastq_filenames.txt
 ```
-Softlinks to reference and repma file
+
+Created softlinks to reference and repma file
 ```
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.fasta ./data/reference/
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.fasta.* ./data/reference/
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.repma.bed ./data/reference/
 ```
-Downloading some files missing from clone of repo (why were they missing?)
+Downloaded some files missing from clone of repo (why were they missing?)
 ```
 wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/main/nf-trim-merged-unmerged/main.nf
 wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/main/nf-trim-merged-unmerged/environment.yml
 wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/main/nf-trim-merged-unmerged/nextflow.config
 ```
 Added entries from nf-pipelines/.gitignore to this repo's .gitignore.
+
 Edited main.nf with reference name and length of historical reads (121 bp). Length derived from [Jem's MultiQC report](https://github.com/philippinespire/pire_chromis_viridis_lcwgs/blob/main/2nd_sequencing_run/fq_fp1_clmp_fp2_fqscrn_rprd/fqc_rprd_report.html)
 
 Edited main.nf to use `bwa mem` for reads >80bp, and existing `bwa aln` for shorter reads. Slightly edited nextflow.config to match.
