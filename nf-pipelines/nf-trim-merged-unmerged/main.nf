@@ -8,7 +8,7 @@ params.reference    = "${projectDir}/data/reference/reference.ssl.Cvi20k_rename.
 params.bed_file     = "${projectDir}/data/reference/reference.ssl.Cvi20k_rename.repma.bed"
 params.split_script = "${projectDir}/scripts/split_reads.sh"
 params.rmdup_script = "${projectDir}/scripts/samremovedup.py"
-params.amber_script = "/home/mdehasqu/TOOLS/AMBER/AMBER" // Ignore this.
+params.amber_script = "/archive/carpentertlab/pire/softwares/AMBER" 
 params.bwa_threads  = 4
 params.bam_q        = 1 // Mapping quality. Currently set to 1 simply to remove unmapped reads. 
 params.trimlength   = 121 // length of historical reads
@@ -89,7 +89,11 @@ process QC_MERGED {
 
     script:
     """
-    fastqc -o . -t ${task.cpus} --extract ${merged_fq}
+    # Added by mpinsky on 2026-06-17: Specify which java to use, so that it can find libfreetype.so.6. Also escape dollar sign so CONDA_PREFIX is resolved inside the task env.
+    echo "[DEBUG QC_MERGED] CONDA_PREFIX = \$CONDA_PREFIX"
+    echo "[DEBUG QC_MERGED] Java path = \$CONDA_PREFIX/bin/java"
+    java -version 2>&1 | head -n 1 | sed 's/^/[DEBUG QC_MERGED] Java version: /'
+    fastqc --java "\$CONDA_PREFIX/bin/java" -o . -t ${task.cpus} --extract ${merged_fq}
     """
 }
 
@@ -147,8 +151,12 @@ process QC_UNMERGED {
 
     script:
     """
-    fastqc -o . -t ${task.cpus} --extract ${r1}
-    fastqc -o . -t ${task.cpus} --extract ${r2}
+    # Added by mpinsky on 2026-06-17: Specify which java to use, so that it can find libfreetype.so.6. Also escape dollar sign so CONDA_PREFIX is resolved inside the task env.
+    echo "[DEBUG QC_UNMERGED] CONDA_PREFIX = \$CONDA_PREFIX"
+    echo "[DEBUG QC_UNMERGED] Java path = \$CONDA_PREFIX/bin/java"
+    java -version 2>&1 | head -n 1 | sed 's/^/[DEBUG QC_UNMERGED] Java version: /'
+    fastqc --java "\$CONDA_PREFIX/bin/java" -o . -t ${task.cpus} --extract ${r1}
+    fastqc --java "\$CONDA_PREFIX/bin/java" -o . -t ${task.cpus} --extract ${r2}
     """
 }
 
@@ -404,6 +412,7 @@ process AMBER_PREP {
 process AMBER {
     tag "$sample_name"
     publishDir "${params.outdir}/results/stats", mode: 'copy'
+    conda 'conda-forge::matplotlib=3.10.9' // Ensure matplotlib is available for AMBER plotting
 
     input:
     tuple val(sample_name), path(amber_input), path(bam_file)
@@ -479,6 +488,6 @@ workflow {
     }
 
     // Run AMBER (Prep -> Run)
-    // AMBER_PREP(INDEX_REALIGNED.out)
-    // AMBER(AMBER_PREP.out)
+    AMBER_PREP(INDEX_REALIGNED.out)
+    AMBER(AMBER_PREP.out)
 }
