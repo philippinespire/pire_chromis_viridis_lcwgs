@@ -227,7 +227,7 @@ git clone https://github.com/mariannedehasque/nf-pipelines.git
 rm -rf nf-pipelines/.git
 rm nf-pipelines/.gitignore
 ```
-Made directories per instructions in [nf-trim-merged-unmerged](https://github.com/mariannedehasque/nf-pipelines/tree/main/nf-trim-merged-unmerged).
+From within `nf-trim-merged-unmerged/`, Made directories per instructions in [nf-trim-merged-unmerged](https://github.com/mariannedehasque/nf-pipelines/tree/main/nf-trim-merged-unmerged).
 
 Made symlinks for NextFlow to the raw fastq files and renamed the symlinks with ```bash fix_symlinks.sh --apply``` (drop the ```--apply``` for a dry run). This checks for corrupt files in ```/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_raw/``` (see ```2026-05-12_corrupt_fastq_report```), symlinks to them if not corrupt, checks for the equivalent in ```fq_fp1_clmp_fp2_fqscrn_rprd``` if they are corrupted, and links there instead if possible. It also checks that the R1 and R2 symlinks both point to the same directory (either raw or repaired). 
 
@@ -240,6 +240,7 @@ Created softlinks to reference and repma file
 ```
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.fasta ./data/reference/
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.fasta.* ./data/reference/
+ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.dict ./data/reference/
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.repma.bed ./data/reference/
 ```
 Downloaded some files missing from clone of repo (why were they missing?)
