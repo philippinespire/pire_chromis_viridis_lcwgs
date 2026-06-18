@@ -8,7 +8,7 @@ params.reference    = "${projectDir}/data/reference/reference.ssl.Cvi20k_rename.
 params.bed_file     = "${projectDir}/data/reference/reference.ssl.Cvi20k_rename.repma.bed"
 params.split_script = "${projectDir}/scripts/split_reads.sh"
 params.rmdup_script = "${projectDir}/scripts/samremovedup.py"
-params.amber_script = "/archive/carpentertlab/pire/softwares/AMBERv2" 
+params.amber_script = "/archive/carpenterlab/pire/softwares/AMBERv2/AMBER" 
 params.bwa_threads  = 4
 params.bam_q        = 1 // Mapping quality. Currently set to 1 simply to remove unmapped reads. 
 params.trimlength   = 121 // length of historical reads
@@ -412,7 +412,6 @@ process AMBER_PREP {
 process AMBER {
     tag "$sample_name"
     publishDir "${params.outdir}/results/stats", mode: 'copy'
-    conda 'conda-forge::matplotlib=3.10.9' // Ensure matplotlib is available for AMBER plotting
 
     input:
     tuple val(sample_name), path(amber_input), path(bam_file)
