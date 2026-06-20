@@ -229,9 +229,9 @@ rm nf-pipelines/.gitignore
 ```
 From within `nf-trim-merged-unmerged/`, Made directories per instructions in [nf-trim-merged-unmerged](https://github.com/mariannedehasque/nf-pipelines/tree/main/nf-trim-merged-unmerged).
 
-Made symlinks for NextFlow to the raw fastq files and renamed the symlinks with ```bash fix_symlinks.sh --apply``` (drop the ```--apply``` for a dry run). This checks for corrupt files in ```/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_raw/``` (see ```2026-05-12_corrupt_fastq_report```), symlinks to them if not corrupt, checks for the equivalent in ```fq_fp1_clmp_fp2_fqscrn_rprd``` if they are corrupted, and links there instead if possible. It also checks that the R1 and R2 symlinks both point to the same directory (either raw or repaired). 
+Made symlinks for NextFlow to the raw fastq files and renamed the symlinks with ```bash fix_symlinks.sh --apply``` (drop the ```--apply``` for a dry run). Script is now in `scripts/`. This scripts checks for corrupt files in ```/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_raw/``` (see ```2026-05-12_corrupt_fastq_report.txt```, now in `output/`), symlinks to them if not corrupt, checks for the equivalent in ```fq_fp1_clmp_fp2_fqscrn_rprd``` if they are corrupted, and links there instead if possible. It also checks that the R1 and R2 symlinks both point to the same directory (either raw or repaired). 
 
-Created the list of filenames:
+Created the list of filenames from within `nf-trim-merged-unmerged/`:
 ```
 ls ./data/symlinks/*fastq.gz | xargs -n1 basename | cut -d "_" -f1,2,3 | uniq > ./inputfiles/fastq_filenames.txt
 ```
@@ -243,7 +243,7 @@ ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/G
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.dict ./data/reference/
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.repma.bed ./data/reference/
 ```
-Downloaded some files missing from clone of repo (why were they missing?)
+Downloaded some files missing from clone of repo (not sure why were they missing):
 ```
 wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/main/nf-trim-merged-unmerged/main.nf
 wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/main/nf-trim-merged-unmerged/environment.yml
@@ -253,11 +253,11 @@ Added entries from nf-pipelines/.gitignore to this repo's .gitignore.
 
 Edited main.nf with reference name and length of historical reads (121 bp). Length derived from [Jem's MultiQC report](https://github.com/philippinespire/pire_chromis_viridis_lcwgs/blob/main/2nd_sequencing_run/fq_fp1_clmp_fp2_fqscrn_rprd/fqc_rprd_report.html)
 
-Edited main.nf to use `bwa mem` for reads >80bp, and existing `bwa aln` for shorter reads. Slightly edited nextflow.config to match.
+Edited main.nf to use `bwa mem` for reads >80bp, and existing `bwa aln` for shorter reads. Edited nextflow.config and environment.yml to run mapdamage and amber.
 
-Added mapdamage step to main.nf. Not sure if this will work.
+Added mapdamage step to main.nf and turned on amber.
 
-Run nf-trim-merged-unmerged pipeline! From within `nf-trim-merged-unmerged/`
+Ran nf-trim-merged-unmerged pipeline from within `nf-trim-merged-unmerged/`:
 ```
 tmux new -s nextflow
 bash
@@ -270,3 +270,10 @@ To rejoin tmux:
 ```
 tmux a -t nextflow
 ```
+
+### 7.1 Diagnosing excessive soft-clipping
+Mapdamage plots show up to 30% softclipping on read ends. Does not appear to adapter, based on FastQC reports. Wrote a script (now in `scripts/`) to summarize the amount of soft-clipping in each scaffold of an individual. Note that column heads are at the bottom, annoyingly:
+```
+softclip_by_scaffold_primary.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam/CviAPal014.merged.L121.realn.bam
+```
+Inspecting reveals three scaffolds with softclipping in >60% of reads and >30% of bases. Put output in `output/`.
