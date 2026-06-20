@@ -40,7 +40,7 @@ if [[ ! -f "$bam_path" ]]; then
   exit 1
 fi
 
-if ! command -v crun.samtools samtools >/dev/null 2>&1; then
+if ! command -v crun.samtools >/dev/null 2>&1; then
   echo "Error: samtools is not available in PATH." >&2
   exit 1
 fi
@@ -56,11 +56,9 @@ bam_base="$(basename "$bam_path")"
 out_file="$out_dir/softclip_by_scaffold_${bam_base}.tsv"
 
 # Exclude: 0x4 (unmapped), 0x100 (secondary), 0x200 (QC-fail), 0x400 (duplicate), 0x800 (supplementary)
-crun.samtools samtools view -F 3844 "$bam_path" | gawk '
-BEGIN {
-  OFS="\t"
-  print "scaffold","reads","reads_with_softclip","frac_reads_with_softclip","query_bases","softclip_bases","frac_query_bases_softclipped"
-}
+{
+  echo -e "scaffold\treads\treads_with_softclip\tfrac_reads_with_softclip\tquery_bases\tsoftclip_bases\tfrac_query_bases_softclipped"
+  crun.samtools samtools view -F 3844 "$bam_path" | gawk '
 {
   scaf=$3
   cig=$6
@@ -89,6 +87,7 @@ END {
     print s, reads[s], reads_soft[s] + 0, fr, query_bases[s] + 0, soft_bases[s] + 0, fb
   }
 }
-' | sort -k1,1 > "$out_file"
+' | sort -k1,1
+} > "$out_file"
 
 echo "Wrote: $out_file"

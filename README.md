@@ -272,8 +272,16 @@ tmux a -t nextflow
 ```
 
 ### 7.1 Diagnosing excessive soft-clipping
-Mapdamage plots show up to 30% softclipping on read ends. Does not appear to adapter, based on FastQC reports. Wrote a script (now in `scripts/`) to summarize the amount of soft-clipping in each scaffold of an individual. Note that column heads are at the bottom, annoyingly:
+Mapdamage plots show up to 30% softclipping on read ends. Does not appear to adapter, based on FastQC reports. Wrote a script (now in `scripts/`) to summarize the amount of soft-clipping in each scaffold of an individual:
 ```
-softclip_by_scaffold_primary.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam/CviAPal014.merged.L121.realn.bam
+scripts/softclip_by_scaffold_primary.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam/CviAPal014.merged.L121.realn.bam output
+
+scripts/softclip_by_scaffold_primary.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam/CviCPal001.merged.L121.realn.bam output
 ```
-Inspecting reveals three scaffolds with softclipping in >60% of reads and >30% of bases. Put output in `output/`.
+Inspecting reveals three scaffolds in CviAPal014 (25 in CviCPal001) with softclipping in >60% of reads and >30% of bases. CviCPal001 has up to 56% bases softclipped. Put output in `output/`.
+
+Manual inspection with IGV suggests lots of softclipping in areas of high depth. Calculate depth and softclipping in 500 bp windows:
+```
+scripts/softclip_by_window_primary.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam/CviAPal014.merged.L121.realn.bam 500 output
+
+```
