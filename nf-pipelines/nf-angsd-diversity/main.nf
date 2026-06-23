@@ -2,13 +2,13 @@ nextflow.enable.dsl=2
 
 // Default Parameters
 params.samplesheet = "${projectDir}/inputfiles/samplesheet.csv"
-params.contigs     = "${projectDir}/data/reference/reference.contigs.txt"
+params.contigs     = "${projectDir}/inputfiles/contig_list.txt"
 params.outdir      = "${projectDir}/results"
-params.reference   = "${projectDir}/data/reference/reference.fasta"
-params.bed_file    = "${projectDir}/data/reference/reference.repma.angsd.txt" // create awk '{print $1"\t"$2+1"\t"$3}' reference.repma.bed > reference.repma.angsd.txt
-params.species     = "Sor"
-params.maxdepth    = 1000
-params.minind      = 20
+params.reference   = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/data/reference/reference.ssl.Cvi20k_rename.fasta"
+params.bed_file    = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/data/reference/reference.sslCvi20k_rename.repma.angsd.txt"
+params.species     = "Cvi"
+params.maxdepth    = 2026
+params.minind      = 61 // minimum number of individuals to include in analysis. 70 percent of 87 individuals.
 
 // import modules
 include { ANGSD_GL_ALL; ANGSD_COLLECT_OUTPUT; ANGSD_EXTRACT_SITES } from './modules/angsd_gl'

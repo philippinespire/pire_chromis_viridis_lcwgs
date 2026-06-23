@@ -220,7 +220,7 @@ ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenE
 ```
 
 ## 7. NextFlow Trimming
-Malin working here, 2026-05.
+Malin Pinsky 2026 May.  
 Cloned the nf-piplines repo and removed its status as a git repo (removed .git/ and .gitignore).
 ```
 git clone https://github.com/mariannedehasque/nf-pipelines.git
@@ -284,4 +284,56 @@ Manual inspection with IGV suggests lots of softclipping in areas of high depth.
 ```
 scripts/softclip_by_window_primary.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam/CviAPal014.merged.L121.realn.bam 500 output
 
+scripts/softclip_by_window_primary.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam/CviCPal001.merged.L121.realn.bam 500 output
+```
+Manual plots of the output don't reveal any obvious problems with high-depth regions. Some have a high fraction of soft-clipping, but low-depth regions do, too. Maybe misplaced bases during library prep caused by "over-chewing" by the KAPA end repair enzyme or by single-stranded overhangs from problems during enzymatic fragmentation. Unclear. Soft-clipping seems like a reasonable solution in any case.
+
+## 8. ANGSD diversity
+Malin, 2026 June. Working in `nf-pipelines/nf-angsd-diversity`.
+
+Wrote `scripts/make_samplesheet_from_bam.sh` to create `inputfiles/samplesheet.csv`:
+```
+scripts/make_samplesheet_from_bam.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam inputfiles/samplesheet.csv
+```
+
+Create the ANGSD sites file next to the reference in `nf-trim-merged-unmerged`. It needs an input file with the starting position shifted by 1 (first command), then load angsd and run the sites command:
+```
+awk '{print $1"\t"$2+1"\t"$3}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/data/reference/reference.ssl.Cvi20k_rename.repma.bed > /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/data/reference/reference.sslCvi20k_rename.repma.angsd.txt
+
+module load container_env
+module load angsd/0.940
+
+crun angsd sites index /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/data/reference/reference.sslCvi20k_rename.repma.angsd.txt
+```
+
+Create the BAM inputfile with a custom script:
+```
+scripts/list_bam_paths.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam inputfiles/bam_list.txt
+```
+
+Create the contigs file by reading the first column from the reference bed file:
+```
+awk '{print $1}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/data/reference/reference.ssl.Cvi20k_rename.repma.bed > inputfiles/contig_list.txt
+```
+
+Update the two main conda paths in test and standard from `nextflow.config` to specify `conda = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/environments/nf-angsd-diversity.yml"` instead of the existing path to marianne's yml file.
+
+Calculate the expected coverage from the dpstats files output by amber in the nf-trim-mergd-unmerged pipeline:
+```
+awk '{s+=$1} END{print s}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/results/stats/Cvi*.bam.dpstats.txt
+```
+
+Update the parameters in main.nf for this run:
+- locations of samplesheet.csv, contig_list.txt, reference fasta, bed file
+- species code Cvi
+- set maxdepth to 10x the 202.6 expected depth = 2026
+- set minind to 61, which is 70% of the 87 individuals we have
+
+Odd that there is no parameter for the bam list.
+
+Start nextflow in my existing tmux window, which already has bash activated and the container_env and nextflow modules loaded (see step 7):
+```
+tmux a -t nextflow
+cd ../nf-angsd-diversity # switch to the new pipeline
+nextflow run main.nf -profile standard -resume
 ```
