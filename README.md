@@ -8,7 +8,7 @@
 # Chromis viridis lcWGS
 
 ---
-Jem Baldisimo
+Jem Baldisimo and Malin Pinsky
 ---
 This repository outlines the roadmap we followed to move *Chromis viridis* through the [Low Coverage Whole Genome Sequencing Pipeline](https://github.com/philippinespire/pire_lcwgs_data_processing). This provides steps taken & analysis we did to gain insight on the historical population demography of this very popular aquarium fish, also known as the green chromis.
 
@@ -142,7 +142,7 @@ I copied the best assembly from the ssl pipeline (see link below) and renamed it
 
 ---
 ## 3. Mapped & Filtered BAM files
-
+_June 2026 note: this step is no longer used. Replaced by Step 7 that trims and maps reads_.   
 <details><summary><i>mkBAM step</i></summary>
 Created mkBAM folder & linked fq.gz files from fq_fp1_clmp_fp2_fqscrn_repaired:
 
@@ -176,6 +176,7 @@ sbatch /home/e1garcia/shotgun_PIRE/dDocentHPC/dDocentHPC2.sbatch fltrBAM config.
 </details>
 
 ## 4. Generated Mapping stats using mappedReadStats
+_June 2026 note: this step is no longer used. Replaced by Step 7 that trims and maps reads_.   
 
 ```
 #navigate to mkBAM folder
@@ -187,7 +188,7 @@ sbatch /home/e1garcia/shotgun_PIRE/pire_fq_gz_processing/mappedReadStats.sbatch 
 ## 5. Visualised results using the Process Sequencing Metadata Repo
 I followed Kevin's repo for [Process Sequencing Metadata](https://github.com/philippinespire/process_sequencing_metadata).
 
-Make sure  you do the following:
+Make sure  you do the following:  
 -If cloning a repo and working in your own folder, make sure to always git pull before doing anything!
 -Move output files to the species repo after you work in your own folder
 -Remember to change line 306 of the visualizeSslCsslLcwgsMETADA.R script. For lcwgs, I changed this line based on what my mkBAM_T setting was and the 2nd to last setting for fltrmBAM:
@@ -201,6 +202,7 @@ Graphs showed information on depth of coverage for both Albatross & Contemporary
 
 ---
 ## 6. GenErode
+_June 2026 note: this step is no longer used. Replaced by Step 7 that trims and maps reads_.   
 
 Jem ran this, and then ANGSD. No details available right now.
 ```
@@ -249,13 +251,13 @@ wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/
 wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/main/nf-trim-merged-unmerged/environment.yml
 wget https://raw.githubusercontent.com/mariannedehasque/nf-pipelines/refs/heads/main/nf-trim-merged-unmerged/nextflow.config
 ```
-Added entries from nf-pipelines/.gitignore to this repo's .gitignore.
+Added entries from `nf-pipelines/.gitignore` to this repo's `.gitignore`.
 
 Edited main.nf with reference name and length of historical reads (121 bp). Length derived from [Jem's MultiQC report](https://github.com/philippinespire/pire_chromis_viridis_lcwgs/blob/main/2nd_sequencing_run/fq_fp1_clmp_fp2_fqscrn_rprd/fqc_rprd_report.html)
 
-Edited main.nf to use `bwa mem` for reads >80bp, and existing `bwa aln` for shorter reads. Edited nextflow.config and environment.yml to run mapdamage and amber.
+Edited `main.nf` to use `bwa mem` for reads >80bp, and existing `bwa aln` for shorter reads. Edited `nextflow.config` and `environment.yml` to run mapdamage and amber.
 
-Added mapdamage step to main.nf and turned on amber.
+Added mapdamage step to `main.nf` and turned on amber.
 
 Ran nf-trim-merged-unmerged pipeline from within `nf-trim-merged-unmerged/`:
 ```
@@ -265,20 +267,20 @@ module load container_env
 module load nextflow
 nextflow run main.nf -profile standard -resume
 ```
-Type Ctrl-B and then D to leave tmux.   
+Type `Ctrl-B` and then `D` to leave tmux.   
 To rejoin tmux:
 ```
 tmux a -t nextflow
 ```
 
 ### 7.1 Diagnosing excessive soft-clipping
-Mapdamage plots show up to 30% softclipping on read ends. Does not appear to adapter, based on FastQC reports. Wrote a script (now in `scripts/`) to summarize the amount of soft-clipping in each scaffold of an individual:
+Mapdamage plots show up to 30% softclipping on read ends. Does not appear to adapter, based on FastQC reports. Wrote a script to summarize the amount of soft-clipping in each scaffold of an individual:
 ```
 scripts/softclip_by_scaffold_primary.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam/CviAPal014.merged.L121.realn.bam output
 
 scripts/softclip_by_scaffold_primary.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam/CviCPal001.merged.L121.realn.bam output
 ```
-Inspecting reveals three scaffolds in CviAPal014 (25 in CviCPal001) with softclipping in >60% of reads and >30% of bases. CviCPal001 has up to 56% bases softclipped. Put output in `output/`.
+Inspecting reveals three scaffolds in CviAPal014 (25 in CviCPal001) with softclipping in >60% of reads and >30% of bases. CviCPal001 has up to 56% bases softclipped on a scaffold. Put output in `output/`.
 
 Manual inspection with IGV suggests lots of softclipping in areas of high depth. Calculate depth and softclipping in 500 bp windows:
 ```
@@ -288,6 +290,9 @@ scripts/softclip_by_window_primary.sh /archive/carpenterlab/pire/mpinsky/pire_ch
 ```
 Manual plots of the output don't reveal any obvious problems with high-depth regions. Some have a high fraction of soft-clipping, but low-depth regions do, too. Maybe misplaced bases during library prep caused by "over-chewing" by the KAPA end repair enzyme or by single-stranded overhangs from problems during enzymatic fragmentation. Unclear. Soft-clipping seems like a reasonable solution in any case.
 
+### 7.2 Clean up
+Removed the `nf-pipelines/nf-trim-merged-unmerged/work` directory.
+
 ## 8. ANGSD diversity
 Malin, 2026 June. Working in `nf-pipelines/nf-angsd-diversity`.
 
@@ -296,7 +301,7 @@ Wrote `scripts/make_samplesheet_from_bam.sh` to create `inputfiles/samplesheet.c
 scripts/make_samplesheet_from_bam.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam inputfiles/samplesheet.csv
 ```
 
-Create the ANGSD sites file next to the reference in `nf-trim-merged-unmerged`. It needs an input file with the starting position shifted by 1 (first command), then load angsd and run the sites command:
+Created the ANGSD sites file next to the reference in `nf-trim-merged-unmerged`. It needs an input file with the starting position shifted by 1 (first command), then load angsd and run the sites command:
 ```
 awk '{print $1"\t"$2+1"\t"$3}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/data/reference/reference.ssl.Cvi20k_rename.repma.bed > /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/data/reference/reference.sslCvi20k_rename.repma.angsd.txt
 
@@ -318,22 +323,47 @@ grep '^>' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipel
 
 Update the two main conda paths in test and standard from `nextflow.config` to specify `conda = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/environments/nf-angsd-diversity.yml"` instead of the existing path to marianne's yml file.
 
-Calculate the expected coverage from the dpstats files output by amber in the nf-trim-mergd-unmerged pipeline:
+Calculate the expected coverage from the dpstats files output by amber in the nf-trim-mergd-unmerged pipeline (outputs 202.6):
 ```
 awk '{s+=$1} END{print s}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/results/stats/Cvi*.bam.dpstats.txt
 ```
 
-Update the parameters in main.nf for this run:
+Update the parameters in `main.nf` for this run:
 - locations of samplesheet.csv, contig_list.txt, reference fasta, bed file
 - species code Cvi
-- set maxdepth to 10x the 202.6 expected depth = 2026
+- set maxdepth to 10x the expected depth = 2026
 - set minind to 61, which is 70% of the 87 individuals we have
 
 Odd that there is no parameter for the bam list.
 
-Start nextflow in my existing tmux window, which already has bash activated and the container_env and nextflow modules loaded (see step 7):
+Start nextflow in my existing tmux window, which already has bash activated and the container_env and nextflow modules loaded (see [Step 7](#-7.-nextflow-trimming)):
 ```
 tmux a -t nextflow
 cd ../nf-angsd-diversity # switch to the new pipeline
 nextflow run main.nf -profile standard
 ```
+
+The [PCA](nf-pipelines/nf-angsd-diversity/results/PCAngsd/Cvi.pcangsd.plot.pdf) shows substantial divergence along PC1 and PC2, but the log file reveals the SVD algorithm didn't converge.
+
+### 8.1 PCA and admixture
+Run pcangsd with more iterations and ask it to calculate admixture proportions, then plot:
+```
+module load container_env ngsTools
+crun pcangsd --iter 500 -b /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity/results/GL/Cvi.beagle.gz -t 8 -o output/Cvi.pcangsd --admix
+
+crun Rscript nf-pipelines/nf-angsd-diversity/scripts/pcangsd.R --cov output/Cvi.pcangsd.cov --samplesheet nf-pipelines/nf-angsd-diversity/inputfiles/samplesheet.csv --species Cvi --out output/Cvi.pcangsd.plot.pdf
+```
+The [new PCA](output/Cvi.pcangsd.plot.pdf) has converged. It is effectively the same as before. Suggests K=3.
+
+Plot the admixture proportions with a new script:
+```
+crun Rscript scripts/plot_admixture.R output/Cvi.pcangsd.admix.3.Q nf-pipelines/nf-angsd-diversity/inputfiles/samplesheet.csv output/Cvi.pcangsd.admix.pdf
+```
+
+The [admixture plot](output/Cvi.pcangsd.admix.pdf) mostly separates by era, as expected.
+
+### 8.1 Plot ANGSD diversity
+
+## 9. Sliding window FST
+
+## 10. ACER selection scan
