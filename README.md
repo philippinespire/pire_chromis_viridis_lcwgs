@@ -311,9 +311,9 @@ Create the BAM inputfile with a custom script:
 scripts/list_bam_paths.sh /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/data/bam inputfiles/bam_list.txt
 ```
 
-Create the contigs file by reading the first column from the reference bed file:
+Create the contigs file by reading the contig names from the reference genome and removing the > character:
 ```
-awk '{print $1}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/data/reference/reference.ssl.Cvi20k_rename.repma.bed > inputfiles/contig_list.txt
+grep '^>' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/data/reference/reference.ssl.Cvi20k_rename.fasta | sed 's/^>//' > inputfiles/contig_list.txt
 ```
 
 Update the two main conda paths in test and standard from `nextflow.config` to specify `conda = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/environments/nf-angsd-diversity.yml"` instead of the existing path to marianne's yml file.
@@ -335,5 +335,5 @@ Start nextflow in my existing tmux window, which already has bash activated and 
 ```
 tmux a -t nextflow
 cd ../nf-angsd-diversity # switch to the new pipeline
-nextflow run main.nf -profile standard -resume
+nextflow run main.nf -profile standard
 ```
