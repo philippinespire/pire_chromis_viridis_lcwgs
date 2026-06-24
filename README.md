@@ -15,6 +15,7 @@ This repository outlines the roadmap we followed to move *Chromis viridis* throu
 ---
 
 ## 1. Completed fq.gz pre-processing
+Working in `/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/`
 
 The [pire_fq_gz_processing](https://github.com/philippinespire/pire_fq_gz_processing) instructions and scripts (Garcia et al 2021) were used. The purpose of the preprocessing pipeline was to Trim, deduplicate, decontaminate, and repair the raw `fq.gz` files.
 
@@ -134,6 +135,7 @@ Potential issues:
 ---
 
 ## 2. Copied the Reference Genome into the species folder
+Working in `/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/`
 
 I copied the best assembly from the ssl pipeline (see link below) and renamed it to reference.ssl.Cvi.fasta that was copied into the refGenome folder
 ```
@@ -142,7 +144,10 @@ I copied the best assembly from the ssl pipeline (see link below) and renamed it
 
 ---
 ## 3. Mapped & Filtered BAM files
-_June 2026 note: this step is no longer used. Replaced by Step 7 that trims and maps reads_.   
+_June 2026 note: this step is no longer used. Replaced by [Step 7](#7-nextflow-trimming) that trims and maps reads_.  
+
+Working in `/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/`
+
 <details><summary><i>mkBAM step</i></summary>
 Created mkBAM folder & linked fq.gz files from fq_fp1_clmp_fp2_fqscrn_repaired:
 
@@ -176,7 +181,9 @@ sbatch /home/e1garcia/shotgun_PIRE/dDocentHPC/dDocentHPC2.sbatch fltrBAM config.
 </details>
 
 ## 4. Generated Mapping stats using mappedReadStats
-_June 2026 note: this step is no longer used. Replaced by Step 7 that trims and maps reads_.   
+_June 2026 note: this step is no longer used. Replaced by [Step 7](#7-nextflow-trimming) that trims and maps reads_.   
+
+Working in `/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/`
 
 ```
 #navigate to mkBAM folder
@@ -186,6 +193,8 @@ sbatch /home/e1garcia/shotgun_PIRE/pire_fq_gz_processing/mappedReadStats.sbatch 
 
 ---
 ## 5. Visualised results using the Process Sequencing Metadata Repo
+Working in `/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/`
+
 I followed Kevin's repo for [Process Sequencing Metadata](https://github.com/philippinespire/process_sequencing_metadata).
 
 Make sure  you do the following:  
@@ -202,7 +211,8 @@ Graphs showed information on depth of coverage for both Albatross & Contemporary
 
 ---
 ## 6. GenErode
-_June 2026 note: this step is no longer used. Replaced by Step 7 that trims and maps reads_.   
+_June 2026 note: this step is no longer used. Replaced by [Step 7](#7-nextflow-trimming) that trims and maps reads_.   
+Working in `/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/`
 
 Jem ran this, and then ANGSD. No details available right now.
 ```
@@ -222,7 +232,8 @@ ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenE
 ```
 
 ## 7. NextFlow Trimming
-Malin Pinsky 2026 May.  
+Malin Pinsky 2026 May. Working in `/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/`
+
 This step applied Marianne's Nextflow trimming script to _all_ individuals and mapped them with bwa mem. This is not a standard application, since typically only the modern individuals are trimmed and they are mapped with bwa aln. By doing this, I didn't rescale the historical reads based on damage patterns, which is done in the generode pipeline. This is probably ok, since the reads have very little damage.
 
 Cloned the nf-piplines repo and removed its status as a git repo (removed .git/ and .gitignore).
@@ -296,7 +307,7 @@ Manual plots of the output don't reveal any obvious problems with high-depth reg
 Removed the `nf-pipelines/nf-trim-merged-unmerged/work` directory.
 
 ## 8. ANGSD structure and diversity
-Malin, 2026 June. Working in `nf-pipelines/nf-angsd-diversity`.
+Malin, 2026 June. Working in `/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity`.
 
 Wrote `scripts/make_samplesheet_from_bam.sh` to create `inputfiles/samplesheet.csv`:
 ```
@@ -338,7 +349,7 @@ Update the parameters in `main.nf` for this run:
 
 Odd that there is no parameter for the bam list.
 
-Start nextflow in my existing tmux window, which already has bash activated and the container_env and nextflow modules loaded (see [Step 7](#-7.-nextflow-trimming)):
+Start nextflow in my existing tmux window, which already has bash activated and the container_env and nextflow modules loaded (see [Step 7](#7-nextflow-trimming)):
 ```
 tmux a -t nextflow
 cd ../nf-angsd-diversity # switch to the new pipeline
@@ -364,7 +375,13 @@ crun Rscript scripts/plot_admixture.R output/Cvi.pcangsd.admix.3.Q nf-pipelines/
 
 The [admixture plot](output/Cvi.pcangsd.admix.pdf) mostly separates by era, as expected.
 
-### 8.1 Plot ANGSD diversity
+### 8.2 FST historical-modern
+Wrote a couple scripts to calc genome-wide and windowed (50kb windows, 10kb steps) fst historical vs. modern: scripts/calc_fst_modern_historic.sbatch, which calls scripts/calc_fst_modern_historic.sh
+```
+sbatch scripts/calc_fst_modern_historic.sbatch
+```
+
+### 8.3 Plot ANGSD diversity
 Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses a new custom script that calculates per-site pi and bootstraps to get 95% CIs:
 ```
 bash
@@ -375,7 +392,9 @@ crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity/r
 The [plot of pi](output/tp_historic_vs_modern_mean_ci.png) suggests higher diversity in the modern samples. Before we think too hard on this, let's check for species identity. Probably should have done this earlier.
 
 ## 9. MitoZ
-Put the scripts in the `scripts/` directory:
+Malin Pinsky, June 2026. Working in `/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/`
+
+Put the mitoz scripts in the `scripts/` directory:
 ```
 wget https://github.com/philippinespire/pire_lcwgs_data_processing/raw/refs/heads/main/scripts/MitoZ_wahab/runMitoZ_array_lcwgs.bash
 wget https://github.com/philippinespire/pire_lcwgs_data_processing/raw/refs/heads/main/scripts/MitoZ_wahab/runMitoZ_array_lcwgs.sbatch
@@ -394,9 +413,11 @@ Then run on the full 2nd sequencing run:
 scripts/runMitoZ_array_lcwgs.bash /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_fp1_clmp_fp2 /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/mitoz 32 0
 ```
 
-Next, move the sbatch .out files into MitoZ as well
+Next, move the sbatch .out files into MitoZ as well, the move mitoz into output/
 ```
-mv MitoZ-*.out mitoz/
+mkdir mitoz/logs
+mv MitoZ-*.out mitoz/logs
+mv mitoz output/
 ```
 
 ## Future
