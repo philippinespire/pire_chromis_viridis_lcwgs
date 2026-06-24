@@ -223,6 +223,8 @@ ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenE
 
 ## 7. NextFlow Trimming
 Malin Pinsky 2026 May.  
+This step applied Marianne's Nextflow trimming script to _all_ individuals and mapped them with bwa mem. This is not a standard application, since typically only the modern individuals are trimmed and they are mapped with bwa aln. By doing this, I didn't rescale the historical reads based on damage patterns, which is done in the generode pipeline. This is probably ok, since the reads have very little damage.
+
 Cloned the nf-piplines repo and removed its status as a git repo (removed .git/ and .gitignore).
 ```
 git clone https://github.com/mariannedehasque/nf-pipelines.git
@@ -293,7 +295,7 @@ Manual plots of the output don't reveal any obvious problems with high-depth reg
 ### 7.2 Clean up
 Removed the `nf-pipelines/nf-trim-merged-unmerged/work` directory.
 
-## 8. ANGSD diversity
+## 8. ANGSD structure and diversity
 Malin, 2026 June. Working in `nf-pipelines/nf-angsd-diversity`.
 
 Wrote `scripts/make_samplesheet_from_bam.sh` to create `inputfiles/samplesheet.csv`:
@@ -363,7 +365,40 @@ crun Rscript scripts/plot_admixture.R output/Cvi.pcangsd.admix.3.Q nf-pipelines/
 The [admixture plot](output/Cvi.pcangsd.admix.pdf) mostly separates by era, as expected.
 
 ### 8.1 Plot ANGSD diversity
+Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses a new custom script that calculates per-site pi and bootstraps to get 95% CIs:
+```
+bash
+module load container_env R
+crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci.png
+```
 
-## 9. Sliding window FST
+The [plot of pi](output/tp_historic_vs_modern_mean_ci.png) suggests higher diversity in the modern samples. Before we think too hard on this, let's check for species identity. Probably should have done this earlier.
 
-## 10. ACER selection scan
+## 9. MitoZ
+Put the scripts in the `scripts/` directory:
+```
+wget https://github.com/philippinespire/pire_lcwgs_data_processing/raw/refs/heads/main/scripts/MitoZ_wahab/runMitoZ_array_lcwgs.bash
+wget https://github.com/philippinespire/pire_lcwgs_data_processing/raw/refs/heads/main/scripts/MitoZ_wahab/runMitoZ_array_lcwgs.sbatch
+```
+
+Bash script sets up an array of sbatch calls, one for each individual. I modified the filename pattern in .bash and .sbatch scripts to match Cvi: *.clmp.fp2_r1.fq.gz. Also modified scripts to take OUTDIR as the 2nd argument and the number of individuals to run as a 4th argument (0 means all individuals). Modifed the sbatch script to check for an existing output directory; skip the individual if one exists. 
+
+Run on one individual to set up the mitoz database:
+```
+bash
+scripts/runMitoZ_array_lcwgs.bash /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_fp1_clmp_fp2 /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/mitoz 32 1
+```
+
+Then run on the full 2nd sequencing run:
+```
+scripts/runMitoZ_array_lcwgs.bash /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_fp1_clmp_fp2 /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/mitoz 32 0
+```
+
+Next, move the sbatch .out files into MitoZ as well
+```
+mv MitoZ-*.out mitoz/
+```
+
+## Future
+- Sliding window FST
+- ACER selection scan
