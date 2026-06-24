@@ -143,15 +143,8 @@ run_realsfs fst stats "${fst_prefix}.fst.idx" > "$stats_file"
 echo "[4/4] Computing sliding-window FST (50kb windows, 10kb step)"
 run_realsfs fst stats2 "${fst_prefix}.fst.idx" -win 50000 -step 10000 > "$windows_file"
 
-weighted_fst="$(awk -F'[: \t]+' 'BEGIN{IGNORECASE=1}
-  /Fst\.Weight|weighted/ {
-    for (i = NF; i >= 1; i--) {
-      if ($i ~ /^-?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/) {
-        print $i
-        exit
-      }
-    }
-  }' "$stats_file")"
+# realSFS fst stats is headerless in this workflow; the second numeric value is weighted FST.
+weighted_fst="$(awk 'NF>=2 {print $2; exit}' "$stats_file")"
 
 {
   echo "pair=${historic_prefix},${modern_prefix}"

@@ -1,0 +1,7 @@
+pair=CviAPal_historic,CviCPal_modern
+folded=1
+weighted_fst=0.110033
+sfs_file=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/output/fst_historic_vs_modern/CviAPal_historic_vs_CviCPal_modern.ml.sfs
+fst_index=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/output/fst_historic_vs_modern/CviAPal_historic_vs_CviCPal_modern.fst.idx
+stats_file=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/output/fst_historic_vs_modern/CviAPal_historic_vs_CviCPal_modern.fst.stats.txt
+windows_file=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/output/fst_historic_vs_modern/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.txt

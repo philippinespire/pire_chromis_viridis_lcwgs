@@ -381,6 +381,8 @@ Wrote a couple scripts to calc genome-wide and windowed (50kb windows, 10kb step
 sbatch scripts/calc_fst_modern_historic.sbatch
 ```
 
+Created `output/fst_historic_vs_modern/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.110033. High!
+
 ### 8.3 Plot ANGSD diversity
 Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses a new custom script that calculates per-site pi and bootstraps to get 95% CIs:
 ```
@@ -413,12 +415,29 @@ Then run on the full 2nd sequencing run:
 scripts/runMitoZ_array_lcwgs.bash /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_fp1_clmp_fp2 /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/mitoz 32 0
 ```
 
-Next, move the sbatch .out files into MitoZ as well, the move mitoz into output/
+Cancelled some jobs that were running for >7 hrs, removed their output directories in mitoz/, and ran this again to try again.
+
+Next, move the sbatch .out files into MitoZ as well, then move mitoz into output/
 ```
 mkdir mitoz/logs
 mv MitoZ-*.out mitoz/logs
 mv mitoz output/
 ```
+
+Summarize the COX1 sequences across all individuals into one file:
+```
+grep 'COX1' output/mitoz/Cvi*/Cvi*.result/*.cds | sed 's/_MitoZ.*//g' | sed 's/^/>/g' > MitoZ_labels
+grep -A1 'COX1' output/mitoz/Cvi*/Cvi*.result/*.cds | grep 'cds-' | sed 's/.*cds-//g' > MitoZ_seqs
+paste -d '\n' MitoZ_labels MitoZ_seqs > output/mitoz/MitoZ_output.fasta
+rm MitoZ_labels
+rm MitoZ_seqs
+```
+
+Blast them:
+```
+sbatch --job-name=blastn_remote_top2 --cpus-per-task=4 --mem=16G --time=24:00:00 --wrap="bash scripts/blastn_remote_top2.sh output/mitoz/MitoZ_output.fasta output/mitoz/MitoZ_output_vs_nt"
+```
+
 
 ## Future
 - Sliding window FST
