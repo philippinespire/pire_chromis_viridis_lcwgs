@@ -6,6 +6,10 @@
 #SBATCH --output=output/fst_historic_vs_modern/logs/%x_%j.out
 #SBATCH --error=output/fst_historic_vs_modern/logs/%x_%j.err
 
+# Malin Pinsky 2026
+# This script was written with AI assistance using GitHub Copilot
+# with the GPT-5.3-Codex model.
+
 set -euo pipefail
 
 # Run from repository root regardless of submit location.

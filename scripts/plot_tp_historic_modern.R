@@ -1,5 +1,8 @@
 #!/usr/bin/env Rscript
 
+# DATE:         June 2026
+# AUTHOR:       Malin Pinsky with assistance from GitHub Copilot with the GPT-5.3-Codex model.
+
 args <- commandArgs(trailingOnly = TRUE)
 
 historic_file <- if (length(args) >= 1) {

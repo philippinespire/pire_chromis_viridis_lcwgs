@@ -15,6 +15,7 @@
 #
 # REQUIREMENTS: Base R installation.
 # DATE:         June 2026
+# AUTHOR:       Malin Pinsky with assistance from GitHub Copilot with the GPT-5.3-Codex model.
 # ==============================================================================
 
 
@@ -56,8 +57,21 @@ if (!("era" %in% colnames(meta))) {
 sorted_data <- combined[order(combined$era), ]
 
 # Separate back out into the sorted Q matrix
-# Assumes Q columns are the last 3 columns of the sorted data frame
-Q_sorted <- sorted_data[, (ncol(sorted_data)-2):ncol(sorted_data)]
+# Assumes Q columns are the last K columns of the sorted data frame
+Q_sorted <- sorted_data[, (ncol(sorted_data)-K+1):ncol(sorted_data)]
+
+# Choose sample labels for the x-axis; prefer common sample ID column names.
+sample_label_candidates <- c("sample", "sample_id", "sampleid", "individual", "ind", "id", "name")
+meta_colnames_lower <- tolower(colnames(sorted_data))
+matched_label_col <- sample_label_candidates[sample_label_candidates %in% meta_colnames_lower]
+
+if (length(matched_label_col) > 0) {
+  sample_label_col <- colnames(sorted_data)[which(meta_colnames_lower == matched_label_col[1])[1]]
+} else {
+  sample_label_col <- colnames(meta)[1]
+}
+
+sample_labels <- as.character(sorted_data[[sample_label_col]])
 
 # Count how many individuals are in each category for labeling later 
 group_counts <- table(sorted_data$era)
@@ -65,8 +79,8 @@ group_counts <- table(sorted_data$era)
 # 4. Open PDF graphics device 
 pdf(file = output_pdf, width = 10, height = 6)
 	
-# 5. Set margins (increased bottom margin to 5 for population labels) 
-par(mar = c(5, 4, 3, 1))
+# 5. Set margins (increase bottom margin for sample and era labels)
+par(mar = c(10, 4, 3, 1))
 
 # 6. Generate color palette dynamically based on the inferred K
 if (K <= 12) {
@@ -80,26 +94,34 @@ bp <- barplot(t(Q_sorted),
               col    = my_colors, 
               border = NA, 
               space  = 0,
+              names.arg = sample_labels,
+              las = 2,
+              cex.names = 0.5,
               xlab   = "",          # Turned off default label to manually place group names
               ylab   = "Ancestry Proportions",
               main   = paste("PCAngsd Admixture Proportions (K =", K, ")"))
 
 # 8. Add dividers and group labels below the x-axis
-# Calculate the split point between groups based on individual bar widths
-split_point <- group_counts[1]
+# Draw vertical lines between era groups and place centered group labels
+group_sizes <- as.numeric(group_counts)
+group_ends <- cumsum(group_sizes)
+group_starts <- c(1, head(group_ends, -1) + 1)
 
-# Draw a vertical line separating the categories
-abline(v = split_point, col = "white", lwd = 2, lty = 2)
+if (length(group_sizes) > 1) {
+  for (i in seq_len(length(group_sizes) - 1)) {
+    divider_x <- (bp[group_ends[i]] + bp[group_ends[i] + 1]) / 2
+    abline(v = divider_x, col = "white", lwd = 2, lty = 2)
+  }
+}
 
-# Place group labels centered underneath each section
-# group_counts[1] is the size of group 1; group_counts[2] is the size of group 2
-axis(side = 1, 
-     at = c(group_counts[1] / 2, group_counts[1] + (group_counts[2] / 2)), 
-     labels = names(group_counts), 
-     tick = FALSE, 
-     line = 1, 
-     font = 2,      # Bold text
-     cex.axis = 1.2)
+group_centers <- mapply(function(start_idx, end_idx) mean(bp[start_idx:end_idx]), group_starts, group_ends)
+axis(side = 1,
+     at = group_centers,
+     labels = names(group_counts),
+     tick = FALSE,
+     line = 7,
+     font = 2,
+     cex.axis = 0.9)
 
 # 8. Close and save the PDF
 dev.off()

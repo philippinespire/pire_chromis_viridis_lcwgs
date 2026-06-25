@@ -4,6 +4,11 @@
 | -------------- | ------------ | ------- |
 | 1st_sequencing_run | 2023-04-28 | test lane |
 | 2nd_sequencing_run | 2023-06-16 | Alb & Contemp sequences from Palapag, Northern Samar|
+| angsd_analysis | 2023? | Jem's angsd analysis |
+| scripts | 2026-05 | scripts for analysis |
+| output | 2026-05 | output from analyses |
+| nf-pipelines | 2026-05 | nextflow pipelines for trimming & angsd |
+| temp | 2026-05 | files not tracked by git |
 
 # Chromis viridis lcWGS
 
@@ -373,7 +378,7 @@ Plot the admixture proportions with a new script:
 crun Rscript scripts/plot_admixture.R output/Cvi.pcangsd.admix.3.Q nf-pipelines/nf-angsd-diversity/inputfiles/samplesheet.csv output/Cvi.pcangsd.admix.pdf
 ```
 
-The [admixture plot](output/Cvi.pcangsd.admix.pdf) mostly separates by era, as expected.
+The [admixture plot](output/Cvi.pcangsd.admix.pdf) mostly separates by era, as expected, but 8 contemporary individuals group with the historical ones.
 
 ### 8.2 FST historical-modern
 Wrote a couple scripts to calc genome-wide and windowed (50kb windows, 10kb steps) fst historical vs. modern: scripts/calc_fst_modern_historic.sbatch, which calls scripts/calc_fst_modern_historic.sh
@@ -391,7 +396,7 @@ module load container_env R
 crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci.png
 ```
 
-The [plot of pi](output/tp_historic_vs_modern_mean_ci.png) suggests higher diversity in the modern samples. Before we think too hard on this, let's check for species identity. Probably should have done this earlier.
+The [plot of pi](output/tp_historic_vs_modern_mean_ci.png) suggests higher diversity in the modern samples. Before we think too hard on this, let's check for species identity. If modern is mixing two species (see the admixture plot), that would explain higher diversity.
 
 ## 9. MitoZ
 Malin Pinsky, June 2026. Working in `/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/`
@@ -415,28 +420,42 @@ Then run on the full 2nd sequencing run:
 scripts/runMitoZ_array_lcwgs.bash /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_fp1_clmp_fp2 /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/mitoz 32 0
 ```
 
-Cancelled some jobs that were running for >7 hrs, removed their output directories in mitoz/, and ran this again to try again.
+Cancelled some jobs that were running for >7 hrs, removed their output directories in mitoz/, and ran this again to try again. Ran into corrupted .fq.gz format issues for 26 of them and didn't try to solve.
 
 Next, move the sbatch .out files into MitoZ as well, then move mitoz into output/
 ```
 mkdir mitoz/logs
 mv MitoZ-*.out mitoz/logs
-mv mitoz output/
+mv mitoz temp/
 ```
 
-Summarize the COX1 sequences across all individuals into one file:
+Summarize the COX1 sequences across all individuals into `output/MitoZ_output.fasta`:
 ```
-grep 'COX1' output/mitoz/Cvi*/Cvi*.result/*.cds | sed 's/_MitoZ.*//g' | sed 's/^/>/g' > MitoZ_labels
-grep -A1 'COX1' output/mitoz/Cvi*/Cvi*.result/*.cds | grep 'cds-' | sed 's/.*cds-//g' > MitoZ_seqs
-paste -d '\n' MitoZ_labels MitoZ_seqs > output/mitoz/MitoZ_output.fasta
+grep 'COX1' temp/mitoz/Cvi*/Cvi*.result/*.cds | sed 's/_MitoZ.*//g' | sed 's/^/>/g' > MitoZ_labels
+grep -A1 'COX1' temp/mitoz/Cvi*/Cvi*.result/*.cds | grep 'cds-' | sed 's/.*cds-//g' > MitoZ_seqs
+paste -d '\n' MitoZ_labels MitoZ_seqs > output/MitoZ_output.fasta
 rm MitoZ_labels
 rm MitoZ_seqs
 ```
 
-Blast them:
+Have 32 COX1 sequences (18 A, 14 C). Blasted them with a script:
 ```
-sbatch --job-name=blastn_remote_top2 --cpus-per-task=4 --mem=16G --time=24:00:00 --wrap="bash scripts/blastn_remote_top2.sh output/mitoz/MitoZ_output.fasta output/mitoz/MitoZ_output_vs_nt"
+sbatch --job-name=blastn_remote_top2 --cpus-per-task=4 --mem=16G --time=24:00:00 --wrap="bash scripts/blastn_remote_top2.sh output/MitoZ_output.fasta output/MitoZ_output_vs_nt"
 ```
+Note this returned warnings from NCBI about many requests from this IP address, which likely slowed down response times. Could use megablast instead of blastn in the future? Or download the nt database locally.
+
+Detailed results in `output/MitoZ_output_vs_nt_all.tsv` with columns  qseqid (query sequence ID from the FASTA header), sacc (subject accession), pident (percent identity), length (alignment length), qcovs (query coverage per subject), evalue (E-value), bitscore (BLAST bit score), staxids (subject taxonomic IDs), sscinames (subject scientific names), stitle (subject title/description). 
+
+Note that APal_002 had two queries, and they both have the same qseqid. A better labeling command would have been `grep 'COX1' temp/mitoz/Cvi*/Cvi*.result/.cds | sed 's/_MitoZ.//g' | awk '{k[$0]++; print ">"$0"_hit"k[$0]}' > MitoZ_labels`, which would have produced unique qseqids.
+
+Trimmed to top two in `MitoZ_output_vs_nt_top2.tsv` and with headers and labeled more clearly in `MitoZ_output_vs_nt_top2_compact.tsv`.
+
+1 of 17 APal individuals matches Cvi. Others match bacteria.  
+7 of 14 CPal individuals match Cvi (CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, and CPal_093). Others match _Chromis atripectoralis_.
+
+Bingo! The CPal individuals that matched Cvi are the "purple" individuals in the [admixture plot](output/Cvi.pcangsd.admix.pdf). The others are _C. atripectoralis_. We mostly collected _C. atripectoralis_.
+
+## 10. ANGSD structure and diversity with only viridis
 
 
 ## Future

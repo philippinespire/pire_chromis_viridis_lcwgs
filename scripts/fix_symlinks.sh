@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Malin Pinsky 2026
+# This script was written with AI assistance using GitHub Copilot
+# with the GPT-5.3-Codex model.
+
 # Rebuilds nf-trim-merged-unmerged symlinks from raw FASTQs, falling back to repaired
 # FASTQs when a pair contains at least one corrupted raw file.
 

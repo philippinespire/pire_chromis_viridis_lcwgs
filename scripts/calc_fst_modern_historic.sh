@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Malin Pinsky 2026
+# This script was written with AI assistance using GitHub Copilot
+# with the GPT-5.3-Codex model.
+
 set -euo pipefail
 
 usage() {

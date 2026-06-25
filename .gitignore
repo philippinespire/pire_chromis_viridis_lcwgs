@@ -74,7 +74,7 @@ modern/
 historical/
 results/
 .snakemake/
-temp/ # intermediate files we don't need to keep, especially large or numerous ones
+temp/
 
 # Block these specific large files
 out_PCAngsd_selection_minMaf0.0_e80.selection.npy
