@@ -1,0 +1,34 @@
+==> Input Arguments:
+	geno: nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz
+	probs: true
+	log_scale: false
+	n_ind: 48
+	n_sites: 56369
+	pos: nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.sites.txt (WITHOUT header)
+	max_kb_dist (kb): 50
+	max_snp_dist: 0
+	min_maf: 0.001000
+	ignore_miss_data: false
+	call_geno: false
+	N_thresh: 0.000000
+	call_thresh: 0.000000
+	rnd_sample: 1.000000
+	seed: 1782480620
+	extend_out: false
+	out: output/ngsld/cvi-only.ld
+	n_threads: 8
+	verbose: 1
+	version: 1.1.0 (Apr 12 2024 @ 14:39:15)
+
+==> GZIP input file (not BINARY)
+> Reading data from file...
+> Header found! Skipping line...
+==> Calculating MAF for all sites...
+==> Getting sites coordinates
+==> Launching threads...
+==> Waiting for all threads to finish...
+==> Freeing memory...
+Done!
+thread 'main' panicked at src/graph.rs:83:42:
+cannot convert weight to float32: ParseFloatError { kind: Invalid }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

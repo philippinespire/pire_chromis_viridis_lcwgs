@@ -361,7 +361,7 @@ cd ../nf-angsd-diversity # switch to the new pipeline
 nextflow run main.nf -profile standard
 ```
 
-The [PCA](nf-pipelines/nf-angsd-diversity/results/PCAngsd/Cvi.pcangsd.plot.pdf) shows substantial divergence along PC1 and PC2, but the log file reveals the SVD algorithm didn't converge.
+The [PCA](nf-pipelines/nf-angsd-diversity/results/PCAngsd/Cvi.pcangsd.plot.pdf) shows substantial divergence along PC1 and PC2, but the log file (buried in a temporary work directory) reveals the SVD algorithm didn't converge.
 
 ### 8.1 PCA and admixture
 Run pcangsd with more iterations and ask it to calculate admixture proportions, then plot:
@@ -381,9 +381,9 @@ crun Rscript scripts/plot_admixture.R output/Cvi.pcangsd.admix.3.Q nf-pipelines/
 The [admixture plot](output/Cvi.pcangsd.admix.pdf) mostly separates by era, as expected, but 8 contemporary individuals group with the historical ones.
 
 ### 8.2 FST historical-modern
-Wrote a couple scripts to calc genome-wide and windowed (50kb windows, 10kb steps) fst historical vs. modern: scripts/calc_fst_modern_historic.sbatch, which calls scripts/calc_fst_modern_historic.sh
+Wrote a couple scripts to calc genome-wide and windowed (50kb windows, 10kb steps) fst historical vs. modern: scripts/calc_fst_modern_historic.sbatch to prep and submit a slurm job, which calls scripts/calc_fst_modern_historic.sh
 ```
-sbatch scripts/calc_fst_modern_historic.sbatch
+bash scripts/calc_fst_modern_historic.sbatch
 ```
 
 Created `output/fst_historic_vs_modern/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.110033. High!
@@ -397,6 +397,12 @@ crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity/r
 ```
 
 The [plot of pi](output/tp_historic_vs_modern_mean_ci.png) suggests higher diversity in the modern samples. Before we think too hard on this, let's check for species identity. If modern is mixing two species (see the admixture plot), that would explain higher diversity.
+
+## 8.3 Clean up
+Remove the 1.2G temporary directory:
+```
+rm -r nf-pipelines/nf-angsd-diversity/work/
+```
 
 ## 9. MitoZ
 Malin Pinsky, June 2026. Working in `/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/`
@@ -456,7 +462,76 @@ Trimmed to top two in `MitoZ_output_vs_nt_top2.tsv` and with headers and labeled
 Bingo! The CPal individuals that matched Cvi are the "purple" individuals in the [admixture plot](output/Cvi.pcangsd.admix.pdf). The others are _C. atripectoralis_. We mostly collected _C. atripectoralis_.
 
 ## 10. ANGSD structure and diversity with only viridis
+Re-run nf-angsd-diversity, trimmed to only the _C. viridis_ individuals. Start by copying over the base of the nf-pipeline:
+```
+rsync -a --exclude='work/' --exclude='results/' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-cvi-only/
+cd nf-pipelines/nf-angsd-diversity-cvi-only
+rm .nextflow.log*
+```
 
+In retrospect, could probably have instead made a new `main.nf` file in the regular nf-angsd-diversity directories and re-run it with that and new output prefixes.
+
+Manually trim `inputfiles/samplesheet.csv` and `intputfiles/bam_list.txt` to the purple modern individuals from the [admixture plot](output/Cvi.pcangsd.admix.pdf): CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (plus all Albatross). 
+
+Calculate the expected coverage from the dpstats files output by amber in the nf-trim-mergd-unmerged pipeline, but only using the individuals in the samplesheet (outputs 74.2):
+```
+awk -F, 'NR>1 {print $1}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv \
+| while read -r id; do
+    awk '{for(i=1;i<=NF;i++) if($i ~ /^-?[0-9]+([.][0-9]+)?([eE][+-]?[0-9]+)?$/) s+=$i} END{print s+0}' \
+      /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/results/stats/"$id"*.bam.dpstats.txt
+  done \
+| awk '{t+=$1} END{print t}'
+```
+
+Update the parameters in `main.nf` for this run:
+- set maxdepth to 10x the expected depth = 742
+- set minind to 34, which is 70% of the 48 individuals we have in this round
+
+Start nextflow in my existing tmux window, which already has bash activated and the container_env and nextflow modules loaded (see [Step 7](#7-nextflow-trimming)):
+```
+tmux a -t nextflow
+cd nf-pipelines/nf-angsd-diversity-cvi-only # switch to the new pipeline
+nextflow run main.nf -profile standard
+```
+
+The [PCA](nf-pipelines/nf-angsd-diversity-cvi-only/results/PCAngsd/Cvi.pcangsd.plot.pdf) still shows substantial (14%) divergence along PC1. The PCAngsd log file (buried in a temporary work directory) shows it converged and selected 1 significant PC with the MAP test.
+
+### 10.1 Admixture
+Run pcangsd and ask it to calculate admixture proportions, then plot:
+```
+module load container_env ngsTools
+crun pcangsd -b /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz -t 8 -o output/Cvi.pcangsd.cvi-only --admix
+```
+
+Plot the admixture proportions:
+```
+crun Rscript scripts/plot_admixture.R output/Cvi.pcangsd.cvi-only.admix.2.Q nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/Cvi.pcangsd.cvi-only.admix.pdf
+```
+
+The [admixture plot](output/Cvi.pcangsd.cvi-only.admix.pdf) shows 4 historical individuals with 100% "yellow" ancestry, remaining historical have ~50% "yellow" ancestry and ~50% "green". All contemporary are green. This seems consistent with drift, though odd how much divergence there is on PC1.
+
+### 10.2 FST historical-modern
+Calculate FST between the eras (note this script submits a slurm job):
+```
+bash scripts/calc_fst_modern_historic.sbatch --results-dir "nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop" --outdir "output/fst_historic_vs_modern-cvi-only"
+```
+
+Created `output/fst_historic_vs_modern-cvi-only/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.0502. Seems reasonable, though on the high side.
+
+### 10.3 Dystruct
+Dystruct wants ld-pruned genotypes. This script submits a slurm job to prune:
+```
+bash scripts/ld_prune_slurm.sh --probs nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --pos nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.sites.txt --out output/ngsld/cvi-only.ld --prune-out output/ngsld/cvi-only.unlinked.pos --max-kb-dist 50 --min-weight 0.4
+```
+
+Note that git ignores the large .ld output file.
+
+Manually make a generation time file for dystruct at `scripts/Cvi-only.generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 and 2022.
+
+Run dystruct script that reads in a beagle file:
+```
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --out-dir output/dystruct --npops 2 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+```
 
 ## Future
 - Sliding window FST
