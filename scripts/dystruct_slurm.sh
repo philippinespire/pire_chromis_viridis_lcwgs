@@ -29,7 +29,8 @@ Generation-time input (choose one):
   --generation-value INT      Use one constant generation-time value for all samples
 
 Optional:
-  --prefix STR                Prefix for intermediate/output files (default: beagle basename)
+  --prefix STR                Base prefix for files (default: beagle basename; outputs append _K<npops>)
+  --sites-file FILE           Optional site list; use only loci whose beagle marker ($1) is in this file
   --seed INT                  Random seed for DYSTRUCT (default: 1145)
   --min-posterior FLOAT       If max posterior < threshold, write missing genotype 9 (default: 0)
   --threads INT               OMP_NUM_THREADS for DYSTRUCT (default: npops)
@@ -50,6 +51,21 @@ Pass-through arguments:
   Any args after "--" are forwarded directly to DYSTRUCT.
   Example: -- --epochs 100 --hold-out-fraction 0.1 --hold-out-seed 55307
 
+Required File Formats:
+  Beagle (--beagle):
+    - ANGSD-style beagle text file, plain or gzipped (.beagle or .beagle.gz).
+    - First row must be a header with marker, allele1, allele2, then 3 columns per individual.
+    - Marker IDs in column 1 are expected to look like contig_position or contig:position.
+
+  Generation times (--generation-times):
+    - Plain text file with one value per line (integer or numeric), exactly one row per individual.
+    - Row order must match individual column order in the beagle file.
+
+  Site list (--sites-file, optional):
+    - Plain text file with site ID in the first column (extra columns allowed).
+    - Accepts IDs as contig:position or contig_position; matching is delimiter-normalized.
+    - Blank lines and lines starting with # are ignored.
+
 Examples:
   bash scripts/dystruct_slurm.sh \
     --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz \
@@ -62,6 +78,7 @@ Examples:
     --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz \
     --out-dir output/dystruct \
     --npops 5 \
+    --sites-file output/ngsld/cvi-only.unlinked.pos \
     --generation-value 0 \
     --min-posterior 0.8 \
     -- --epochs 100 --hold-out-fraction 0.1
@@ -74,6 +91,7 @@ npops=""
 generation_times=""
 generation_value=""
 prefix=""
+sites_file=""
 seed="1145"
 min_posterior="0"
 threads=""
@@ -121,6 +139,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --prefix)
       prefix="$2"
+      shift 2
+      ;;
+    --sites-file)
+      sites_file="$2"
       shift 2
       ;;
     --seed)
@@ -199,6 +221,11 @@ if [[ ! -f "$beagle" ]]; then
   exit 1
 fi
 
+if [[ -n "$sites_file" && ! -f "$sites_file" ]]; then
+  echo "Error: sites file not found: $sites_file" >&2
+  exit 1
+fi
+
 if [[ -n "$generation_times" && -n "$generation_value" ]]; then
   echo "Error: Use either --generation-times or --generation-value, not both." >&2
   exit 1
@@ -225,6 +252,8 @@ if [[ -z "$prefix" ]]; then
   prefix="${prefix%.gz}"
   prefix="${prefix%.beagle}"
 fi
+
+run_prefix="${prefix}_K${npops}"
 
 if [[ -z "$threads" ]]; then
   threads="$npops"
@@ -270,8 +299,16 @@ else
 fi
 
 # Infer n_ind from beagle header and create sample-id list.
-sample_ids_file="${out_dir}/${prefix}.sample_ids.txt"
-header_info="$(${beagle_reader[@]} | awk 'NR==1 {
+sample_ids_file="${out_dir}/${run_prefix}.sample_ids.txt"
+header_line=""
+if [[ "$beagle" == *.gz ]]; then
+  # Use sed without early exit to avoid SIGPIPE on gzip under pipefail.
+  header_line="$(gzip -cd -- "$beagle" | sed -n '1p')"
+else
+  header_line="$(sed -n '1p' "$beagle")"
+fi
+
+header_info="$(printf '%s\n' "$header_line" | awk 'NR==1 {
   ncols=NF
   if (ncols < 6) {
     print "ERR: header has too few columns"; exit 2
@@ -285,21 +322,21 @@ header_info="$(${beagle_reader[@]} | awk 'NR==1 {
   }
   print "NIND=" nind > "/dev/stderr"
   exit
-}' 2>"${out_dir}/${prefix}.header_info.tmp")"
+}' 2>"${out_dir}/${run_prefix}.header_info.tmp")"
 
 if [[ -n "$header_info" && "$header_info" == ERR:* ]]; then
   echo "Error parsing beagle header: ${header_info#ERR: }" >&2
-  rm -f "${out_dir}/${prefix}.header_info.tmp"
+  rm -f "${out_dir}/${run_prefix}.header_info.tmp"
   exit 1
 fi
 
-if [[ ! -s "${out_dir}/${prefix}.header_info.tmp" ]]; then
+if [[ ! -s "${out_dir}/${run_prefix}.header_info.tmp" ]]; then
   echo "Error: Could not parse beagle header from $beagle" >&2
   exit 1
 fi
 
-n_ind="$(awk -F'=' '/^NIND=/{print $2; exit}' "${out_dir}/${prefix}.header_info.tmp" | tr -d '[:space:]')"
-rm -f "${out_dir}/${prefix}.header_info.tmp"
+n_ind="$(awk -F'=' '/^NIND=/{print $2; exit}' "${out_dir}/${run_prefix}.header_info.tmp" | tr -d '[:space:]')"
+rm -f "${out_dir}/${run_prefix}.header_info.tmp"
 
 if [[ -z "$n_ind" ]]; then
   echo "Error: Failed to infer number of individuals from beagle header." >&2
@@ -308,21 +345,53 @@ fi
 
 printf '%s\n' "$header_info" > "$sample_ids_file"
 
-geno_file="${out_dir}/${prefix}.geno"
+geno_file="${out_dir}/${run_prefix}.geno"
 
 echo "Converting beagle to EIGENSTRAT .geno"
 echo "  Input:  $beagle"
 echo "  Output: $geno_file"
 echo "  n_ind:  $n_ind"
 echo "  min_posterior threshold: $min_posterior"
+if [[ -n "$sites_file" ]]; then
+  echo "  sites filter: $sites_file"
+fi
 
 # Convert per-locus genotype posteriors to hard genotype calls in EIGENSTRAT format.
-${beagle_reader[@]} | awk -v minp="$min_posterior" '
+"${beagle_reader[@]}" | awk -v minp="$min_posterior" -v sites_file="$sites_file" '
+function canon_site_id(id, a) {
+  # Normalize both contig:pos and contig_pos into contig:pos (last delimiter before numeric pos).
+  if (match(id, /^(.*)[:_]([0-9]+)$/, a)) {
+    return a[1] ":" a[2]
+  }
+  return id
+}
+
+BEGIN {
+  use_filter = 0
+  if (sites_file != "") {
+    use_filter = 1
+    while ((getline line < sites_file) > 0) {
+      gsub(/\r$/, "", line)
+      if (line == "" || line ~ /^#/) continue
+      split(line, fields, /[ \t]+/)
+      if (fields[1] != "") {
+        keep[fields[1]] = 1
+        keep[canon_site_id(fields[1])] = 1
+      }
+    }
+    close(sites_file)
+  }
+  kept_loci = 0
+}
 NR==1 {
   nind=(NF-3)/3
   next
 }
 {
+  site_id = $1
+  site_id_norm = canon_site_id(site_id)
+  if (use_filter && !(site_id in keep) && !(site_id_norm in keep)) next
+
   row=""
   for (i=1; i<=nind; i++) {
     p0=$(3 + (i-1)*3 + 1)
@@ -337,7 +406,18 @@ NR==1 {
 
     row=row g
   }
+  kept_loci++
   print row
+}
+END {
+  if (kept_loci == 0) {
+    if (use_filter) {
+      print "Error: No loci from beagle matched entries in --sites-file." > "/dev/stderr"
+    } else {
+      print "Error: No loci found in beagle input after header." > "/dev/stderr"
+    }
+    exit 4
+  }
 }
 ' > "$geno_file"
 
@@ -348,7 +428,7 @@ if [[ -z "$nloci" || "$nloci" -le 0 ]]; then
 fi
 
 if [[ -n "$generation_value" ]]; then
-  generation_times="${out_dir}/${prefix}.generation_times.txt"
+  generation_times="${out_dir}/${run_prefix}.generation_times.txt"
   awk -v n="$n_ind" -v g="$generation_value" 'BEGIN {for (i=1; i<=n; i++) print g}' > "$generation_times"
 fi
 
@@ -361,7 +441,7 @@ fi
 
 export OMP_NUM_THREADS="$threads"
 
-dystruct_output_prefix="${out_dir}/${prefix}.dystruct"
+dystruct_output_prefix="${out_dir}/${run_prefix}.dystruct"
 
 dystruct_cmd=(
   "$dystruct_bin"

@@ -526,12 +526,33 @@ bash scripts/ld_prune_slurm.sh --probs nf-pipelines/nf-angsd-diversity-cvi-only/
 
 Note that git ignores the large .ld output file.
 
-Manually make a generation time file for dystruct at `scripts/Cvi-only.generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 and 2022.
+Manually made a generation time file for dystruct at `scripts/Cvi-only.generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 and 2022.
 
-Run dystruct script that reads in a beagle file:
+Run dystruct script that reads in a beagle file and submits a slurm job using K=2:
 ```
-bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --out-dir output/dystruct --npops 2 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 2 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
 ```
+See `output/dystruct/Cvi_K2.*`. hold-out log-likelihood was -2548 in [log file](output/dystruct/logs/dystruct_5976233.out).
+
+Plot the dystruct proportions:
+```
+module load container_env R
+
+crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K2.dystruct_theta nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/dystruct/Cvi.dystruct.cvi-only.K2.pdf
+```
+
+The [output proportions plot](output/dystruct/Cvi.dystruct.cvi-only.dystruct.pdf) suggest a lot of the modern ancestry is mixed in with the historical population, though to varying proportions across historical individuals.
+
+For comparison, run dystruct script with K=1 and K=3, and plot K=3:
+```
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 1 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 3 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+
+crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K3.dystruct_theta nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/dystruct/Cvi.dystruct.cvi-only.K3.pdf
+```
+K=1 hold-out log-likelihood -2786 (see the [log file](output/dystruct/logs/dystruct_5978242.out).
+K=3 hold-out log-likelihood -2580 (see the [log file](output/dystruct/logs/dystruct_5978243.out). K=3 [further divides up the historical samples](output/dystruct/Cvi.dystruct.cvi-only.K3.pdf).
 
 ## Future
 - Sliding window FST
