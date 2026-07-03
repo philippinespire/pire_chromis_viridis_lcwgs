@@ -8,13 +8,13 @@ args <- commandArgs(trailingOnly = TRUE)
 historic_file <- if (length(args) >= 1) {
   args[1]
 } else {
-  "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity/results/angsd_pop_theta/CviAPal_historic.pestPG"
+  stop("Please provide the path to the historic tP file as the first argument.")
 }
 
 modern_file <- if (length(args) >= 2) {
   args[2]
 } else {
-  "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity/results/angsd_pop_theta/CviCPal_modern.pestPG"
+  stop("Please provide the path to the modern tP file as the second argument.")
 }
 
 output_file <- if (length(args) >= 3) {

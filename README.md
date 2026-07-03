@@ -541,7 +541,7 @@ module load container_env R
 crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K2.dystruct_theta nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/dystruct/Cvi.dystruct.cvi-only.K2.pdf
 ```
 
-The [output proportions plot](output/dystruct/Cvi.dystruct.cvi-only.dystruct.pdf) suggest a lot of the modern ancestry is mixed in with the historical population, though to varying proportions across historical individuals.
+The [output proportions plot](output/dystruct/Cvi.dystruct.cvi-only.K2.pdf) suggest a lot of the modern ancestry is mixed in with the historical population, though to varying proportions across historical individuals.
 
 For comparison, run dystruct script with K=1 and K=3, and plot K=3:
 ```
@@ -551,8 +551,29 @@ bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only
 
 crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K3.dystruct_theta nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/dystruct/Cvi.dystruct.cvi-only.K3.pdf
 ```
-K=1 hold-out log-likelihood -2786 (see the [log file](output/dystruct/logs/dystruct_5978242.out).
-K=3 hold-out log-likelihood -2580 (see the [log file](output/dystruct/logs/dystruct_5978243.out). K=3 [further divides up the historical samples](output/dystruct/Cvi.dystruct.cvi-only.K3.pdf).
+K=1 hold-out log-likelihood -2786 (see the [log file](output/dystruct/logs/dystruct_5978242.out).  
+K=3 hold-out log-likelihood -2580 (see the [log file](output/dystruct/logs/dystruct_5978243.out). K=3 [further divides up the historical samples](output/dystruct/Cvi.dystruct.cvi-only.K3.pdf).  
+This leaves K=2 as the best supported option.
+
+### 10.4 Continuity
+I also tried running Josh Schraiber's [genomic continuity calculations](https://github.com/schraiber/continuity/). Modified his `ancient_genotypes.py` to work with python3 (it was written in python2). Created a script to make the input file from the angsd sample sheet, angsd .mafs.gz, and the bam files. It ended up being complex to sort out environments for python and samtools:
+```
+bash scripts/run_continuity_from_mafs.sbatch \
+  --samplesheet nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv \
+  --mafs nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.mafs.gz \
+  --bam-dir nf-pipelines/nf-trim-merged-unmerged/results/data/bam \
+  --output-prefix output/continuity/cvi-only
+```
+
+### 10.5 Diversity
+Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses our custom script that calculates per-site pi and bootstraps to get 95% CIs:
+```
+bash
+module load container_env R
+crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci-cvi-only.png
+```
+
+The [plot of pi](output/tp_historic_vs_modern_mean_ci-cvi-only.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
 
 ## Future
 - Sliding window FST
