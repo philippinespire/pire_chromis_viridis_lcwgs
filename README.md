@@ -565,7 +565,7 @@ bash scripts/run_continuity_from_mafs.sbatch \
   --output-prefix output/continuity/cvi-only
 ```
 
-### 10.5 Diversity
+### 10.5 Whole-genome diversity
 Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses our custom script that calculates per-site pi and bootstraps to get 95% CIs:
 ```
 bash
@@ -575,6 +575,34 @@ crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-c
 
 The [plot of pi](output/tp_historic_vs_modern_mean_ci-cvi-only.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
 
+### 10.6 ACER selection scan
+Used the `run_acer.R` script to iteratively identify loci under selection (adapted chi-squared test from the ACER package in R) and the effective population size (Ne) from the base directory:
+```
+module load container_env R
+crun Rscript scripts/run_acer.R \
+--hist_mafs=nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop/CviAPal_historic.mafs.gz \
+--mod_mafs=nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop/CviCPal_modern.mafs.gz \
+--region_names=Pop1 \
+--out_dir=output/acer \
+--helpers=scripts/acer_helpers.R \
+--ne_generations=114 \
+--test_gen_start=0 \
+--test_gen_end=113 \
+--fdr_cutoff=0.05 \
+--max_rounds=20 \
+--n_boot=1000 \
+--min_ind=4
+```
+See the output in [output/acer](output/acer/), including the [Manhattan Plot](output/acer/chisq_manhattan_Pop1_final.png).
+
+--- ACER Summary ---  
+Converged after 1 rounds   
+Total SNPs tested: 47770  
+Total SNPs under selection: 0  
+Neutral SNPs remaining: 47770  
+
+### 10.7 Neutral diversity
+The same as in [Section 10.5](#105-whole-genome-diversity), since no loci identified as being under selection.
+
 ## Future
 - Sliding window FST
-- ACER selection scan

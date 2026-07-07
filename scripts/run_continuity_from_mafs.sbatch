@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=cvi_continuity
-#SBATCH --time=24:00:00
+#SBATCH --time=96:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
 
@@ -55,7 +55,7 @@ Runtime options:
 
 SLURM options:
   --job-name NAME           SLURM job name (default: cvi_continuity)
-  --time HH:MM:SS           SLURM time limit (default: 24:00:00)
+  --time HH:MM:SS           SLURM time limit (default: 96:00:00)
   --cpus INT                SLURM cpus-per-task (default: 8)
   --mem SIZE                SLURM memory (default: 32G)
   --partition NAME          SLURM partition/queue (optional)
@@ -100,7 +100,7 @@ python_cmd="/home/mpinsky/.conda/envs/AMBER/bin/python"
 python_cmd_user_set=0
 
 job_name="cvi_continuity"
-time_limit="24:00:00"
+time_limit="96:00:00"
 cpus="8"
 mem="32G"
 partition=""
