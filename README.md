@@ -604,5 +604,10 @@ Neutral SNPs remaining: 47770
 ### 10.7 Neutral diversity
 The same as in [Section 10.5](#105-whole-genome-diversity), since no loci identified as being under selection.
 
-## Future
-- Sliding window FST
+## Sliding window FST
+Use plot_windowed_fst.R to make a Manhattan plot from the angsd sliding-window Fst (50kb windows, 10kb steps):
+```
+module load container_env R
+crun Rscript scripts/plot_windowed_fst.R output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.txt output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png
+```
+The [output figure](output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png) has a handful of windows with Fst>0.3, but they are scattered and not obviously pointing towards a region with strong selection.
