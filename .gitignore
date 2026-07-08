@@ -63,6 +63,7 @@ busco_c*/
 busco_s*/
 busco_d*/
 */logs/probes_ann*out
+logs/
 probes_ann*
 rgsam/
 GenErode_templatedir
@@ -74,6 +75,7 @@ modern/
 historical/
 results/
 .snakemake/
+__pycache__/
 temp/
 
 # Block these specific large files
