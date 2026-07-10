@@ -611,3 +611,14 @@ module load container_env R
 crun Rscript scripts/plot_windowed_fst.R output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.txt output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png
 ```
 The [output figure](output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png) has a handful of windows with Fst>0.3, but they are scattered and not obviously pointing towards a region with strong selection.
+
+### Investigating outlier individuals
+Admixture and PCA plots show four outlier individuals: CviAPal004, CviAPal016, CviAPal028, CviAPal040.
+
+#### Low depth?
+Made a script to plot admixture proportion vs. depth (latter from BAM_QC process):
+```
+module load container_env R
+crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-diversity-cvi-only/results/inputfiles/bamlist.txt output/Cvi.pcangsd.cvi-only.admix.2.Q nf-pipelines/nf-trim-merged-unmerged/results/results/stats/ 1 output/admix_vs_depth.png
+```
+Yes, the [output plot](output/admix_vs_depth.png) shows that low depth is associated with membership in the "yellow" group from the [admixture plot](output/Cvi.pcangsd.cvi-only.admix.pdf).

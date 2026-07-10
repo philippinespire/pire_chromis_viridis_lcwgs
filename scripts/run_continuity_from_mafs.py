@@ -10,7 +10,7 @@ Overview
 This script automates a full continuity-model workflow around
 ``scripts/ancient_genotypes.py``:
 
-1. Read sample metadata from a CSV samplesheet.
+1. Read sample metadata from a CSV samplesheet. Assumes all individuals are in different eras from a single population.
 2. Select a BAM subset from either ``--bam-dir``, ``--bam-list``, or the
     samplesheet BAM column.
 3. Use an ANGSD ``.mafs(.gz)`` file as the reference AF source and to polarize
@@ -27,7 +27,7 @@ This script automates a full continuity-model workflow around
 
 Required Inputs
 ---------------
-- ``--samplesheet``: CSV with at least sample/bam/pop/era columns.
+- ``--samplesheet``: CSV with at least sample/bam/era columns.
 - ``--mafs``: ANGSD ``.mafs`` or ``.mafs.gz``.
 - ``--output-prefix``: Prefix used for output files.
 
@@ -42,7 +42,8 @@ Runtime Requirements
     - ``matplotlib`` (imported by ``ancient_genotypes.py``)
 - External command-line tools:
         - ``crun.samtools samtools`` (required in this environment; used for
-            ``mpileup``) or a direct ``samtools`` binary if configured.
+            ``mpileup``) or a direct ``samtools`` binary if configured. The script has code to try 
+            to find a samtools executable in the PATH or load it via a module system if necessary.
 - Input data requirements:
     - Coordinate-compatible BAM files with indexes available to ``samtools``.
     - ANGSD ``.mafs(.gz)`` with the expected columns (at minimum:
@@ -299,13 +300,20 @@ def select_historic_rows(
         )
 
     era_col = args.era_column
+    # Count historic and modern samples among the validated selection
+    n_historic = sum(1 for r in selected_rows if r.get(era_col, "").strip().lower() == args.historic_era.lower())
+    n_modern = sum(1 for r in selected_rows if r.get(era_col, "").strip().lower() == args.modern_era.lower())
+
+    if n_historic == 0:
+        raise ValueError("Error: No historic-era samples found. Both historic and modern eras must be present.")
+    if n_modern == 0:
+        raise ValueError("Error: No modern-era samples found. Both historic and modern eras must be present.")
+
     historic_rows = [
         r
         for r in selected_rows
         if r.get(era_col, "").strip().lower() == args.historic_era.lower()
     ]
-    if not historic_rows:
-        raise ValueError("No historic-era samples found among selected BAMs")
 
     return historic_rows
 
@@ -655,11 +663,12 @@ def build_continuity_read_table(
 
 
 def write_ind_file(path: str, historic_rows: list[dict[str, str]], args: argparse.Namespace) -> None:
-    """Write Eigenstrat-style ``.ind`` file required by parse_reads_by_pop()."""
+    """Write Eigenstrat-style ``.ind`` file required by parse_reads_by_pop(). Assigns everyone to 'all_pop'.
+    """
     with open(path, "w", encoding="utf-8") as out:
         for row in historic_rows:
             sample = row[args.sample_column]
-            pop = row[args.pop_column]
+            pop = "all_pop"
             out.write("{}\tU\t{}\n".format(sample, pop))
 
 
