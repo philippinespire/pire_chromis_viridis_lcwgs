@@ -239,7 +239,7 @@ ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenE
 ## 7. NextFlow Trimming
 Malin Pinsky 2026 May. Working in `/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/`
 
-This step applied Marianne's Nextflow trimming script to _all_ individuals and mapped them with bwa mem. This is not a standard application, since typically only the modern individuals are trimmed and they are mapped with bwa aln. By doing this, I didn't rescale the historical reads based on damage patterns, which is done in the generode pipeline. This is probably ok, since the reads have very little damage.
+This step applied Marianne's Nextflow trimming script to _all_ individuals and mapped them with bwa mem. This is not a standard application, since typically only the modern individuals are trimmed and they are mapped with bwa aln. By doing this, I didn't rescale the historical reads based on damage patterns, which is done in the generode pipeline. This is probably ok, since the reads have very little damage. Also see the new and improved pipeline at [Step 11](#11-retrim-and-map-with-nf-trim-generode).
 
 Cloned the nf-piplines repo and removed its status as a git repo (removed .git/ and .gitignore).
 ```
@@ -471,7 +471,7 @@ rm .nextflow.log*
 
 In retrospect, could probably have instead made a new `main.nf` file in the regular nf-angsd-diversity directories and re-run it with that and new output prefixes.
 
-Manually trim `inputfiles/samplesheet.csv` and `intputfiles/bam_list.txt` to the purple modern individuals from the [admixture plot](output/Cvi.pcangsd.admix.pdf): CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (plus all Albatross). 
+Manually trim `inputfiles/samplesheet.csv` and `inputfiles/bam_list.txt` to the purple modern individuals from the [admixture plot](output/Cvi.pcangsd.admix.pdf): CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (plus all Albatross). 
 
 Calculate the expected coverage from the dpstats files output by amber in the nf-trim-mergd-unmerged pipeline, but only using the individuals in the samplesheet (outputs 74.2):
 ```
@@ -622,3 +622,67 @@ module load container_env R
 crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-diversity-cvi-only/results/inputfiles/bamlist.txt output/Cvi.pcangsd.cvi-only.admix.2.Q nf-pipelines/nf-trim-merged-unmerged/results/results/stats/ 1 output/admix_vs_depth.png
 ```
 Yes, the [output plot](output/admix_vs_depth.png) shows that low depth is associated with membership in the "yellow" group from the [admixture plot](output/Cvi.pcangsd.cvi-only.admix.pdf).
+
+## 11. Retrim and map with nf-trim-generode
+Try new trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed split_reads.sh, and does mapdamage rescaling of bam files. Get the files from an updated branch in my home directory (in the future, it will be available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo)
+```
+cd /archive/carpenterlab/pire/mpinsky/
+rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow*' --exclude='.nextflow/' --exclude='examples/' nf-pipelines/nf-trim-generode pire_chromis_viridis_lcwgs/nf-pipelines/
+```
+
+Set up the directories and symlinks. Use the symlinks from nf-trim-merged-unmerged to skip the slow step of running `fix_symlinks.sh`:
+```
+bash
+cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode
+
+# Create new directories
+mkdir data
+mkdir ./data/reference
+mkdir ./data/symlinks
+mkdir inputfiles
+
+# Create softlinks to the raw fastq files by copying the existing symlinks from nf-trim-merged-unmerged
+cp -P /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/data/symlinks/*fastq.gz ./data/symlinks
+
+# Create samplesheet metadata file from the fastq files.
+# This assumes that the sample name in the fastq files have an A (Albatross) or C (contemporary) in the 4th position, e.g., TzoAMta and TzoCMta
+# Manually adjust the file if necessary (e.g. if not all samples are to be used)
+(echo "sample,era"; ls ./data/symlinks/*fastq.gz | xargs -n1 basename | cut -d "_" -f1,2,3 | uniq | awk '{
+    type = substr($0, 4, 1)
+    if (type == "A") 
+        print $0 ",historical"
+    else if (type == "C") 
+        print $0 ",modern"
+    else 
+        print $0 ",modern"
+}') > ./inputfiles/samplesheet.csv
+
+# Create softlinks to reference and repma bed file
+ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.fasta ./data/reference/
+ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.fasta.* ./data/reference/
+ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.dict ./data/reference/
+ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.repma.bed ./data/reference/
+```
+
+Manually trimmed out from `inputfiles/samplesheet.csv` the modern individuals that we discovered were _C. atripectoralis_. Keep CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (plus all Albatross).
+
+Edited `main.nf` to:
+* match this pipeline's file locations. 
+* use bwa mem for first historical mapping (since we know reads are >80bp)
+* run repeatmasking
+* run historical fastqc
+* run historical mapdamage rescaling
+* run historical and modern amber
+
+Ran nf-trim-merged-unmerged pipeline from within `nf-trim-generode/` in my existing tmux window (already running bash):
+```
+tmux a -t nextflow
+cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode
+module load container_env nextflow
+nextflow run main.nf -profile standard -resume
+```
+Type `Ctrl-B` and then `d` to leave tmux.   
+To rejoin tmux:
+```
+tmux a -t nextflow
+```
