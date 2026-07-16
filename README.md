@@ -461,6 +461,15 @@ Trimmed to top two in `MitoZ_output_vs_nt_top2.tsv` and with headers and labeled
 
 Bingo! The CPal individuals that matched Cvi are the "purple" individuals in the [admixture plot](output/Cvi.pcangsd.admix.pdf). The others are _C. atripectoralis_. We mostly collected _C. atripectoralis_.
 
+## 10. MIA to find historical mitogenomes
+Installed mapping-iterative-assembler (MIA) in carpenterlab/pire/softwares/. 
+Downloaded the [Chromis viridis mitogenome MT199208.1](https://www.ncbi.nlm.nih.gov/nuccore/MT199208.1/) and stored in [data/](data/chromis_virids_mitogenome_MT199208.1.fasta)
+Wrote [run_MIA.sbatch](scripts/run_MIA.sbatch) for MIA that uses the [Illumina PE substitution matrix](data/ancient.submat.solexa.pe.txt) from MIA, finds the reverse read file if given the forward reads, and specifies output directories, etc., at the top of the sbatch script. Submit a job for each historical individual with another script:
+```
+scripts/run_MIA_all_historical.sh
+```
+Output goes in [`output/mia`](output/mia/), including lower quality (`*.3x_0.67`) and higher quality (`*.10x_0.9`) filtered fasta files.
+
 ## 10. ANGSD structure and diversity with only viridis
 Re-run nf-angsd-diversity, trimmed to only the _C. viridis_ individuals. Start by copying over the base of the nf-pipeline:
 ```
@@ -612,7 +621,7 @@ crun Rscript scripts/plot_windowed_fst.R output/fst_historic_vs_modern-cvi-only/
 ```
 The [output figure](output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png) has a handful of windows with Fst>0.3, but they are scattered and not obviously pointing towards a region with strong selection.
 
-### Investigating outlier individuals
+### 10.9 Investigating outlier individuals
 Admixture and PCA plots show four outlier individuals: CviAPal004, CviAPal016, CviAPal028, CviAPal040.
 
 #### Low depth?
@@ -622,6 +631,12 @@ module load container_env R
 crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-diversity-cvi-only/results/inputfiles/bamlist.txt output/Cvi.pcangsd.cvi-only.admix.2.Q nf-pipelines/nf-trim-merged-unmerged/results/results/stats/ 1 output/admix_vs_depth.png
 ```
 Yes, the [output plot](output/admix_vs_depth.png) shows that low depth is associated with membership in the "yellow" group from the [admixture plot](output/Cvi.pcangsd.cvi-only.admix.pdf).
+
+## 10.10 Clean up
+Remove the 674M temporary directory:
+```
+rm -r nf-pipelines/nf-angsd-diversity-cvi-only/work/
+```
 
 ## 11. Retrim and map with nf-trim-generode
 Try new trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed split_reads.sh, and does mapdamage rescaling of bam files. Get the files from an updated branch in my home directory (in the future, it will be available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo)
@@ -674,15 +689,72 @@ Edited `main.nf` to:
 * run historical mapdamage rescaling
 * run historical and modern amber
 
-Ran nf-trim-merged-unmerged pipeline from within `nf-trim-generode/` in my existing tmux window (already running bash):
+Ran nf-trim-merged-unmerged pipeline from within `nf-trim-generode/` in my existing tmux window (already running bash with modules loaded, see [Step 7](#7-nextflow-trimming)):
+:
 ```
 tmux a -t nextflow
 cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode
-module load container_env nextflow
 nextflow run main.nf -profile standard -resume
 ```
-Type `Ctrl-B` and then `d` to leave tmux.   
-To rejoin tmux:
+Finished in 12 hrs. Found 107 bp average historical length and mapped with `bwa mem`.
+
+Inspecting the [AMBER plots](nf-pipelines/nf-trim-generode/results/amber), the read length gap from 50-60bp has been fixed by the new `split_reads.sh` script. The historical reads have a wider read length distribution than the modern since there is a substantial fraction of short historical reads, plus some merged historical reads. The [mapdamage plots](nf-pipelines/nf-trim-generode/results/mapdamage/) show many soft-clipped historical reads, but very little evidence of historical damage patterns.
+
+## 11.1 Clean up
+Remove the temporary directory:
+```
+rm -r nf-pipelines/nf-trim-generode/work/
+```
+
+## 12 ANGSD structure and diversity from nf-trim-generode 
+Malin, 2026 July. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-generode`.
+
+Run nf-angsd-diversity on the nf-trim-generode reads from [Step 11](#11-retrim-and-map-with-nf-trim-generode). This is also trimmed to only the _C. viridis_ individuals. Start by copying over the base of the nf-pipeline:
+```
+rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-cvi-only/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-generode/
+
+cd nf-pipelines/nf-angsd-diversity-generode
+```
+
+Make bam list by combining modern bams with historical rescaled bams:
+```
+find /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results/data/bam_rescaled/ -maxdepth 1 -type f -name 'CviAPal*.bam' | sort > inputfiles/bam_list.txt
+
+find /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results/data/bam/ -maxdepth 1 -type f -name 'CviCPal*.bam' | sort >> inputfiles/bam_list.txt
+
+```
+Both `inputfiles/samplesheet.csv` and `inputfiles/bam_list.txt` are already trimmed to the _Chromis viridis_ individuals (removing _Chromis atripectoralis_). Manually updated `samplesheet.csv` to the correct bam paths (easy enough to do).
+
+Calculate the expected coverage from the dpstats files in nf-trim-generode, using the individuals in the samplesheet:
+```
+bash
+awk -F, 'NR>1 {print $1}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-generode/inputfiles/samplesheet.csv \
+| while read -r id; do
+    awk '{for(i=1;i<=NF;i++) if($i ~ /^-?[0-9]+([.][0-9]+)?([eE][+-]?[0-9]+)?$/) s+=$i} END{print s+0}' \
+      /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results/depth/"$id"*.bam.dpstats.txt
+  done \
+| awk '{t+=$1} END{print t}'
+```
+Outputs 103.4
+
+Update the parameters in `main.nf` for this run:
+- set maxdepth to 10x the expected depth = 1034
+- set minind to 34, which is 70% of the 48 individuals we have in this round
+- use the repeat-masked bed file output by nf-trim-generode
+
+Start nextflow in my existing tmux window, which already has bash activated and the container_env and nextflow modules loaded (see [Step 7](#7-nextflow-trimming)):
 ```
 tmux a -t nextflow
+cd nf-pipelines/nf-angsd-diversity-generode # switch to the new pipeline
+nextflow run main.nf -profile standard
 ```
+
+### 12.1 Whole-genome diversity
+Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses our custom script that calculates per-site pi and bootstraps to get 95% CIs:
+```
+bash
+module load container_env R
+crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci-generode.png
+```
+
+The [plot of pi](output/tp_historic_vs_modern_mean_ci-cvi-only.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.

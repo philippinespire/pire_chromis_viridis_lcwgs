@@ -11,5 +11,6 @@ nf-pipelines/
 ├── nf-angsd-diversity/             # angsd, PCA, gen div for all individuals
 ├── nf-angsd-diversity-cvi-only/    # same, but trimming out C. atripectoralis.
 ├── nf-trim-generode/               # replacement for nf-trim-merged-unmerged (done later)
+│                                   # adds repeat-masking, only trims modern reads
 └── nf-trim-merged-unmerged/        # read trimming and mapping and amber (done originally)
 ```
