@@ -532,7 +532,7 @@ Dystruct wants ld-pruned genotypes. This script submits a slurm job to prune:
 ```
 bash scripts/ld_prune_slurm.sh --probs nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --pos nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.sites.txt --out output/ngsld/cvi-only.ld --prune-out output/ngsld/cvi-only.unlinked.pos --max-kb-dist 50 --min-weight 0.4
 ```
-
+Key output is a list of unlinked positions, `output/ngsld/cvi-only.unlinked.pos`.
 Note that git ignores the large .ld output file.
 
 Manually made a generation time file for dystruct at `scripts/Cvi-only.generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 and 2022.
@@ -706,6 +706,13 @@ Remove the temporary directory:
 rm -r nf-pipelines/nf-trim-generode/work/
 ```
 
+## 11.2 Depth vs. reads
+Plot read depth vs. number of reads
+```
+sbatch scripts/plot_depth_vs_reads.sbatch nf-pipelines/nf-trim-generode/data/symlinks nf-pipelines/nf-trim-generode/results/depth output/depth_vs_reads_nf-trim-generode.txt output/depth_vs_reads_nf-trim-generode.pdf
+```
+[Plot](output/depth_vs_reads_nf-trim-generode.pdf) suggests
+
 ## 12 ANGSD structure and diversity from nf-trim-generode 
 Malin, 2026 July. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-generode`.
 
@@ -737,14 +744,19 @@ awk -F, 'NR>1 {print $1}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridi
 ```
 Outputs 103.4
 
+Modified `main.nf` and `modules/pcangsd/main.nf` to run optional LD-pruning, use this for the PCA, use this for a new admixture plot, and use this for the diversity calculation.
+
 Update the parameters in `main.nf` for this run:
 - set maxdepth to 10x the expected depth = 1034
 - set minind to 34, which is 70% of the 48 individuals we have in this round
 - use the repeat-masked bed file output by nf-trim-generode
+- use 50kb with 10kb steps for ld-pruning, and turn this on
 
-Start nextflow in my existing tmux window, which already has bash activated and the container_env and nextflow modules loaded (see [Step 7](#7-nextflow-trimming)):
+Start nextflow (Wahab had restarted, older tmux windows closed):
 ```
-tmux a -t nextflow
+tmux new -s nextflow
+bash
+module load container_env nextflow
 cd nf-pipelines/nf-angsd-diversity-generode # switch to the new pipeline
 nextflow run main.nf -profile standard
 ```

@@ -9,11 +9,14 @@ params.bed_file    = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lc
 params.species     = "Cvi"
 params.maxdepth    = 1034 // maximum depth to include in analysis. 10x the expected depth across the 48 individuals.
 params.minind      = 34 // minimum number of individuals to include in analysis. 70 percent of 48 individuals.
+params.ld_prune    = true  // Set to true to enable LD pruning
+params.max_kb_dist = 50     // Maximum pairwise distance in kb to test for LD if pruning
+params.min_weight  = 0.2    // Minimum r2 threshold for pruning filter
 
 // import modules
 include { ANGSD_GL_ALL; ANGSD_COLLECT_OUTPUT; ANGSD_EXTRACT_SITES } from './modules/angsd_gl'
 include { COLLECT_BAM_ALL; COLLECT_BAM_POP } from './modules/collect_bam'
-include { PCANGSD; PLOT_PCANGSD } from './modules/pcangsd'
+include { PCANGSD; PLOT_PCANGSD; PLOT_ADMIXTURE } from './modules/pcangsd'
 include { ANGSD_GL_POP } from './modules/angsd_gl_pop'
 include { ANGSD_DIVERSITY } from './modules/angsd_diversity'
 
@@ -41,6 +44,169 @@ pop_bams = samples
     .groupTuple(by: [1, 2])
     .map { samples, pop, era, regions, bams -> tuple(pop, era, bams)}
 
+// Proceses
+process LD_PRUNE {
+    tag "LD Pruning"
+    publishDir "${params.outdir}/ld_pruning", mode: 'copy'
+
+    input:
+    path beagle
+    path pos
+
+    output:
+    path "pruned_sites.pos", emit: pruned_sites
+    path "all.ld", emit: ld_table
+
+    script:
+    """
+    # Load required HPC container environment modules
+    module load container_env ngsTools
+
+    # Count fields in beagle header to infer number of individuals
+    beagle_ncols=\$(zcat ${beagle} | head -n 1 | awk '{print NF}')
+    n_ind=\$(( (beagle_ncols - 3) / 3 ))
+    
+    # Safely count total number of sites (handling both plain text and gzipped files)
+    if [[ "${pos}" == *.gz ]]; then
+        n_sites=\$(zcat ${pos} | wc -l)
+    else
+        n_sites=\$(wc -l < ${pos})
+    fi
+
+    # Run ngsLD
+    crun ngsLD \\
+        --geno ${beagle} \\
+        --probs \\
+        --pos ${pos} \\
+        --n_ind \$n_ind \\
+        --n_sites \$n_sites \\
+        --max_kb_dist ${params.max_kb_dist} \\
+        --n_threads ${task.cpus ?: 8} \\
+        --out all.ld
+
+    # Format the pairwise table for prune_graph
+    max_bp_dist=\$(awk -v kb="${params.max_kb_dist}" 'BEGIN{printf "%.6f", kb*1000}')
+    
+    # Safely handle header / lines formatting
+    first_dist_field=\$(awk 'NR==1 {print \$7; exit}' all.ld)
+    if [[ "\$first_dist_field" =~ ^[0-9]+([.][0-9]+)?\$ ]]; then
+        awk 'BEGIN{OFS="\\t"; print "site1","site2","dist","r2"} {print \$1,\$4,\$7,\$8}' all.ld > prune_graph_input.tsv
+    else
+        awk 'BEGIN{OFS="\\t"; print "site1","site2","dist","r2"} NR>1 {print \$1,\$4,\$7,\$8}' all.ld > prune_graph_input.tsv
+    fi
+
+    weight_filter="dist <= \${max_bp_dist} && r2 >= ${params.min_weight}"
+
+    # Run prune_graph
+    crun prune_graph \\
+        --header \\
+        --in prune_graph_input.tsv \\
+        --weight-field "r2" \\
+        --weight-filter "\$weight_filter" \\
+        --out pruned_sites.raw.pos
+
+    # Reconstruct the 2-column, tab-separated, sorted, headerless sites file for angsd. 
+    # We need to match the pruned site IDs back to their original chromosome and position values. 
+    # The pruned_sites.raw.pos file contains site IDs in the format "chr_pos" or "chr:pos", 
+    # so we create a lookup table from the original pos file to map these back to their 
+    # original chromosome and position.
+    # We use gzip -cd -f to safely read the original pos file whether it is gzipped or not.
+    awk '
+      FNR == NR {
+        chr = \$1
+        pos = \$2
+        lines[chr "_" pos] = chr "\\t" pos
+        lines[chr ":" pos] = chr "\\t" pos
+        lines[pos] = chr "\\t" pos
+        next
+      }
+      {
+        if (\$1 in lines) {
+          print lines[\$1]
+        }
+      }
+    ' <(gzip -cd -f ${pos}) pruned_sites.raw.pos | sort -k1,1 -k2,2n > pruned_sites.pos
+
+    # Clean up temporary tables
+    rm -f prune_graph_input.tsv pruned_sites.raw.pos
+    """
+}
+
+process INDEX_PRUNED_SITES {
+    tag "Index Pruned Sites"
+    publishDir "${params.outdir}/ld_pruning", mode: 'copy'
+
+    input:
+    path pruned_sites
+
+    output:
+    path "pruned_sites.pos", emit: snps
+    path "pruned_sites.pos.bin", emit: bin
+    path "pruned_sites.pos.idx", emit: idx
+
+    script:
+    """
+    # Index the pruned sites with ANGSD so they can be read downstream
+    angsd sites index ${pruned_sites}
+    """
+}
+
+process SUBSET_BEAGLE {
+    tag "Subset Beagle File"
+    publishDir "${params.outdir}/ld_pruning", mode: 'copy'
+
+    input:
+    path original_beagle
+    path pruned_pos
+
+    output:
+    path "pruned.beagle.gz", emit: pruned_beagle
+
+    script:
+    """
+    # Match the marker ID column (col 1 of beagle) to the pruned positions.
+    # This robust parser handles chromosomes containing any number of underscores.
+    zcat ${original_beagle} | awk -F'\\t' -v OFS='\\t' '
+        FNR == NR { 
+            # Robustly split the pruned_pos columns by any whitespace (tabs or spaces)
+            split(\$0, a, /[ \\t]+/)
+            if (a[1] != "" && a[2] != "") {
+                keys[a[1], a[2]] = 1 
+            }
+            next 
+        }
+        {
+            if (FNR == 1) { 
+                print \$0 
+                next 
+            }
+            
+            # Extract chromosome and position from marker ID (col 1)
+            marker = \$1
+            # Clean up trailing alleles if they exist (e.g., _A_G or _C_T)
+            sub(/(_[A-Za-z])+\$/, "", marker)
+            
+            # Find the last underscore which separates chromosome from position
+            last_under = 0
+            for (i = length(marker); i > 0; i--) {
+                if (substr(marker, i, 1) == "_") {
+                    last_under = i
+                    break
+                }
+            }
+            
+            if (last_under > 0) {
+                chr = substr(marker, 1, last_under - 1)
+                pos = substr(marker, last_under + 1)
+                if ((chr, pos) in keys) {
+                    print \$0
+                }
+            }
+        }
+    ' ${pruned_pos} - | gzip -c > pruned.beagle.gz
+    """
+}
+
 // Workflow 
 
 workflow {
@@ -64,16 +230,39 @@ workflow {
     collected = ANGSD_COLLECT_OUTPUT(mafs, beagle)
 
     sites = ANGSD_EXTRACT_SITES(collected.all_mafs)
-    snps = sites.snps
-    bin = sites.snps_bin
-    idx = sites.snps_idx
+
+    // Define starting points for SNPs and metadata (no pruning)
+    def final_snps = sites.snps
+    def final_bin  = sites.snps_bin
+    def final_idx  = sites.snps_idx
+    def final_beagle = collected.all_beagle
+    
+    // Optional LD-Pruning workflow branch
+    if (params.ld_prune) {
+    	// Run ngsLD and prune_graph
+        pruned = LD_PRUNE(collected.all_beagle, sites.snps)
+        
+        // Index pruned sites for downstream ANGSD runs
+        indexed = INDEX_PRUNED_SITES(pruned.pruned_sites)
+        
+        // Subset the Beagle file using the pruned positions
+        subset_beagle = SUBSET_BEAGLE(collected.all_beagle, pruned.pruned_sites)
+        
+        // Re-route downstream dependencies
+        final_snps = indexed.snps
+        final_bin  = indexed.bin
+        final_idx  = indexed.idx
+        final_beagle = subset_beagle.pruned_beagle
+    }
+
     regions = sites.regions
 
-    // PCAngsd (optional)
-     pcangsd_cov = PCANGSD(collected.all_beagle)
-     PLOT_PCANGSD(pcangsd_cov, samplesheet_file)
+    // PCAngsd will run on the pruned beagle if params.ld_prune is true
+    pcangsd_results = PCANGSD(final_beagle)
+    PLOT_PCANGSD(pcangsd_results.pcangsd_cov, samplesheet_file)
+	PLOT_ADMIXTURE(pcangsd_results.q_matrix, samplesheet_file)
     
-    ANGSD_GL_POP(bamlist_pop,snps, bin,idx,regions)
+    ANGSD_GL_POP(bamlist_pop, final_snps, final_bin, final_idx,regions)
 
     ANGSD_DIVERSITY(ANGSD_GL_POP.out.saf_files)
 
