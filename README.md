@@ -468,7 +468,18 @@ Wrote [run_MIA.sbatch](scripts/run_MIA.sbatch) for MIA that uses the [Illumina P
 ```
 scripts/run_MIA_all_historical.sh
 ```
-Output goes in [`output/mia`](output/mia/), including lower quality (`*.3x_0.67`) and higher quality (`*.10x_0.9`) filtered fasta files.
+Output goes in [`output/mia`](output/mia/), including lower quality (`*.3x_0.67`) and higher quality (`*.10x_0.9`) filtered fasta files. Took days for large files.
+
+Download a COI voucher example so that I can pull out the barcode region:
+```
+curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=JQ431634.1&retmode=text&rettype=fasta" > data/c_viridis_coi_ref.fasta
+```
+
+Pull out the barcode region by blasting against the example:
+```
+sbatch scripts/cut_COI_from_mia.sbatch
+```
+Made `output/mia/all_samples_3x_0.67_coi.fasta` and `output/mia/all_samples_10x_0.9_coi.fasta`.
 
 ## 10. ANGSD structure and diversity with only viridis
 Re-run nf-angsd-diversity, trimmed to only the _C. viridis_ individuals. Start by copying over the base of the nf-pipeline:
@@ -769,4 +780,4 @@ module load container_env R
 crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci-generode.png
 ```
 
-The [plot of pi](output/tp_historic_vs_modern_mean_ci-cvi-only.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
+The [plot of pi](output/tp_historic_vs_modern_mean_ci-generode.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
