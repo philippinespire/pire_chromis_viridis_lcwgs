@@ -378,7 +378,15 @@ Plot the admixture proportions with a new script:
 crun Rscript scripts/plot_admixture.R output/Cvi.pcangsd.admix.3.Q nf-pipelines/nf-angsd-diversity/inputfiles/samplesheet.csv output/Cvi.pcangsd.admix.pdf
 ```
 
-The [admixture plot](output/Cvi.pcangsd.admix.pdf) mostly separates by era, as expected, but 8 contemporary individuals group with the historical ones.
+The [admixture plot](output/Cvi.pcangsd.admix.pdf) mostly separates by era, as expected, but 8 contemporary individuals group with the historical ones (purple) and 4 historical individuals cluster somewhat separately (yellow).
+
+#### Low depth?
+Made a script to plot admixture proportion in the purple group vs. depth (latter from BAM_QC process):
+```
+module load container_env R
+crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-diversity/results/inputfiles/bamlist.txt output/Cvi.pcangsd.admix.3.Q nf-pipelines/nf-trim-merged-unmerged/results/results/stats/ 3 output/admix_vs_depth.png
+```
+Yes, the [output plot](output/admix_vs_depth.png) shows that low depth in the historical is associated with low membership in the "purple" group from the [admixture plot](output/Cvi.pcangsd.admix.pdf). Some contemporary individuals don't below to purple no matter the depth.
 
 ### 8.2 FST historical-modern
 Wrote a couple scripts to calc genome-wide and windowed (50kb windows, 10kb steps) fst historical vs. modern: scripts/calc_fst_modern_historic.sbatch to prep and submit a slurm job, which calls scripts/calc_fst_modern_historic.sh
@@ -468,11 +476,11 @@ Wrote [run_MIA.sbatch](scripts/run_MIA.sbatch) for MIA that uses the [Illumina P
 ```
 scripts/run_MIA_all_historical.sh
 ```
-Output goes in [`output/mia`](output/mia/), including lower quality (`*.3x_0.67`) and higher quality (`*.10x_0.9`) filtered fasta files. Took days for large files.
+Most output goes in a `temp/` directory. See [`output/mia`](output/mia/) for lower quality (`*.3x_0.67`) and higher quality (`*.10x_0.9`) filtered fasta files. Took days for large files. Failed for CviAPal040 and CviAPal018 because of a goof on my end and re-ran by hand.
 
 Download a COI voucher example so that I can pull out the barcode region:
 ```
-curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=JQ431634.1&retmode=text&rettype=fasta" > data/c_viridis_coi_ref.fasta
+curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=JQ431634.1&retmode=text&rettype=fasta" > data/chromis_viridis_COI_barcode_ref.fasta
 ```
 
 Pull out the barcode region by blasting against the example:
@@ -481,176 +489,29 @@ sbatch scripts/cut_COI_from_mia.sbatch
 ```
 Made `output/mia/all_samples_3x_0.67_coi.fasta` and `output/mia/all_samples_10x_0.9_coi.fasta`.
 
-## 10. ANGSD structure and diversity with only viridis
-Re-run nf-angsd-diversity, trimmed to only the _C. viridis_ individuals. Start by copying over the base of the nf-pipeline:
+BLAST these against our local nt database and keep the top five hits:
 ```
-rsync -a --exclude='work/' --exclude='results/' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-cvi-only/
-cd nf-pipelines/nf-angsd-diversity-cvi-only
-rm .nextflow.log*
+sbatch scripts/blastn_coi_local_top5.sbatch
 ```
+All individuals that match to _C. viridis_ and _C. atripectoralis_ are equally good matches to both. The barcode region of COI does not appear to be enough.
 
-In retrospect, could probably have instead made a new `main.nf` file in the regular nf-angsd-diversity directories and re-run it with that and new output prefixes.
+Make a fasta of the full COI gene from NCBI PZ237689.1. Did this manually on their webpage by clicking 'CDS' next to the CO1 gene. Put in `data/chromis_viridis_COI_full.fasta`.
 
-Manually trim `inputfiles/samplesheet.csv` and `inputfiles/bam_list.txt` to the purple modern individuals from the [admixture plot](output/Cvi.pcangsd.admix.pdf): CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (plus all Albatross). 
+Modify the script's blast target (see paramaeter at the top) and pull out the full COI by blasting against the example:
+```
+sbatch scripts/cut_COI_from_mia.sbatch
+```
+Made `output/mia/all_samples_3x_0.67_coi_full.fasta` and `output/mia/all_samples_10x_0.9_coi_full.fasta`. Now has ~1600 bp insead of ~600.
 
-Calculate the expected coverage from the dpstats files output by amber in the nf-trim-mergd-unmerged pipeline, but only using the individuals in the samplesheet (outputs 74.2):
+BLAST these against our local nt database and keep the top five hits. Modify the script to use the new .fasta files:
 ```
-awk -F, 'NR>1 {print $1}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv \
-| while read -r id; do
-    awk '{for(i=1;i<=NF;i++) if($i ~ /^-?[0-9]+([.][0-9]+)?([eE][+-]?[0-9]+)?$/) s+=$i} END{print s+0}' \
-      /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-merged-unmerged/results/results/stats/"$id"*.bam.dpstats.txt
-  done \
-| awk '{t+=$1} END{print t}'
+sbatch scripts/blastn_coi_local_top5.sbatch
 ```
-
-Update the parameters in `main.nf` for this run:
-- set maxdepth to 10x the expected depth = 742
-- set minind to 34, which is 70% of the 48 individuals we have in this round
-
-Start nextflow in my existing tmux window, which already has bash activated and the container_env and nextflow modules loaded (see [Step 7](#7-nextflow-trimming)):
-```
-tmux a -t nextflow
-cd nf-pipelines/nf-angsd-diversity-cvi-only # switch to the new pipeline
-nextflow run main.nf -profile standard
-```
-
-The [PCA](nf-pipelines/nf-angsd-diversity-cvi-only/results/PCAngsd/Cvi.pcangsd.plot.pdf) still shows substantial (14%) divergence along PC1. The PCAngsd log file (buried in a temporary work directory) shows it converged and selected 1 significant PC with the MAP test.
-
-### 10.1 Admixture
-Run pcangsd and ask it to calculate admixture proportions, then plot:
-```
-module load container_env ngsTools
-crun pcangsd -b /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz -t 8 -o output/Cvi.pcangsd.cvi-only --admix
-```
-
-Plot the admixture proportions:
-```
-crun Rscript scripts/plot_admixture.R output/Cvi.pcangsd.cvi-only.admix.2.Q nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/Cvi.pcangsd.cvi-only.admix.pdf
-```
-
-The [admixture plot](output/Cvi.pcangsd.cvi-only.admix.pdf) shows 4 historical individuals with 100% "yellow" ancestry, remaining historical have ~50% "yellow" ancestry and ~50% "green". All contemporary are green. This seems consistent with drift, though odd how much divergence there is on PC1.
-
-### 10.2 FST historical-modern
-Calculate FST between the eras (note this script submits a slurm job):
-```
-bash scripts/calc_fst_modern_historic.sbatch --results-dir "nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop" --outdir "output/fst_historic_vs_modern-cvi-only"
-```
-
-Created `output/fst_historic_vs_modern-cvi-only/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.0502. Seems reasonable, though on the high side.
-
-### 10.3 Dystruct
-Dystruct wants ld-pruned genotypes. This script submits a slurm job to prune:
-```
-bash scripts/ld_prune_slurm.sh --probs nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --pos nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.sites.txt --out output/ngsld/cvi-only.ld --prune-out output/ngsld/cvi-only.unlinked.pos --max-kb-dist 50 --min-weight 0.4
-```
-Key output is a list of unlinked positions, `output/ngsld/cvi-only.unlinked.pos`.
-Note that git ignores the large .ld output file.
-
-Manually made a generation time file for dystruct at `scripts/Cvi-only.generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 and 2022.
-
-Run dystruct script that reads in a beagle file and submits a slurm job using K=2:
-```
-bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 2 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
-```
-See `output/dystruct/Cvi_K2.*`. hold-out log-likelihood was -2548 in [log file](output/dystruct/logs/dystruct_5976233.out).
-
-Plot the dystruct proportions:
-```
-module load container_env R
-
-crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K2.dystruct_theta nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/dystruct/Cvi.dystruct.cvi-only.K2.pdf
-```
-
-The [output proportions plot](output/dystruct/Cvi.dystruct.cvi-only.K2.pdf) suggest a lot of the modern ancestry is mixed in with the historical population, though to varying proportions across historical individuals.
-
-For comparison, run dystruct script with K=1 and K=3, and plot K=3:
-```
-bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 1 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
-
-bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 3 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
-
-crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K3.dystruct_theta nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/dystruct/Cvi.dystruct.cvi-only.K3.pdf
-```
-K=1 hold-out log-likelihood -2786 (see the [log file](output/dystruct/logs/dystruct_5978242.out).  
-K=3 hold-out log-likelihood -2580 (see the [log file](output/dystruct/logs/dystruct_5978243.out). K=3 [further divides up the historical samples](output/dystruct/Cvi.dystruct.cvi-only.K3.pdf).  
-This leaves K=2 as the best supported option.
-
-### 10.4 Continuity
-I also tried running Josh Schraiber's [genomic continuity calculations](https://github.com/schraiber/continuity/). Modified his `ancient_genotypes.py` to work with python3 (it was written in python2). Created a script to make the input file from the angsd sample sheet, angsd .mafs.gz, and the bam files. It ended up being complex to sort out environments for python and samtools:
-```
-bash scripts/run_continuity_from_mafs.sbatch \
-  --samplesheet nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv \
-  --mafs nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.mafs.gz \
-  --bam-dir nf-pipelines/nf-trim-merged-unmerged/results/data/bam \
-  --output-prefix output/continuity/cvi-only
-```
-
-### 10.5 Whole-genome diversity
-Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses our custom script that calculates per-site pi and bootstraps to get 95% CIs:
-```
-bash
-module load container_env R
-crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci-cvi-only.png
-```
-
-The [plot of pi](output/tp_historic_vs_modern_mean_ci-cvi-only.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
-
-### 10.6 ACER selection scan
-Used the `run_acer.R` script to iteratively identify loci under selection (adapted chi-squared test from the ACER package in R) and the effective population size (Ne) from the base directory:
-```
-module load container_env R
-crun Rscript scripts/run_acer.R \
---hist_mafs=nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop/CviAPal_historic.mafs.gz \
---mod_mafs=nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop/CviCPal_modern.mafs.gz \
---region_names=Pop1 \
---out_dir=output/acer \
---helpers=scripts/acer_helpers.R \
---ne_generations=114 \
---test_gen_start=0 \
---test_gen_end=113 \
---fdr_cutoff=0.05 \
---max_rounds=20 \
---n_boot=1000 \
---min_ind=4
-```
-See the output in [output/acer](output/acer/), including the [Manhattan Plot](output/acer/chisq_manhattan_Pop1_final.png).
-
---- ACER Summary ---  
-Converged after 1 rounds   
-Total SNPs tested: 47770  
-Total SNPs under selection: 0  
-Neutral SNPs remaining: 47770  
-
-### 10.7 Neutral diversity
-The same as in [Section 10.5](#105-whole-genome-diversity), since no loci identified as being under selection.
-
-### 10.8 Sliding window FST
-Use plot_windowed_fst.R to make a Manhattan plot from the angsd sliding-window Fst (50kb windows, 10kb steps):
-```
-module load container_env R
-crun Rscript scripts/plot_windowed_fst.R output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.txt output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png
-```
-The [output figure](output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png) has a handful of windows with Fst>0.3, but they are scattered and not obviously pointing towards a region with strong selection.
-
-### 10.9 Investigating outlier individuals
-Admixture and PCA plots show four outlier individuals: CviAPal004, CviAPal016, CviAPal028, CviAPal040.
-
-#### Low depth?
-Made a script to plot admixture proportion vs. depth (latter from BAM_QC process):
-```
-module load container_env R
-crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-diversity-cvi-only/results/inputfiles/bamlist.txt output/Cvi.pcangsd.cvi-only.admix.2.Q nf-pipelines/nf-trim-merged-unmerged/results/results/stats/ 1 output/admix_vs_depth.png
-```
-Yes, the [output plot](output/admix_vs_depth.png) shows that low depth is associated with membership in the "yellow" group from the [admixture plot](output/Cvi.pcangsd.cvi-only.admix.pdf).
-
-## 10.10 Clean up
-Remove the 674M temporary directory:
-```
-rm -r nf-pipelines/nf-angsd-diversity-cvi-only/work/
-```
+Overwrote the COI barcode results file. See `output/mia/all_samples_coi_blast_results.txt`.  
+APal_016 matches to _C. atripectoralis_. This was one of the admixture outliers. The other outliers (APal_004 and APal_016) unfortunately did not return any mtDNA sequence.
 
 ## 11. Retrim and map with nf-trim-generode
-Try new trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed split_reads.sh, and does mapdamage rescaling of bam files. Get the files from an updated branch in my home directory (in the future, it will be available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo)
+Try new trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed `split_reads.sh`, and does mapdamage rescaling of bam files. Get the files from an updated branch in my home directory (in the future, it will be available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo)
 ```
 cd /archive/carpenterlab/pire/mpinsky/
 rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow*' --exclude='.nextflow/' --exclude='examples/' nf-pipelines/nf-trim-generode pire_chromis_viridis_lcwgs/nf-pipelines/
@@ -690,22 +551,24 @@ ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/G
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.repma.bed ./data/reference/
 ```
 
-Manually trimmed out from `inputfiles/samplesheet.csv` the modern individuals that we discovered were _C. atripectoralis_. Keep CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (plus all Albatross).
+Manually trimmed out from `inputfiles/samplesheet.csv` the modern and historical individuals that we suspect are _C. atripectoralis_. Keep CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (remove other modern). Remove APal_004, APal016, APal_028, APal_040 (keep other historical). Leave n=35 historical and n=9 modern individuals.
 
 Edited `main.nf` to:
-* match this pipeline's file locations. 
+* match this pipeline's file locations 
 * use bwa mem for first historical mapping (since we know reads are >80bp)
+* set bam_q to 25 to remove low-quality reads
 * run repeatmasking
 * run historical fastqc
 * run historical mapdamage rescaling
 * run historical and modern amber
 
+Also modified `mapping_modules.nf` to use `-F 2308` to drop unmapped reads (4), secondary alignments/multi-mappers (256), and supplementary/chimeric alignments (2048). Only keep the single best primary alignment for each read.
+
 Ran nf-trim-merged-unmerged pipeline from within `nf-trim-generode/` in my existing tmux window (already running bash with modules loaded, see [Step 7](#7-nextflow-trimming)):
-:
 ```
 tmux a -t nextflow
 cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode
-nextflow run main.nf -profile standard -resume
+nextflow run main.nf -profile standard
 ```
 Finished in 12 hrs. Found 107 bp average historical length and mapped with `bwa mem`.
 
@@ -722,12 +585,12 @@ Plot read depth vs. number of reads
 ```
 sbatch scripts/plot_depth_vs_reads.sbatch nf-pipelines/nf-trim-generode/data/symlinks nf-pipelines/nf-trim-generode/results/depth output/depth_vs_reads_nf-trim-generode.txt output/depth_vs_reads_nf-trim-generode.pdf
 ```
-[Plot](output/depth_vs_reads_nf-trim-generode.pdf) suggests
+[Plot](output/depth_vs_reads_nf-trim-generode.pdf) shows that, as expected, depth increases with the number of reads. Depth increases much more strongly for modern than for historical individuals.
 
 ## 12 ANGSD structure and diversity from nf-trim-generode 
 Malin, 2026 July. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-generode`.
 
-Run nf-angsd-diversity on the nf-trim-generode reads from [Step 11](#11-retrim-and-map-with-nf-trim-generode). This is also trimmed to only the _C. viridis_ individuals. Start by copying over the base of the nf-pipeline:
+Run nf-angsd-diversity on the nf-trim-generode reads from [Step 11](#11-retrim-and-map-with-nf-trim-generode). This is also trimmed to only the _C. viridis_ individuals. Start by copying over the base of the pipeline from an old run of nf-angsd-diversity:
 ```
 rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-cvi-only/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-generode/
 
@@ -781,3 +644,125 @@ crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-g
 ```
 
 The [plot of pi](output/tp_historic_vs_modern_mean_ci-generode.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
+
+
+## TO DO (old code)
+### FST historical-modern
+Calculate FST between the eras (note this script submits a slurm job):
+```
+bash scripts/calc_fst_modern_historic.sbatch --results-dir "nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop" --outdir "output/fst_historic_vs_modern-cvi-only"
+```
+
+Created `output/fst_historic_vs_modern-cvi-only/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.0502. Seems reasonable, though on the high side.
+
+### Dystruct
+Dystruct wants ld-pruned genotypes. This script submits a slurm job to prune:
+```
+bash scripts/ld_prune_slurm.sh --probs nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --pos nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.sites.txt --out output/ngsld/cvi-only.ld --prune-out output/ngsld/cvi-only.unlinked.pos --max-kb-dist 50 --min-weight 0.4
+```
+Key output is a list of unlinked positions, `output/ngsld/cvi-only.unlinked.pos`.
+Note that git ignores the large .ld output file.
+
+Manually made a generation time file for dystruct at `scripts/Cvi-only.generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 and 2022. __Note I need to swap the times so that time counts forward.__
+
+Run dystruct script that reads in a beagle file and submits a slurm job using K=2:
+```
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 2 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+```
+See `output/dystruct/Cvi_K2.*`. hold-out log-likelihood was -2548 in [log file](output/dystruct/logs/dystruct_5976233.out).
+
+Plot the dystruct proportions:
+```
+module load container_env R
+
+crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K2.dystruct_theta nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/dystruct/Cvi.dystruct.cvi-only.K2.pdf
+```
+
+The [output proportions plot](output/dystruct/Cvi.dystruct.cvi-only.K2.pdf) suggest a lot of the modern ancestry is mixed in with the historical population, though to varying proportions across historical individuals.
+
+For comparison, run dystruct script with K=1 and K=3, and plot K=3:
+```
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 1 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 3 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+
+crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K3.dystruct_theta nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/dystruct/Cvi.dystruct.cvi-only.K3.pdf
+```
+K=1 hold-out log-likelihood -2786 (see the [log file](output/dystruct/logs/dystruct_5978242.out).  
+K=3 hold-out log-likelihood -2580 (see the [log file](output/dystruct/logs/dystruct_5978243.out). K=3 [further divides up the historical samples](output/dystruct/Cvi.dystruct.cvi-only.K3.pdf).  
+This leaves K=2 as the best supported option.
+
+### Continuity
+I also tried running Josh Schraiber's [genomic continuity calculations](https://github.com/schraiber/continuity/). Modified his `ancient_genotypes.py` to work with python3 (it was written in python2). Created a script to make the input file from the angsd sample sheet, angsd .mafs.gz, and the bam files. It ended up being complex to sort out environments for python and samtools:
+```
+bash scripts/run_continuity_from_mafs.sbatch \
+  --samplesheet nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv \
+  --mafs nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.mafs.gz \
+  --bam-dir nf-pipelines/nf-trim-merged-unmerged/results/data/bam \
+  --output-prefix output/continuity/cvi-only
+```
+It ran on small test batches of individuals, but the full set ran out of time after 4 days.
+
+### Whole-genome diversity
+Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses our custom script that calculates per-site pi and bootstraps to get 95% CIs:
+```
+bash
+module load container_env R
+crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci-cvi-only.png
+```
+
+The [plot of pi](output/tp_historic_vs_modern_mean_ci-cvi-only.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
+
+### ACER selection scan
+Used the `run_acer.R` script to iteratively identify loci under selection (adapted chi-squared test from the ACER package in R) and the effective population size (Ne) from the base directory:
+```
+module load container_env R
+crun Rscript scripts/run_acer.R \
+--hist_mafs=nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop/CviAPal_historic.mafs.gz \
+--mod_mafs=nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop/CviCPal_modern.mafs.gz \
+--region_names=Pop1 \
+--out_dir=output/acer \
+--helpers=scripts/acer_helpers.R \
+--ne_generations=114 \
+--test_gen_start=0 \
+--test_gen_end=113 \
+--fdr_cutoff=0.05 \
+--max_rounds=20 \
+--n_boot=1000 \
+--min_ind=4
+```
+See the output in [output/acer](output/acer/), including the [Manhattan Plot](output/acer/chisq_manhattan_Pop1_final.png).
+
+--- ACER Summary ---  
+Converged after 1 rounds   
+Total SNPs tested: 47770  
+Total SNPs under selection: 0  
+Neutral SNPs remaining: 47770  
+
+### Neutral diversity
+The same as in [Section 10.5](#105-whole-genome-diversity), since no loci identified as being under selection.
+
+### Sliding window FST
+Use plot_windowed_fst.R to make a Manhattan plot from the angsd sliding-window Fst (50kb windows, 10kb steps):
+```
+module load container_env R
+crun Rscript scripts/plot_windowed_fst.R output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.txt output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png
+```
+The [output figure](output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png) has a handful of windows with Fst>0.3, but they are scattered and not obviously pointing towards a region with strong selection.
+
+### Investigating outlier individuals
+Admixture and PCA plots show four outlier individuals: CviAPal004, CviAPal016, CviAPal028, CviAPal040.
+
+#### Low depth?
+Made a script to plot admixture proportion vs. depth (latter from BAM_QC process):
+```
+module load container_env R
+crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-diversity-cvi-only/results/inputfiles/bamlist.txt output/Cvi.pcangsd.cvi-only.admix.2.Q nf-pipelines/nf-trim-merged-unmerged/results/results/stats/ 1 output/admix_vs_depth.png
+```
+Yes, the [output plot](output/admix_vs_depth.png) shows that low depth is associated with membership in the "yellow" group from the [admixture plot](output/Cvi.pcangsd.cvi-only.admix.pdf).
+
+## Clean up
+Remove the 674M temporary directory:
+```
+rm -r nf-pipelines/nf-angsd-diversity-cvi-only/work/
+```

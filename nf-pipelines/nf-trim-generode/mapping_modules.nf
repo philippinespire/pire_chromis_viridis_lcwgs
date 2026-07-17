@@ -23,14 +23,14 @@ process BWA_MERGED {
         
         bwa samse -r "@RG\\tID:${rg}\\tSM:${name}\\tPL:ILLUMINA\\tLB:${name}_${lib}\\tPU:${rg}" \
             ${reference_bundle[0]} ${sample_id}.sai ${merged_fq} \
-            | samtools view -q${bam_q} -F 4 -@ ${task.cpus} -bSh - \
+            | samtools view -q${bam_q} -F 2308 -@ ${task.cpus} -bSh - \
             | samtools sort -m 4G -o ${sample_id}_trimmed_merged.L${trimlength}.sorted.bam -T ${sample_id}.sorting -@ ${task.cpus} -
         """
     } else {
         """
         bwa mem -R "@RG\\tID:${rg}\\tSM:${name}\\tPL:ILLUMINA\\tLB:${name}_${lib}\\tPU:${rg}" \
             -t ${task.cpus} ${reference_bundle[0]} ${merged_fq} \
-            | samtools view -q${bam_q} -F 4 -@ ${task.cpus} -bSh - \
+            | samtools view -q${bam_q} -F 2308 -@ ${task.cpus} -bSh - \
             | samtools sort -m 4G -o ${sample_id}_trimmed_merged.L${trimlength}.sorted.bam -T ${sample_id}.sorting -@ ${task.cpus} -
         """
     }
@@ -63,14 +63,14 @@ process BWA_UNMERGED {
         bwa sampe \
             -r "@RG\\tID:${rg}\\tSM:${name}\\tPL:ILLUMINA\\tLB:${name}_${lib}\\tPU:${rg}" \
             ${reference_bundle[0]} ${sample_id}_R1.sai ${sample_id}_R2.sai ${r1} ${r2} \
-            | samtools view -q${bam_q} -F 4 -@ ${task.cpus} -bSh - \
+            | samtools view -q${bam_q} -F 2308 -@ ${task.cpus} -bSh - \
             | samtools sort -m 4G -o ${sample_id}.L${trimlength}.sorted.bam -T ${sample_id}.sorting -@ ${task.cpus} -
         """
     } else {
         """
         bwa mem -R "@RG\\tID:${rg}\\tSM:${name}\\tPL:ILLUMINA\\tLB:${name}_${lib}\\tPU:${rg}" \
             -t ${task.cpus} ${reference_bundle[0]} ${r1} ${r2} \
-            | samtools view -q${bam_q} -F 4 -@ ${task.cpus} -bSh - \
+            | samtools view -q${bam_q} -F 2308 -@ ${task.cpus} -bSh - \
             | samtools sort -m 4G -o ${sample_id}.L${trimlength}.sorted.bam -T ${sample_id}.sorting -@ ${task.cpus} -
         """
     }

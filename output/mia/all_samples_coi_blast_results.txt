@@ -1,0 +1,221 @@
+Individual_ID	Query_ID	Subject_Accession	Percent_Identity	Alignment_Length	E_Value	Bit_Score	Species_Title
+CviAPal002	CviAPal002_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	88.722	1596	0.0	2283	Chromis viridis mitochondrion, complete genome
+CviAPal002	CviAPal002_10x_0.9_COI	gi|1980524333|ref|NC_052722.1|	80.702	1596	0.0	1574	Chromis notata mitochondrion, complete genome
+CviAPal002	CviAPal002_10x_0.9_COI	gi|126143578|dbj|AP006016.1|	79.408	1588	0.0	1450	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal002	CviAPal002_10x_0.9_COI	gi|197304274|dbj|AB370894.1|	78.686	1553	0.0	1362	Odontesthes sp. Odsp-001 mitochondrial DNA, complete genome
+CviAPal002	CviAPal002_10x_0.9_COI	gi|256353319|dbj|AP011061.1|	79.267	1500	0.0	1354	Kyphosus cinerascens mitochondrial DNA, complete genome
+CviAPal003	CviAPal003_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	90.082	1593	0.0	2359	Chromis viridis mitochondrion, complete genome
+CviAPal003	CviAPal003_10x_0.9_COI	gi|1980524333|ref|NC_052722.1|	81.961	1591	0.0	1640	Chromis notata mitochondrion, complete genome
+CviAPal003	CviAPal003_10x_0.9_COI	gi|126143578|dbj|AP006016.1|	80.038	1588	0.0	1465	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal003	CviAPal003_10x_0.9_COI	gi|1593555200|ref|NC_041192.1|	79.748	1590	0.0	1434	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal003	CviAPal003_10x_0.9_COI	gi|197304274|dbj|AB370894.1|	79.459	1553	0.0	1387	Odontesthes sp. Odsp-001 mitochondrial DNA, complete genome
+CviAPal005	CviAPal005_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	91.855	1596	0.0	2468	Chromis viridis mitochondrion, complete genome
+CviAPal005	CviAPal005_10x_0.9_COI	gi|1980524333|ref|NC_052722.1|	83.709	1596	0.0	1748	Chromis notata mitochondrion, complete genome
+CviAPal005	CviAPal005_10x_0.9_COI	gi|126143578|dbj|AP006016.1|	81.927	1588	0.0	1580	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal005	CviAPal005_10x_0.9_COI	gi|1593555200|ref|NC_041192.1|	81.549	1588	0.0	1546	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal005	CviAPal005_10x_0.9_COI	gi|1842048737|gb|MT199209.1|	81.218	1560	0.0	1496	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal006	CviAPal006_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	89.035	1596	0.0	2302	Chromis viridis mitochondrion, complete genome
+CviAPal006	CviAPal006_10x_0.9_COI	gi|1980524333|ref|NC_052722.1|	81.078	1596	0.0	1598	Chromis notata mitochondrion, complete genome
+CviAPal006	CviAPal006_10x_0.9_COI	gi|126143578|dbj|AP006016.1|	79.434	1590	0.0	1437	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal006	CviAPal006_10x_0.9_COI	gi|1593555200|ref|NC_041192.1|	79.057	1590	0.0	1404	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal006	CviAPal006_10x_0.9_COI	gi|1842048737|gb|MT199209.1|	79.193	1562	0.0	1400	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal007	CviAPal007_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	82.895	1596	0.0	1940	Chromis viridis mitochondrion, complete genome
+CviAPal007	CviAPal007_10x_0.9_COI	gi|126143578|dbj|AP006016.1|	77.078	1588	0.0	1417	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal007	CviAPal007_10x_0.9_COI	gi|1842048737|gb|MT199209.1|	76.697	1562	0.0	1365	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal007	CviAPal007_10x_0.9_COI	gi|1935445780|ref|NC_051497.1|	76.697	1562	0.0	1365	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal007	CviAPal007_10x_0.9_COI	gi|139000641|dbj|AP009169.1|	76.261	1546	0.0	1319	Monodactylus argenteus mitochondrial DNA, complete genome
+CviAPal008	CviAPal008_10x_0.9_COI	gi|1897743522|gb|MN733676.1|	86.677	653	0.0	885	Chromis viridis voucher CKF150 cytochrome c oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal008	CviAPal008_10x_0.9_COI	gi|1331389596|gb|MF409462.1|	85.942	626	0.0	830	Chromis viridis voucher R0101_152 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal008	CviAPal008_10x_0.9_COI	gi|1331389580|gb|MF409454.1|	85.942	626	0.0	830	Chromis viridis voucher R0201_091 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal008	CviAPal008_10x_0.9_COI	gi|1682662780|gb|MK657289.1|	86.111	612	0.0	817	Chromis atripectoralis voucher GAM-266 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal008	CviAPal008_10x_0.9_COI	gi|816377247|gb|KP194940.1|	86.111	612	0.0	817	Chromis viridis voucher UG0319 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal011	CviAPal011_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	82.609	253	5.67e-77	300	Chromis viridis mitochondrion, complete genome
+CviAPal011	CviAPal011_10x_0.9_COI	gi|557639966|gb|KF648507.1|	85.577	104	4.74e-23	121	Okamejei acutispina mitochondrion, complete genome
+CviAPal011	CviAPal011_10x_0.9_COI	gi|844169275|gb|KP756687.1|	84.906	106	1.70e-22	119	Okamejei hollandi mitochondrion, complete genome
+CviAPal011	CviAPal011_10x_0.9_COI	gi|115336598|gb|DQ835932.1|	82.759	116	2.20e-21	115	Katsuwonus pelamis isolate SKJT15 cytochrome oxidase subunit I (COI) gene, partial cds; mitochondrial
+CviAPal011	CviAPal011_10x_0.9_COI	gi|115336592|gb|DQ835929.1|	82.759	116	2.20e-21	115	Katsuwonus pelamis isolate SKJT14 cytochrome oxidase subunit I (COI) gene, partial cds; mitochondrial
+CviAPal012	CviAPal012_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	89.286	1596	0.0	2313	Chromis viridis mitochondrion, complete genome
+CviAPal012	CviAPal012_10x_0.9_COI	gi|1980524333|ref|NC_052722.1|	81.328	1596	0.0	1609	Chromis notata mitochondrion, complete genome
+CviAPal012	CviAPal012_10x_0.9_COI	gi|126143578|dbj|AP006016.1|	79.912	1588	0.0	1474	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal012	CviAPal012_10x_0.9_COI	gi|1593555200|ref|NC_041192.1|	79.434	1590	0.0	1426	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal012	CviAPal012_10x_0.9_COI	gi|1842048737|gb|MT199209.1|	79.129	1562	0.0	1386	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal015	CviAPal015_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	90.256	195	2.52e-74	291	Chromis viridis mitochondrion, complete genome
+CviAPal015	CviAPal015_10x_0.9_COI	gi|1897743522|gb|MN733676.1|	90.256	195	2.52e-74	291	Chromis viridis voucher CKF150 cytochrome c oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal015	CviAPal015_10x_0.9_COI	gi|1980524333|ref|NC_052722.1|	86.154	195	5.53e-61	246	Chromis notata mitochondrion, complete genome
+CviAPal015	CviAPal015_10x_0.9_COI	gi|223367208|gb|FJ583145.1|	90.345	145	4.34e-52	217	Chromis atripectoralis voucher BIOUG<CAN>:HLC-11602 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal015	CviAPal015_10x_0.9_COI	gi|1331389892|gb|MF409610.1|	90.278	144	1.56e-51	215	Chromis viridis voucher R0101_151 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal025	CviAPal025_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	84.076	157	1.21e-41	182	Chromis viridis mitochondrion, complete genome
+CviAPal025	CviAPal025_10x_0.9_COI	gi|1707334803|gb|MK496978.1|	81.046	153	9.48e-33	152	Sicyopterus sarasini isolate sar51 mitochondrion, complete genome
+CviAPal025	CviAPal025_10x_0.9_COI	gi|2037390503|gb|MZ051758.1|	80.921	152	3.41e-32	150	Eigenmannia virescens voucher PAG-2438 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal025	CviAPal025_10x_0.9_COI	gi|2037389527|gb|MZ051270.1|	80.921	152	3.41e-32	150	Eigenmannia virescens voucher GF15-362 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal025	CviAPal025_10x_0.9_COI	gi|1707334831|gb|MK496980.1|	80.392	153	4.41e-31	147	Sicyopterus sarasini isolate sar53 mitochondrion, complete genome
+CviAPal026	CviAPal026_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	77.303	608	4.67e-171	614	Chromis viridis mitochondrion, complete genome
+CviAPal026	CviAPal026_10x_0.9_COI	gi|112361658|gb|DQ874760.1|	77.338	278	4.25e-57	235	Katsuwonus pelamis isolate JJ13:12 cytochrome oxidase subunit 1 (COX1) gene, partial cds; mitochondrial
+CviAPal026	CviAPal026_10x_0.9_COI	gi|620656400|gb|KJ439726.1|	75.261	287	9.27e-49	207	Eviota nigriventris isolate DG1 cytochrome c oxidase subunit I (COI) gene, partial cds; mitochondrial
+CviAPal026	CviAPal026_10x_0.9_COI	gi|620656392|gb|KJ439722.1|	75.261	287	9.27e-49	207	Eviota nigriventris isolate NV9 cytochrome c oxidase subunit I (COI) gene, partial cds; mitochondrial
+CviAPal026	CviAPal026_10x_0.9_COI	gi|620656390|gb|KJ439721.1|	75.261	287	9.27e-49	207	Eviota nigriventris isolate NV8 cytochrome c oxidase subunit I (COI) gene, partial cds; mitochondrial
+CviAPal027	CviAPal027_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	96.679	1596	0.0	2752	Chromis viridis mitochondrion, complete genome
+CviAPal027	CviAPal027_10x_0.9_COI	gi|126215391|ref|NC_009065.1|	83.259	1565	0.0	1533	Amphiprion ocellaris mitochondrion, complete genome
+CviAPal027	CviAPal027_10x_0.9_COI	gi|1036211822|dbj|AB979697.1|	83.131	1565	0.0	1522	Amphiprion ocellaris mitochondrial DNA, complete genome
+CviAPal027	CviAPal027_10x_0.9_COI	gi|1036211836|dbj|AB980197.1|	83.067	1565	0.0	1517	Amphiprion ocellaris mitochondrial DNA, complete genome
+CviAPal027	CviAPal027_10x_0.9_COI	gi|1707502657|ref|NC_043918.1|	82.783	1545	0.0	1478	Amblyglyphidodon curacao mitochondrion, complete genome
+CviAPal029	CviAPal029_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	87.500	88	3.32e-24	122	Chromis viridis mitochondrion, complete genome
+CviAPal029	CviAPal029_10x_0.9_COI	gi|1772664115|gb|MN560913.1|	87.500	88	3.32e-24	122	Chromis viridis voucher AWCF708 cytochrome c oxidase subunit I (COI) gene, partial cds; mitochondrial
+CviAPal029	CviAPal029_10x_0.9_COI	gi|1772663945|gb|MN560828.1|	87.500	88	3.32e-24	122	Chromis viridis voucher AWCF109 cytochrome c oxidase subunit I (COI) gene, partial cds; mitochondrial
+CviAPal029	CviAPal029_10x_0.9_COI	gi|1682662780|gb|MK657289.1|	87.500	88	3.32e-24	122	Chromis atripectoralis voucher GAM-266 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal029	CviAPal029_10x_0.9_COI	gi|1534500489|gb|MH049166.1|	87.500	88	3.32e-24	122	Chromis atripectoralis isolate dki101 cytochrome c oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal030	CviAPal030_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	88.150	1595	0.0	2248	Chromis viridis mitochondrion, complete genome
+CviAPal030	CviAPal030_10x_0.9_COI	gi|1897743522|gb|MN733676.1|	89.244	688	0.0	998	Chromis viridis voucher CKF150 cytochrome c oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal030	CviAPal030_10x_0.9_COI	gi|2030286475|gb|MW630797.1|	88.906	658	0.0	946	Chromis viridis isolate KU:IT:4272 cytochrome c oxidase subunit I (COI) gene, partial cds; mitochondrial
+CviAPal030	CviAPal030_10x_0.9_COI	gi|1682662780|gb|MK657289.1|	88.855	655	0.0	941	Chromis atripectoralis voucher GAM-266 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal030	CviAPal030_10x_0.9_COI	gi|2030286455|gb|MW630787.1|	88.754	658	0.0	941	Chromis atripectoralis isolate KU:IT:761 cytochrome c oxidase subunit I (COI) gene, partial cds; mitochondrial
+CviAPal034	CviAPal034_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	91.057	123	1.88e-43	187	Chromis viridis mitochondrion, complete genome
+CviAPal034	CviAPal034_10x_0.9_COI	gi|699128821|gb|KM517200.1|	81.967	122	1.49e-24	124	Salanx ariakensis mitochondrion, complete genome
+CviAPal034	CviAPal034_10x_0.9_COI	gi|58430873|dbj|AP006231.1|	81.967	122	1.49e-24	124	Salanx ariakensis mitochondrial DNA, complete genome
+CviAPal034	CviAPal034_10x_0.9_COI	gi|407971073|gb|JX568887.1|	83.186	113	6.95e-23	119	Protopterus annectens mitochondrion, complete genome
+CviAPal034	CviAPal034_10x_0.9_COI	gi|1161203|gb|L42813.1|PRRMTCG	83.186	113	6.95e-23	119	Protopterus annectens mitochondrion, complete genome
+CviAPal035	CviAPal035_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	87.387	111	1.65e-33	154	Chromis viridis mitochondrion, complete genome
+CviAPal035	CviAPal035_10x_0.9_COI	gi|1682662780|gb|MK657289.1|	87.387	111	1.65e-33	154	Chromis atripectoralis voucher GAM-266 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal035	CviAPal035_10x_0.9_COI	gi|1534500489|gb|MH049166.1|	87.387	111	1.65e-33	154	Chromis atripectoralis isolate dki101 cytochrome c oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal035	CviAPal035_10x_0.9_COI	gi|1331389892|gb|MF409610.1|	87.387	111	1.65e-33	154	Chromis viridis voucher R0101_151 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal035	CviAPal035_10x_0.9_COI	gi|1331389596|gb|MF409462.1|	87.387	111	1.65e-33	154	Chromis viridis voucher R0101_152 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal036	CviAPal036_10x_0.9_COI	gi|1682662780|gb|MK657289.1|	84.709	654	0.0	839	Chromis atripectoralis voucher GAM-266 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal036	CviAPal036_10x_0.9_COI	gi|666877422|gb|KJ967971.1|	84.709	654	0.0	839	Chromis atripectoralis voucher FLMOO_556 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal036	CviAPal036_10x_0.9_COI	gi|666877420|gb|KJ967970.1|	84.709	654	0.0	839	Chromis atripectoralis voucher FLMOO_702 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal036	CviAPal036_10x_0.9_COI	gi|816376921|gb|KP194777.1|	84.769	650	0.0	835	Chromis atripectoralis voucher UG0718 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal036	CviAPal036_10x_0.9_COI	gi|816376917|gb|KP194775.1|	84.769	650	0.0	835	Chromis atripectoralis voucher UG0720 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal037	CviAPal037_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	79.135	1596	0.0	1696	Chromis viridis mitochondrion, complete genome
+CviAPal037	CviAPal037_10x_0.9_COI	gi|1682662780|gb|MK657289.1|	79.010	586	4.55e-175	628	Chromis atripectoralis voucher GAM-266 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal037	CviAPal037_10x_0.9_COI	gi|1534500489|gb|MH049166.1|	79.010	586	4.55e-175	628	Chromis atripectoralis isolate dki101 cytochrome c oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal037	CviAPal037_10x_0.9_COI	gi|816376921|gb|KP194777.1|	79.010	586	4.55e-175	628	Chromis atripectoralis voucher UG0718 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal037	CviAPal037_10x_0.9_COI	gi|816376917|gb|KP194775.1|	79.010	586	4.55e-175	628	Chromis atripectoralis voucher UG0720 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal038	CviAPal038_10x_0.9_COI	gi|1842048723|gb|MT199208.1|	83.109	817	0.0	989	Chromis viridis mitochondrion, complete genome
+CviAPal038	CviAPal038_10x_0.9_COI	gi|126143578|dbj|AP006016.1|	76.350	685	6.61e-146	531	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal038	CviAPal038_10x_0.9_COI	gi|1842048737|gb|MT199209.1|	76.748	658	8.55e-145	527	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal038	CviAPal038_10x_0.9_COI	gi|1935445780|ref|NC_051497.1|	76.748	658	8.55e-145	527	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal038	CviAPal038_10x_0.9_COI	gi|336327133|gb|JN086155.1|	76.526	639	3.10e-139	508	Katsuwonus pelamis voucher KP02-2318 mitochondrion, complete genome
+CviAPal039	CviAPal039_10x_0.9_COI	gi|1682662780|gb|MK657289.1|	89.008	655	0.0	944	Chromis atripectoralis voucher GAM-266 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal039	CviAPal039_10x_0.9_COI	gi|666877422|gb|KJ967971.1|	88.855	655	0.0	939	Chromis atripectoralis voucher FLMOO_556 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal039	CviAPal039_10x_0.9_COI	gi|816376921|gb|KP194777.1|	95.303	511	0.0	856	Chromis atripectoralis voucher UG0718 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal039	CviAPal039_10x_0.9_COI	gi|816376917|gb|KP194775.1|	95.303	511	0.0	856	Chromis atripectoralis voucher UG0720 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal039	CviAPal039_10x_0.9_COI	gi|816376851|gb|KP194742.1|	95.303	511	0.0	856	Chromis atripectoralis voucher UG0697 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal001	CviAPal001_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	94.110	1596	0.0	2579	Chromis viridis mitochondrion, complete genome
+CviAPal001	CviAPal001_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	84.837	1596	0.0	1759	Chromis notata mitochondrion, complete genome
+CviAPal001	CviAPal001_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	83.186	1588	0.0	1602	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal001	CviAPal001_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	82.327	1590	0.0	1524	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal001	CviAPal001_3x_0.67_COI	gi|599087375|gb|KJ174497.1|	82.428	1565	0.0	1513	Amphiprion percula mitochondrion, complete genome
+CviAPal002	CviAPal002_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	93.546	1596	0.0	2564	Chromis viridis mitochondrion, complete genome
+CviAPal002	CviAPal002_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	84.837	1596	0.0	1794	Chromis notata mitochondrion, complete genome
+CviAPal002	CviAPal002_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	83.060	1588	0.0	1626	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal002	CviAPal002_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	82.453	1590	0.0	1567	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal002	CviAPal002_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	82.179	1560	0.0	1526	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal003	CviAPal003_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	93.860	1596	0.0	2586	Chromis viridis mitochondrion, complete genome
+CviAPal003	CviAPal003_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	84.900	1596	0.0	1794	Chromis notata mitochondrion, complete genome
+CviAPal003	CviAPal003_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	82.997	1588	0.0	1615	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal003	CviAPal003_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	82.516	1590	0.0	1567	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal003	CviAPal003_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	82.308	1560	0.0	1531	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal005	CviAPal005_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	93.734	1596	0.0	2577	Chromis viridis mitochondrion, complete genome
+CviAPal005	CviAPal005_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	84.900	1596	0.0	1796	Chromis notata mitochondrion, complete genome
+CviAPal005	CviAPal005_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	83.123	1588	0.0	1628	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal005	CviAPal005_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	82.579	1590	0.0	1574	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal005	CviAPal005_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	82.308	1560	0.0	1533	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal006	CviAPal006_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	93.672	1596	0.0	2573	Chromis viridis mitochondrion, complete genome
+CviAPal006	CviAPal006_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	84.900	1596	0.0	1797	Chromis notata mitochondrion, complete genome
+CviAPal006	CviAPal006_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	82.997	1588	0.0	1618	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal006	CviAPal006_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	82.453	1590	0.0	1565	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal006	CviAPal006_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	82.244	1560	0.0	1530	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal007	CviAPal007_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	93.358	1596	0.0	2549	Chromis viridis mitochondrion, complete genome
+CviAPal007	CviAPal007_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	84.774	1596	0.0	1790	Chromis notata mitochondrion, complete genome
+CviAPal007	CviAPal007_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	82.997	1588	0.0	1622	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal007	CviAPal007_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	82.579	1590	0.0	1580	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal007	CviAPal007_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	82.564	1560	0.0	1563	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal008	CviAPal008_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	94.486	1596	0.0	2617	Chromis viridis mitochondrion, complete genome
+CviAPal008	CviAPal008_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	85.338	1596	0.0	1808	Chromis notata mitochondrion, complete genome
+CviAPal008	CviAPal008_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	83.186	1588	0.0	1607	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal008	CviAPal008_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	82.767	1590	0.0	1565	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal008	CviAPal008_3x_0.67_COI	gi|599087375|gb|KJ174497.1|	82.545	1564	0.0	1530	Amphiprion percula mitochondrion, complete genome
+CviAPal009	CviAPal009_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	90.799	1152	0.0	1711	Chromis viridis mitochondrion, complete genome
+CviAPal009	CviAPal009_3x_0.67_COI	gi|726965608|gb|KM605252.1|	80.790	1114	0.0	1040	Katsuwonus pelamis mitochondrion, complete genome
+CviAPal009	CviAPal009_3x_0.67_COI	gi|2165127933|gb|MW232426.1|	80.790	1114	0.0	1040	Katsuwonus pelamis voucher USNM 424773 mitochondrion, complete genome
+CviAPal009	CviAPal009_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	80.645	1116	0.0	1035	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal009	CviAPal009_3x_0.67_COI	gi|2165127975|gb|MW232429.1|	80.700	1114	0.0	1035	Katsuwonus pelamis voucher USNM 443178 mitochondrion, complete genome
+CviAPal011	CviAPal011_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	92.544	1596	0.0	2381	Chromis viridis mitochondrion, complete genome
+CviAPal011	CviAPal011_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	85.276	1596	0.0	1738	Chromis notata mitochondrion, complete genome
+CviAPal011	CviAPal011_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	83.123	1588	0.0	1535	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal011	CviAPal011_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	83.269	1560	0.0	1526	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal011	CviAPal011_3x_0.67_COI	gi|1935445780|ref|NC_051497.1|	83.269	1560	0.0	1526	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal012	CviAPal012_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	94.110	1596	0.0	2545	Chromis viridis mitochondrion, complete genome
+CviAPal012	CviAPal012_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	85.714	1596	0.0	1803	Chromis notata mitochondrion, complete genome
+CviAPal012	CviAPal012_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	83.690	1588	0.0	1613	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal012	CviAPal012_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	83.396	1590	0.0	1581	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal012	CviAPal012_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	83.205	1560	0.0	1546	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal015	CviAPal015_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	90.602	1596	0.0	2290	Chromis viridis mitochondrion, complete genome
+CviAPal015	CviAPal015_3x_0.67_COI	gi|1682662780|gb|MK657289.1|	93.130	655	0.0	1044	Chromis atripectoralis voucher GAM-266 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal015	CviAPal015_3x_0.67_COI	gi|816376921|gb|KP194777.1|	93.098	652	0.0	1038	Chromis atripectoralis voucher UG0718 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal015	CviAPal015_3x_0.67_COI	gi|816376917|gb|KP194775.1|	93.098	652	0.0	1038	Chromis atripectoralis voucher UG0720 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal015	CviAPal015_3x_0.67_COI	gi|816376851|gb|KP194742.1|	93.098	652	0.0	1038	Chromis atripectoralis voucher UG0697 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal016	CviAPal016_3x_0.67_COI	gi|1682662780|gb|MK657289.1|	85.191	655	0.0	809	Chromis atripectoralis voucher GAM-266 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal016	CviAPal016_3x_0.67_COI	gi|666877422|gb|KJ967971.1|	85.191	655	0.0	809	Chromis atripectoralis voucher FLMOO_556 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal016	CviAPal016_3x_0.67_COI	gi|666877420|gb|KJ967970.1|	85.191	655	0.0	809	Chromis atripectoralis voucher FLMOO_702 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal016	CviAPal016_3x_0.67_COI	gi|816376921|gb|KP194777.1|	85.123	652	0.0	804	Chromis atripectoralis voucher UG0718 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal016	CviAPal016_3x_0.67_COI	gi|816376917|gb|KP194775.1|	85.123	652	0.0	804	Chromis atripectoralis voucher UG0720 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal025	CviAPal025_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	83.271	1596	0.0	1821	Chromis viridis mitochondrion, complete genome
+CviAPal025	CviAPal025_3x_0.67_COI	gi|148762688|dbj|AP009145.1|	81.510	1536	0.0	1616	Spratelloides gracilis mitochondrial DNA, complete genome
+CviAPal025	CviAPal025_3x_0.67_COI	gi|256353319|dbj|AP011061.1|	78.849	1546	0.0	1395	Kyphosus cinerascens mitochondrial DNA, complete genome
+CviAPal025	CviAPal025_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	78.526	1588	0.0	1393	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal025	CviAPal025_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	78.526	1560	0.0	1378	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal026	CviAPal026_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	95.927	1596	0.0	2706	Chromis viridis mitochondrion, complete genome
+CviAPal026	CviAPal026_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	85.777	1596	0.0	1808	Chromis notata mitochondrion, complete genome
+CviAPal026	CviAPal026_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	82.997	1588	0.0	1552	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal026	CviAPal026_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	82.997	1588	0.0	1552	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal026	CviAPal026_3x_0.67_COI	gi|599087375|gb|KJ174497.1|	82.875	1565	0.0	1520	Amphiprion percula mitochondrion, complete genome
+CviAPal027	CviAPal027_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	99.499	1596	0.0	2913	Chromis viridis mitochondrion, complete genome
+CviAPal027	CviAPal027_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	87.782	1596	0.0	1877	Chromis notata mitochondrion, complete genome
+CviAPal027	CviAPal027_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	85.264	1588	0.0	1642	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal027	CviAPal027_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	85.013	1588	0.0	1620	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal027	CviAPal027_3x_0.67_COI	gi|599087375|gb|KJ174497.1|	84.792	1565	0.0	1578	Amphiprion percula mitochondrion, complete genome
+CviAPal029	CviAPal029_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	90.226	1596	0.0	2342	Chromis viridis mitochondrion, complete genome
+CviAPal029	CviAPal029_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	82.080	1596	0.0	1622	Chromis notata mitochondrion, complete genome
+CviAPal029	CviAPal029_3x_0.67_COI	gi|1897743522|gb|MN733676.1|	91.419	571	0.0	850	Chromis viridis voucher CKF150 cytochrome c oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal029	CviAPal029_3x_0.67_COI	gi|1682662780|gb|MK657289.1|	92.642	530	0.0	830	Chromis atripectoralis voucher GAM-266 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal029	CviAPal029_3x_0.67_COI	gi|816376921|gb|KP194777.1|	92.642	530	0.0	830	Chromis atripectoralis voucher UG0718 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal030	CviAPal030_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	97.368	1596	0.0	2793	Chromis viridis mitochondrion, complete genome
+CviAPal030	CviAPal030_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	86.842	1596	0.0	1862	Chromis notata mitochondrion, complete genome
+CviAPal030	CviAPal030_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	84.131	1588	0.0	1611	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal030	CviAPal030_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	84.068	1588	0.0	1605	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal030	CviAPal030_3x_0.67_COI	gi|599087375|gb|KJ174497.1|	83.514	1565	0.0	1535	Amphiprion percula mitochondrion, complete genome
+CviAPal033	CviAPal033_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	92.231	1596	0.0	2490	Chromis viridis mitochondrion, complete genome
+CviAPal033	CviAPal033_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	83.459	1596	0.0	1714	Chromis notata mitochondrion, complete genome
+CviAPal033	CviAPal033_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	81.935	1561	0.0	1546	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal033	CviAPal033_3x_0.67_COI	gi|1935445780|ref|NC_051497.1|	81.935	1561	0.0	1546	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal033	CviAPal033_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	81.258	1590	0.0	1504	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal034	CviAPal034_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	88.596	1596	0.0	2180	Chromis viridis mitochondrion, complete genome
+CviAPal034	CviAPal034_3x_0.67_COI	gi|1682662780|gb|MK657289.1|	93.130	655	0.0	1044	Chromis atripectoralis voucher GAM-266 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal034	CviAPal034_3x_0.67_COI	gi|816376921|gb|KP194777.1|	93.241	651	0.0	1040	Chromis atripectoralis voucher UG0718 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal034	CviAPal034_3x_0.67_COI	gi|816376917|gb|KP194775.1|	93.241	651	0.0	1040	Chromis atripectoralis voucher UG0720 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal034	CviAPal034_3x_0.67_COI	gi|816376851|gb|KP194742.1|	93.241	651	0.0	1040	Chromis atripectoralis voucher UG0697 cytochrome oxidase subunit 1 (COI) gene, partial cds; mitochondrial
+CviAPal035	CviAPal035_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	93.734	1596	0.0	2564	Chromis viridis mitochondrion, complete genome
+CviAPal035	CviAPal035_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	85.088	1596	0.0	1799	Chromis notata mitochondrion, complete genome
+CviAPal035	CviAPal035_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	82.935	1588	0.0	1598	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal035	CviAPal035_3x_0.67_COI	gi|1593555200|ref|NC_041192.1|	82.453	1590	0.0	1550	Abudefduf bengalensis mitochondrion, complete genome
+CviAPal035	CviAPal035_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	82.394	1562	0.0	1526	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal036	CviAPal036_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	93.108	1596	0.0	2372	Chromis viridis mitochondrion, complete genome
+CviAPal036	CviAPal036_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	86.466	1596	0.0	1784	Chromis notata mitochondrion, complete genome
+CviAPal036	CviAPal036_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	84.383	1588	0.0	1589	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal036	CviAPal036_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	84.295	1560	0.0	1557	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal036	CviAPal036_3x_0.67_COI	gi|1935445780|ref|NC_051497.1|	84.295	1560	0.0	1557	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal037	CviAPal037_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	92.982	1596	0.0	2401	Chromis viridis mitochondrion, complete genome
+CviAPal037	CviAPal037_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	85.965	1596	0.0	1781	Chromis notata mitochondrion, complete genome
+CviAPal037	CviAPal037_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	83.753	1588	0.0	1574	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal037	CviAPal037_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	83.974	1560	0.0	1570	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal037	CviAPal037_3x_0.67_COI	gi|1935445780|ref|NC_051497.1|	83.974	1560	0.0	1570	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal038	CviAPal038_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	93.108	1596	0.0	2460	Chromis viridis mitochondrion, complete genome
+CviAPal038	CviAPal038_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	85.840	1596	0.0	1818	Chromis notata mitochondrion, complete genome
+CviAPal038	CviAPal038_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	83.627	1588	0.0	1611	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal038	CviAPal038_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	83.205	1560	0.0	1550	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal038	CviAPal038_3x_0.67_COI	gi|1935445780|ref|NC_051497.1|	83.205	1560	0.0	1550	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal039	CviAPal039_3x_0.67_COI	gi|1842048723|gb|MT199208.1|	92.481	1596	0.0	2327	Chromis viridis mitochondrion, complete genome
+CviAPal039	CviAPal039_3x_0.67_COI	gi|1980524333|ref|NC_052722.1|	86.153	1596	0.0	1768	Chromis notata mitochondrion, complete genome
+CviAPal039	CviAPal039_3x_0.67_COI	gi|126143578|dbj|AP006016.1|	83.816	1588	0.0	1550	Abudefduf vaigiensis mitochondrial DNA, complete genome
+CviAPal039	CviAPal039_3x_0.67_COI	gi|1842048737|gb|MT199209.1|	84.038	1560	0.0	1546	Pomacentrus moluccensis mitochondrion, complete genome
+CviAPal039	CviAPal039_3x_0.67_COI	gi|1935445780|ref|NC_051497.1|	84.038	1560	0.0	1546	Pomacentrus moluccensis mitochondrion, complete genome

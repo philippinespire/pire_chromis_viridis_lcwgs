@@ -25,7 +25,7 @@ params.split_script = "${projectDir}/scripts/split_reads.sh"
 params.rmdup_script = "${projectDir}/scripts/samremovedup.py"
 params.amber_script = "/archive/carpenterlab/pire/softwares/AMBERv2/AMBER" 
 params.bwa_threads  = 4
-params.bam_q        = 1 // Mapping quality threshold. 
+params.bam_q        = 25 // Mapping quality threshold. 
 params.trimlength   = 85 // Default fallback trim length if no historical reads map successfully
 
 def resolve_reads = { String sample_id ->

@@ -4,7 +4,7 @@
 #SBATCH --mem=40G
 #SBATCH --time=04:00:00
 #SBATCH --job-name=blast_mitogenomes
-#SBATCH --output=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/logs/blast_%j.out
+#SBATCH --output=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/logs/blastn_local_top2_%j.out
 
 # Malin Pinsky 2026
 # with assistance from Google Gemini

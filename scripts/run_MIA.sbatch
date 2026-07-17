@@ -18,6 +18,7 @@ SAMPLE_PATH=$1
 
 ### Set up user parameters
 MIA_OUTDIR=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/output/mia/
+TEMP_DIR=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/temp/mia
 ANCIENT_DNA_MATRIX=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/ancient.submat.solexa.pe.txt
 MIA_REFERENCE_MITOGENOME=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/chromis_viridis_mitogenome_MT199208.1.fasta
 MIA_FASTA_PY=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/scripts/create_fasta_from_mia.py
@@ -48,32 +49,25 @@ else
     READS_TO_STREAM="$SAMPLE_PATH"
 fi
 
-# make output directory if it doesn't exist
+# make output and temporary directories if they don't exist
 mkdir -p ${MIA_OUTDIR}
+mkdir -p ${TEMP_DIR}
 
 # Running MIA -- Shotgun data, not too diverged from reference (if capture, remove duplicates; if diverged, use wormhole MIA)
-	# slow approach with gzip
-	# try to replace with zcat and stdin
-	#gzip -d $PROCESSED_READS/${SAMPLE_NAME}
-
 	# run mia from the fastq file
-	zcat $READS_TO_STREAM | mia -r $MIA_REFERENCE_MITOGENOME -f /dev/stdin -c -C -U -s ${ANCIENT_DNA_MATRIX} -i -F -k 14 -m ${MIA_OUTDIR}/${SAMPLE_NAME}.maln
-
-	# slow approach with gzip
-	# try to replace with zcat and stdin
-	# gzip $PROCESSED_READS/${SAMPLE_NAME}_trimmed_merged.fastq
+	zcat $READS_TO_STREAM | mia -r $MIA_REFERENCE_MITOGENOME -f /dev/stdin -c -C -U -s ${ANCIENT_DNA_MATRIX} -i -F -k 14 -m ${TEMP_DIR}/${SAMPLE_NAME}.maln
 
 	# output the column summary format
-	ma -M ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.* -f 3 > ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.F.mia_stats.txt
+	ma -M ${TEMP_DIR}/${SAMPLE_NAME}.maln.* -f 3 > ${TEMP_DIR}/${SAMPLE_NAME}.maln.F.mia_stats.txt
 
 	# output the line summary format
-	ma -M ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.* -f 2 > ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.F.mia_coverage_per_site.txt
+	ma -M ${TEMP_DIR}/${SAMPLE_NAME}.maln.* -f 2 > ${TEMP_DIR}/${SAMPLE_NAME}.maln.F.mia_coverage_per_site.txt
 
 	# output the fasta format
-	ma -M ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.* -f 5 > ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.F.mia_consensus.fasta
+	ma -M ${TEMP_DIR}/${SAMPLE_NAME}.maln.* -f 5 > ${TEMP_DIR}/${SAMPLE_NAME}.maln.F.mia_consensus.fasta
 
 	# output the 13-column format for the python script
-	ma -M ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.* -f 41 > ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.F.inputfornext.txt
+	ma -M ${TEMP_DIR}/${SAMPLE_NAME}.maln.* -f 41 > ${TEMP_DIR}/${SAMPLE_NAME}.maln.F.inputfornext.txt
 
 
 module load container_env python3
@@ -81,9 +75,9 @@ module load container_env python3
 # Generating consensus mitogenomes
 	# -c = minimum depth of coverage required for a base to be called
 	# -p = proportion of read agreement required for a base to be called
-	python3 ${MIA_FASTA_PY} -c 3 -p 0.67 -I ${MIA_OUTDIR}/${SAMPLE_NAME}_3x_0.67 -m ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.F.inputfornext.txt -o ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.F.mia_consensus.3x_0.67_filtered.fasta
+	python3 ${MIA_FASTA_PY} -c 3 -p 0.67 -I ${MIA_OUTDIR}/${SAMPLE_NAME}_3x_0.67 -m ${TEMP_DIR}/${SAMPLE_NAME}.maln.F.inputfornext.txt -o ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.F.mia_consensus.3x_0.67_filtered.fasta
 
-	python3 ${MIA_FASTA_PY} -c 10 -p 0.9 -I ${MIA_OUTDIR}/${SAMPLE_NAME}_10x_0.9 -m ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.F.inputfornext.txt -o ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.F.mia_consensus.10x_0.9_filtered.fasta
+	python3 ${MIA_FASTA_PY} -c 10 -p 0.9 -I ${MIA_OUTDIR}/${SAMPLE_NAME}_10x_0.9 -m ${TEMP_DIR}/${SAMPLE_NAME}.maln.F.inputfornext.txt -o ${MIA_OUTDIR}/${SAMPLE_NAME}.maln.F.mia_consensus.10x_0.9_filtered.fasta
 
 
 #Change name of alignment to something more informative
