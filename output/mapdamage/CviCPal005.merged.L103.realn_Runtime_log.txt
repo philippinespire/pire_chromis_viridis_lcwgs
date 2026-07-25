@@ -1,0 +1,4 @@
+2026-07-18 06:58:16,012	INFO	main: Started with the command: /opt/mapdamage2/bin/mapDamage -i nf-pipelines/nf-trim-generode/results/data/bam/CviCPal005.merged.L103.realn.bam -r nf-pipelines/nf-trim-generode//data/reference/reference.ssl.Cvi20k_rename.fasta -d output/mapdamage/tmp_CviCPal005.merged.L103.realn --no-stats
+2026-07-18 07:08:11,496	DEBUG	main: BAM read in 598.781959 seconds
+2026-07-18 07:09:07,868	INFO	main: Successful run
+2026-07-18 07:09:07,869	DEBUG	main: Run completed in 655.154258 seconds
