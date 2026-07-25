@@ -476,7 +476,7 @@ Wrote [run_MIA.sbatch](scripts/run_MIA.sbatch) for MIA that uses the [Illumina P
 ```
 scripts/run_MIA_all_historical.sh
 ```
-Most output goes in a `temp/` directory. See [`output/mia`](output/mia/) for lower quality (`*.3x_0.67`) and higher quality (`*.10x_0.9`) filtered fasta files. Took days for large files. Failed for CviAPal040 and CviAPal018 because of a goof on my end and re-ran by hand.
+Most output goes in a `temp/` directory. See [`output/mia`](output/mia/) for lower quality (`*.3x_0.67`) and higher quality (`*.10x_0.9`) filtered fasta files. Took days for large files. CviAPal018 and CviAPal040 repeatedly failed because of an mia segfault; possibly high depth (did not investigate further).
 
 Download a COI voucher example so that I can pull out the barcode region:
 ```
@@ -503,12 +503,12 @@ sbatch scripts/cut_COI_from_mia.sbatch
 ```
 Made `output/mia/all_samples_3x_0.67_coi_full.fasta` and `output/mia/all_samples_10x_0.9_coi_full.fasta`. Now has ~1600 bp insead of ~600.
 
-BLAST these against our local nt database and keep the top five hits. Modify the script to use the new .fasta files:
+BLAST these against our local nt database and keep the top five hits. Modify the script to use the full COI .fasta files:
 ```
 sbatch scripts/blastn_coi_local_top5.sbatch
 ```
-Overwrote the COI barcode results file. See `output/mia/all_samples_coi_blast_results.txt`.  
-APal_016 matches to _C. atripectoralis_. This was one of the admixture outliers. The other outliers (APal_004 and APal_016) unfortunately did not return any mtDNA sequence.
+Note: this overwrote the COI barcode results file. See `output/mia/all_samples_coi_blast_results.txt`.  
+APal_016 matches to _C. atripectoralis_. This was one of the admixture outliers. The APal_004 and APal_016 unfortunately did not return any mtDNA sequence. MIA repeatedly segfaulted on the APal_040 outlier. Despite limited information, removing all four seems appropriate. They have low depth, group together, and one is _C. atripectoralis_.
 
 ## 11. Retrim and map with nf-trim-generode
 Try new trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed `split_reads.sh`, and does mapdamage rescaling of bam files. Get the files from an updated branch in my home directory (in the future, it will be available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo)
@@ -551,7 +551,7 @@ ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/G
 ln -s /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenErode/reference/reference.ssl.Cvi20k_rename.repma.bed ./data/reference/
 ```
 
-Manually trimmed out from `inputfiles/samplesheet.csv` the modern and historical individuals that we suspect are _C. atripectoralis_. Keep CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (remove other modern). Remove APal_004, APal016, APal_028, APal_040 (keep other historical). Leave n=35 historical and n=9 modern individuals.
+Manually trimmed out from `inputfiles/samplesheet.csv` the modern and historical individuals that we suspect are _C. atripectoralis_. Kept CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (removed other modern). Removed APal_004, APal016, APal_028, APal_040 (kept other historical). Left n=35 historical and n=9 modern individuals.
 
 Edited `main.nf` to:
 * match this pipeline's file locations 
@@ -562,23 +562,17 @@ Edited `main.nf` to:
 * run historical mapdamage rescaling
 * run historical and modern amber
 
-Also modified `mapping_modules.nf` to use `-F 2308` to drop unmapped reads (4), secondary alignments/multi-mappers (256), and supplementary/chimeric alignments (2048). Only keep the single best primary alignment for each read.
+Also modified `mapping_modules.nf` to use `bwa -F 2308` to drop unmapped reads (4), secondary alignments/multi-mappers (256), and supplementary/chimeric alignments (2048). Only keep the single best primary alignment for each read.
 
-Ran nf-trim-merged-unmerged pipeline from within `nf-trim-generode/` in my existing tmux window (already running bash with modules loaded, see [Step 7](#7-nextflow-trimming)):
+Ran pipeline from within `nf-trim-generode/` in my existing tmux window (already running bash with modules loaded, see [Step 7](#7-nextflow-trimming)):
 ```
 tmux a -t nextflow
 cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode
 nextflow run main.nf -profile standard
 ```
-Finished in 12 hrs. Found 107 bp average historical length and mapped with `bwa mem`.
+Finished in 7 hrs. Found 103 bp average historical length and mapped with `bwa mem`.
 
-Inspecting the [AMBER plots](nf-pipelines/nf-trim-generode/results/amber), the read length gap from 50-60bp has been fixed by the new `split_reads.sh` script. The historical reads have a wider read length distribution than the modern since there is a substantial fraction of short historical reads, plus some merged historical reads. The [mapdamage plots](nf-pipelines/nf-trim-generode/results/mapdamage/) show many soft-clipped historical reads, but very little evidence of historical damage patterns.
-
-## 11.1 Clean up
-Remove the temporary directory:
-```
-rm -r nf-pipelines/nf-trim-generode/work/
-```
+Inspecting the [AMBER plots](nf-pipelines/nf-trim-generode/results/amber), the read length gap from 50-60bp has been fixed by the new `split_reads.sh` script. The historical reads have a wider read length distribution than the modern since there is a substantial fraction of short historical reads, plus some merged historical reads. The [mapdamage plots](nf-pipelines/nf-trim-generode/results/mapdamage/) still show many soft-clipped historical reads, despite stricter mapping, but very little evidence of historical damage patterns. Could summarize the `*_misincorporation.txt` files into a multi-individual plot.
 
 ## 11.2 Depth vs. reads
 Plot read depth vs. number of reads
@@ -586,6 +580,83 @@ Plot read depth vs. number of reads
 sbatch scripts/plot_depth_vs_reads.sbatch nf-pipelines/nf-trim-generode/data/symlinks nf-pipelines/nf-trim-generode/results/depth output/depth_vs_reads_nf-trim-generode.txt output/depth_vs_reads_nf-trim-generode.pdf
 ```
 [Plot](output/depth_vs_reads_nf-trim-generode.pdf) shows that, as expected, depth increases with the number of reads. Depth increases much more strongly for modern than for historical individuals.
+
+## 11.3 Softclipping
+Run mapdamage diagnostics on the modern Cvi files with a custom script to check if they also have soft-clipping:
+```
+sbatch scripts/run_mapdamage_diagnostics.sbatch
+```
+Output is in `output/mapdamage`. Moderns alignments also have a lot of soft-clipping (~20% at read ends), like the historical alignments (~30% at read ends). 
+
+Also make histograms of fraction soft-clipped by individual and by contig with a custom script:
+```
+sbatch scripts/soft_clip_analysis.sbatch nf-pipelines/nf-trim-generode/results/data/bam/*.bam
+```
+The [histogram by contig](output/softclip_analysis/histogram_soft_clipped_per_contig.png) shows a handful of contigs with >30% clipping. A [handful of individuals](output/softclip_analysis/histogram_soft_clipped_per_individual.png) also have a lot of soft-clipping.
+
+## 11.4 Try mapping against a new reference
+Will this reduce soft-clipping?
+Download the Iridian genome, trim to contigs >20kb, create a dictionary, and index it for use:
+```
+cd data
+wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/051/013/605/GCA_051013605.1_ASM5101360v1/GCA_051013605.1_ASM5101360v1_genomic.fna.gz
+gunzip GCA_051013605.1_ASM5101360v1_genomic.fna.gz
+module load container_env seqtk
+crun.seqtk seqtk seq -L 20000 GCA_051013605.1_ASM5101360v1_genomic.fna > GCA_051013605.1_ASM5101360v1_genomic_20kb.fna
+module unload container_env seqtk
+module load container_env samtools/1.19
+crun.samtools samtools dict GCA_051013605.1_ASM5101360v1_genomic_20kb.fna -o GCA_051013605.1_ASM5101360v1_genomic_20kb.dict
+crun.samtools samtools faidx GCA_051013605.1_ASM5101360v1_genomic_20kb.fna
+module unload container_env samtools
+module load container_env bwa
+crun.bwa bwa index GCA_051013605.1_ASM5101360v1_genomic_20kb.fna
+```
+Seems to have left 31 contigs.
+
+Checked the length of our in-house genome and the Iridian genome, after both have been trimmed to contigs >20kb:
+```
+bash
+awk '!/^>/ {sum += length($0)} END {print sum}' nf-pipelines/nf-trim-generode/data/reference/reference.ssl.Cvi20k_rename.fasta
+awk '!/^>/ {sum += length($0)} END {print sum}' data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna
+```
+Ours is only 89MB, the Iridian one is 760MB.
+
+Run nf-trim-generode on the new genome with output in `results-iridian`. Otherwise the same parameters:
+```
+tmux a -t nextflow
+cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode
+nextflow run main.nf -profile standard --reference /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna --outdir /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results-iridian
+```
+See `results-iridian` for the output. Mapdamage has dropped by about half (compared to the in-house genome) based on spot-checking mapdamage plots. However, about 12% of the Iridian genome has no coverage, even for individuals with high read depth. Repeat modeling and masking took more than 6 days (most of this time in post-processing the masking files).
+
+### 11.4.1 Softclipping for Iridian genome
+Modified the fasta, input, and output file paths, then ran mapdamage diagnostics on the modern Cvi files to check if they also have less soft-clipping:
+```
+sbatch scripts/run_mapdamage_diagnostics.sbatch
+```
+Output is in `output/mapdamage-iridian`. Moderns alignments also have a lot of soft-clipping (~20% at read ends), like the historical alignments (~30% at read ends). 
+
+Modified the output file paths, and then made histograms of fraction soft-clipped by individual and by contig:
+```
+sbatch scripts/soft_clip_analysis.sbatch nf-pipelines/nf-trim-generode/results-iridian/data/bam/*.bam
+```
+The [histogram by contig](output/softclip_analysis-iridian/histogram_soft_clipped_per_contig.png) shows all contigs with <15% clipping. Only [one individual](output/softclip_analysis-iridian/histogram_soft_clipped_per_individual.png) has 30% soft-clipping (CviAPal011).
+
+## 11.4.2 Softclipping vs. depth for Iridian genome
+Made a script to plot fraction softclipped vs. depth per individual:
+```
+sbatch scripts/plot_softclip_vs_depth.sbatch
+```
+The [plot](output/softclip_analysis-iridian/softclip_vs_depth_plot.png) shows that all individuals have ~5% softclipping, and the individuals with depth <1x have 10-30% softclipping. 
+
+NOTE: This script currently uses the depth calculations in `nf-pipelines/nf-trim-generode/results/depth`. Once ready, we should instead use `nf-pipelines/nf-trim-generode/results-iridian/depth`.
+
+## 11.X Clean up
+Remove the temporary work directory:
+```
+rm -r nf-pipelines/nf-trim-generode/work/
+```
+
 
 ## 12 ANGSD structure and diversity from nf-trim-generode 
 Malin, 2026 July. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-generode`.

@@ -3,12 +3,15 @@
 #SBATCH --time 4-00:00:00
 #SBATCH --job-name=MIA
 #SBATCH --output=/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/logs/run_MIA_%j.out
+#SBATCH --mem=32G 
 
 ### MIA (Mapping Iterative Assembler): for mitogenome reconstruction
 # Call it with one argument: the path to the .fastq.gz file to run, eg
 # sbatch run_MIA.sbatch /path/to/fastq/my.fastq.gz
 # If the fastq file is paired-end and ends with _R1.fastq.gz, it will 
 # look for the second read in the same directory with the same name but ending in _R2.fastq.gz
+#
+# Malin Pinsky, 2026, with assistance from Gemini
 
 # set the path to mia and ma
 export PATH=/archive/carpenterlab/pire/softwares/mapping-iterative-assembler/bin:$PATH
@@ -48,6 +51,8 @@ else
     echo "LOG: Single-end read detected. Streaming R1 only."
     READS_TO_STREAM="$SAMPLE_PATH"
 fi
+
+echo "LOG: Working on sample $SAMPLE_NAME"
 
 # make output and temporary directories if they don't exist
 mkdir -p ${MIA_OUTDIR}

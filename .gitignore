@@ -74,6 +74,7 @@ reference/
 modern/
 historical/
 results/
+results-iridian/
 .snakemake/
 __pycache__/
 temp/
