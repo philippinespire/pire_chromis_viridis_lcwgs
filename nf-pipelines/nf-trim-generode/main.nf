@@ -100,6 +100,56 @@ process REPEAT_MODELER {
     """
 }
 
+process EXTRACT_CPG {
+    tag "Extracting CpG sites from ${ref_fasta.baseName}"
+    label 'process_low'
+    module 'container_env:python3'
+    publishDir "${params.outdir}/data/reference", mode: 'copy'
+
+    input:
+    path ref_fasta
+
+    output:
+    path "cpg_sites.bed", emit: cpg_bed
+
+    script:
+    """
+    crun python3 -c '
+    import sys
+
+    ref_fasta = "${ref_fasta}"
+    out_bed = "cpg_sites.bed"
+
+    with open(ref_fasta, "r") as f_in, open(out_bed, "w") as f_out:
+        chr_name = ""
+        seq = []
+
+        def process_seq(header, sequence):
+            full_seq = "".join(sequence).upper()
+            pos = 0
+            while True:
+                pos = full_seq.find("CG", pos)
+                if pos == -1:
+                    break
+                f_out.write(f"{header}\\t{pos}\\t{pos+2}\\n")
+                pos += 1
+
+        for line in f_in:
+            line = line.strip()
+            if line.startswith(">"):
+                if chr_name:
+                    process_seq(chr_name, seq)
+                chr_name = line.split()[0][1:]
+                seq = []
+            else:
+                seq.append(line)
+
+        if chr_name:
+            process_seq(chr_name, seq)
+    '
+    """
+}
+
 process REPEAT_MASKER {
     tag "Masking ${ref_fasta.baseName}"
     label 'process_medium'
@@ -108,6 +158,7 @@ process REPEAT_MASKER {
     input:
     path ref_fasta
     path repeat_library // This accepts the 'consensi.fa' file from REPEAT_MODELER
+    path cpg_bed
     
     output:
     path "${ref_fasta.baseName}.combined_mask.bed", emit: mask_bed
@@ -131,19 +182,8 @@ process REPEAT_MASKER {
         touch repeats.bed
     fi
 
-    # Step C: Extract custom hyper-mutable CpG tracks on the fly
-    awk '/^>/ {chr=substr(\$1,2); pos=0; next} \
-         { \
-           line=toupper(\$0); \
-           for(i=1; i<length(line); i++) { \
-             if(substr(line,i,2)=="CG") print chr"\\t"(pos+i-1)"\\t"(pos+i+1); \
-           } \
-           pos+=length(\$0); \
-         }' ${ref_fasta} > cpg_sites.bed
-
-    # Step D: Synthesize tracks using bedtools (if bedtools is inside your repeatmasker container)
-    # If bedtools is missing in your container, use a standard awk implementation to merge/sort.
-    cat repeats.bed cpg_sites.bed | sort -k1,1 -k2,2n > combined_sorted.bed
+    # Step C: Combine repeats BED with Python-generated CpG BED
+    cat repeats.bed ${cpg_bed} | sort -k1,1 -k2,2n > combined_sorted.bed
     
     # Fast native custom merge line replacing 'bedtools merge' to avoid container dependency errors
     awk 'OFS="\\t" { \
@@ -156,6 +196,7 @@ process REPEAT_MASKER {
     cut -f1 ${ref_fasta.baseName}.combined_mask.bed | uniq | awk '{print \$0 ":"}' > ${ref_fasta.baseName}.cleaned.regions
     """
 }
+
 
 process PREP_REFERENCE_REPEAT {
     publishDir "${params.outdir}/data/reference", mode: 'copy'
@@ -648,11 +689,11 @@ workflow {
     // 1. Conduct optional repeat modeling, repeat-masking and CpG site filtering on the reference genome
     bed_ch = Channel.empty()
     if (params.run_repeatmasking) {
-        // repeat modeling, masking, and CpG site extraction
         modeler_output = REPEAT_MODELER(fasta_ref_ch) // resource-intensive step, may require high RAM and CPU
-        masking_output = REPEAT_MASKER(fasta_ref_ch, modeler_output.model_library)
+        cpg_output     = EXTRACT_CPG(fasta_ref_ch)        
+        masking_output = REPEAT_MASKER(fasta_ref_ch, modeler_output.model_library, cpg_output.cpg_bed)
         bed_ch = masking_output.mask_bed 
-        regions_ch  = masking_output.regions // not used?
+        regions_ch  = masking_output.regions
     } else {
         // Ensure the manual BED file exists before proceeding
         bed_file_obj = file(params.bed_file)
