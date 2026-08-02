@@ -83,3 +83,25 @@ process ANGSD_EXTRACT_SITES {
     
     """
 }
+
+process INDEX_BED_SITES {
+    // Index the bed file to make a list of all callable sites for downstream analyses. 
+    // This is useful for calculating diversity statistics across all callable sites, not just SNPs.
+    tag "Index BED Sites"
+    publishDir "${params.outdir}/sites", mode: 'copy'
+
+    input:
+    path bed_file
+
+    output:
+    path "all_sites.pos", emit: snps
+    path "all_sites.pos.bin", emit: bin
+    path "all_sites.pos.idx", emit: idx
+
+    script:
+    """
+    module load container_env ngsTools
+    cp ${bed_file} all_sites.pos
+    angsd sites index all_sites.pos
+    """
+}

@@ -1,3 +1,4 @@
+// run ANGSD on each population and era combination for diversity calculations and FST
 process ANGSD_GL_POP {
     tag { "${pop}_${era}" }
     publishDir "${params.outdir}/angsd_pop", mode: 'copy'
@@ -31,5 +32,7 @@ process ANGSD_GL_POP {
         -sites ${snps} \
         -rf ${regions} \
         -out ${pop}_${era}
+        # remove transitions to avoid bias from historical damage
+        -noTrans 1
     """
 }

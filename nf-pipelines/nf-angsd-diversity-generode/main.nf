@@ -14,12 +14,11 @@ params.max_kb_dist = 50     // Maximum pairwise distance in kb to test for LD if
 params.min_weight  = 0.2    // Minimum r2 threshold for pruning filter
 
 // import modules
-include { ANGSD_GL_ALL; ANGSD_COLLECT_OUTPUT; ANGSD_EXTRACT_SITES } from './modules/angsd_gl'
+include { ANGSD_GL_ALL; ANGSD_COLLECT_OUTPUT; ANGSD_EXTRACT_SITES; INDEX_BED_SITES} from './modules/angsd_gl'
 include { COLLECT_BAM_ALL; COLLECT_BAM_POP } from './modules/collect_bam'
 include { PCANGSD; PLOT_PCANGSD; PLOT_ADMIXTURE } from './modules/pcangsd'
 include { ANGSD_GL_POP } from './modules/angsd_gl_pop'
 include { ANGSD_DIVERSITY } from './modules/angsd_diversity'
-
 
 // --- Input Channels ---
 
@@ -28,7 +27,7 @@ include { ANGSD_DIVERSITY } from './modules/angsd_diversity'
 samples = Channel
     .fromPath(params.samplesheet, checkIfExists: true)
     .splitCsv(header: true)
-    .map { row -> tuple(row.sample, row.pop, row.era,row.region, row.bam) }
+    .map { row -> tuple(row.sample, row.pop, row.era, row.region, row.bam) }
 
 all_bams = samples
     .map { sample, pop, era, region, bam -> bam }
@@ -214,30 +213,24 @@ workflow {
     samplesheet_file = Channel.fromPath(params.samplesheet)
 
     bamlist = COLLECT_BAM_ALL(all_bams)
-
     bamlist_pop = COLLECT_BAM_POP(pop_bams)
 
+    // 1. Index full callable bed file for UNBIASED diversity calculations (No SNP_pval filter)
+    all_sites = INDEX_BED_SITES(params.bed_file)
+
+    // 2. Run ANGSD_GL_ALL for PCA (uses SNP_pval 1e-6)
     genotypes = ANGSD_GL_ALL(contigs, bamlist)
 
-    mafs = genotypes.mafs
-        .map { contig, file -> file }
-        .collect()
-
-    beagle = genotypes.beagle
-        .map { contig, file -> file }
-        .collect()
+    mafs = genotypes.mafs.map { contig, file -> file }.collect()
+    beagle = genotypes.beagle.map { contig, file -> file }.collect()
 
     collected = ANGSD_COLLECT_OUTPUT(mafs, beagle)
-
     sites = ANGSD_EXTRACT_SITES(collected.all_mafs)
 
-    // Define starting points for SNPs and metadata (no pruning)
-    def final_snps = sites.snps
-    def final_bin  = sites.snps_bin
-    def final_idx  = sites.snps_idx
+    // Setup channel paths for PCA (filtered & pruned) and Diversity (unpruned)
     def final_beagle = collected.all_beagle
-    
-    // Optional LD-Pruning workflow branch
+    def pruned_files = Channel.of([])
+
     if (params.ld_prune) {
     	// Run ngsLD and prune_graph
         pruned = LD_PRUNE(collected.all_beagle, sites.snps)
@@ -248,25 +241,20 @@ workflow {
         // Subset the Beagle file using the pruned positions
         subset_beagle = SUBSET_BEAGLE(collected.all_beagle, pruned.pruned_sites)
         
-        // Re-route downstream dependencies
-        final_snps = indexed.snps
-        final_bin  = indexed.bin
-        final_idx  = indexed.idx
         final_beagle = subset_beagle.pruned_beagle
+        pruned_files = indexed.snps.combine(indexed.bin).combine(indexed.idx)
     }
 
     regions = sites.regions
 
-    // PCAngsd will run on the pruned beagle if params.ld_prune is true
+    // 3. Run PCAngsd on filtered (+ pruned) beagle file
     pcangsd_results = PCANGSD(final_beagle)
     PLOT_PCANGSD(pcangsd_results.pcangsd_cov, samplesheet_file)
-	PLOT_ADMIXTURE(pcangsd_results.q_matrix, samplesheet_file)
+    PLOT_ADMIXTURE(pcangsd_results.q_matrix, samplesheet_file)
     
-    ANGSD_GL_POP(bamlist_pop, final_snps, final_bin, final_idx,regions)
+    // 4. Run ANGSD_GL_POP on ALL callable sites (No SNP_pval filter, No LD pruning)
+    ANGSD_GL_POP(bamlist_pop, all_sites.snps, all_sites.bin, all_sites.idx, regions)
 
-    ANGSD_DIVERSITY(ANGSD_GL_POP.out.saf_files)
-
-
-    
-
+    // 5. Diversity Calculations: Pi & Theta calculated on full SFS; Outputs both ld-pruned and un-pruned SFS versions
+    ANGSD_DIVERSITY(ANGSD_GL_POP.out.saf_files, pruned_files.first())
 }
