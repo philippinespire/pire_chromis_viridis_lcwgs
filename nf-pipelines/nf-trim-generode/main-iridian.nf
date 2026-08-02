@@ -10,8 +10,8 @@ include { BWA_UNMERGED as BWA_UNMERGED_PASS1; BWA_UNMERGED as BWA_UNMERGED_PASS2
 params.samplesheet = "${projectDir}/inputfiles/samplesheet.csv" // Preferred way to provide sample metadata, including sample IDs and eras (modern or historical).
 params.samples_file = "${projectDir}/inputfiles/fastq_filenames.txt" // Legacy way to provide sample metadata. One-column text file with sample IDs. All modern by default.
 params.indir        = "${projectDir}/data/symlinks" // Directory where raw FASTQ files are expected.
-params.outdir       = "${projectDir}/results" // Directory where all output files will be written.
-params.reference    = "${projectDir}/data/reference/reference.ssl.Cvi20k_rename.fasta" // Path to reference genome FASTA file.
+params.outdir       = "${projectDir}/results-iridian" // Directory where all output files will be written.
+params.reference    = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna" // Path to reference genome FASTA file.
 params.bed_file     = "${projectDir}/data/reference/reference.ssl.Cvi20k_rename.repma.bed" // input bed file. Only used if params.run_repeatmasking is set to false.
 params.reference_prefix         = params.reference.tokenize('/').last().replaceAll(/\.(fa|fasta|fna)$/, '') // Extracts base name of reference.
 params.historical_era           = "historical"

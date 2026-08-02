@@ -13,8 +13,8 @@
 #      - Format: Tab-delimited (Sample, SoftClippedBases, TotalBases, Fraction)
 #      - Sample name format example: CviAPal001.merged.L98.realn
 #
-#   2. Individual Depth Files (CHANGE THIS TO IRIDIAN WHEN IT IS READY):
-#      - Location: nf-pipelines/nf-trim-generode/results/depth/*.dpstats.txt
+#   2. Individual Depth Files
+#      - Location: nf-pipelines/nf-trim-generode/results-iridian/depth/*.dpstats.txt
 #      - Format: Single mean depth number on the first line of each file
 #      - Sample format example: CviAPal001.Q25.L103.bam.dpstats.txt
 #
@@ -57,7 +57,7 @@ library(dplyr)
 
 # Paths
 softclip_path <- "output/softclip_analysis-iridian/per_individual_stats.txt"
-depth_dir     <- "nf-pipelines/nf-trim-generode/results/depth"
+depth_dir     <- "nf-pipelines/nf-trim-generode/results-iridian/depth"
 output_plot   <- "output/softclip_analysis-iridian/softclip_vs_depth_plot.png"
 
 # Load soft-clip data

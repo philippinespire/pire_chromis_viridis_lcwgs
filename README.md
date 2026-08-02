@@ -619,15 +619,15 @@ bash
 awk '!/^>/ {sum += length($0)} END {print sum}' nf-pipelines/nf-trim-generode/data/reference/reference.ssl.Cvi20k_rename.fasta
 awk '!/^>/ {sum += length($0)} END {print sum}' data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna
 ```
-Ours is only 89MB, the Iridian one is 760MB.
+Ours is only 89MB, the Iridian one is 760MB. Latter is much more contiguous.
 
-Run nf-trim-generode on the new genome with output in `results-iridian`. Otherwise the same parameters:
+Run nf-trim-generode on the new genome with output in `results-iridian` (see parameters in `main-iridian.nf`). Otherwise the same parameters:
 ```
 tmux a -t nextflow
 cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode
-nextflow run main.nf -profile standard --reference /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna --outdir /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results-iridian
+nextflow run main-iridian.nf -profile standard
 ```
-See `results-iridian` for the output. Mapdamage has dropped by about half (compared to the in-house genome) based on spot-checking mapdamage plots. However, about 12% of the Iridian genome has no coverage, even for individuals with high read depth. Repeat modeling and masking took more than 6 days (most of this time in post-processing the masking files).
+See `results-iridian` for the output. Mapdamage has dropped by about half (compared to the in-house genome) based on spot-checking mapdamage plots. However, about 12% of the Iridian genome has no coverage, even for individuals with high read depth.
 
 ### 11.4.1 Softclipping for Iridian genome
 Modified the fasta, input, and output file paths, then ran mapdamage diagnostics on the modern Cvi files to check if they also have less soft-clipping:
@@ -648,8 +648,6 @@ Made a script to plot fraction softclipped vs. depth per individual:
 sbatch scripts/plot_softclip_vs_depth.sbatch
 ```
 The [plot](output/softclip_analysis-iridian/softclip_vs_depth_plot.png) shows that all individuals have ~5% softclipping, and the individuals with depth <1x have 10-30% softclipping. 
-
-NOTE: This script currently uses the depth calculations in `nf-pipelines/nf-trim-generode/results/depth`. Once ready, we should instead use `nf-pipelines/nf-trim-generode/results-iridian/depth`.
 
 ## 11.X Clean up
 Remove the temporary work directory:
