@@ -752,7 +752,7 @@ Calculate FST between the eras with a slurm job:
 bash scripts/calc_fst_modern_historic.sbatch --results-dir "nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop" --outdir "output/fst_historic_vs_modern-generode"
 ```
 
-Created `output/fst_historic_vs_modern-generode/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is XX. Seems reasonable, though on the high side.
+Created `output/fst_historic_vs_modern-generode/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.038. Seems reasonable.
 
 ## TO DO (old code)
 ### Dystruct
