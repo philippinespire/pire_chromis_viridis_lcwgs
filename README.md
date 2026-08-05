@@ -594,7 +594,7 @@ sbatch scripts/soft_clip_analysis.sbatch nf-pipelines/nf-trim-generode/results/d
 ```
 The [histogram by contig](output/softclip_analysis/histogram_soft_clipped_per_contig.png) shows a handful of contigs with >30% clipping. A [handful of individuals](output/softclip_analysis/histogram_soft_clipped_per_individual.png) also have a lot of soft-clipping.
 
-## 11.4 Try mapping against a new reference
+## 11.4 Map against a new reference
 Will this reduce soft-clipping?
 Download the Iridian genome, trim to contigs >20kb, create a dictionary, and index it for use:
 ```
@@ -627,14 +627,14 @@ tmux a -t nextflow
 cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode
 nextflow run main-iridian.nf -profile standard
 ```
-See `results-iridian` for the output. Mapdamage has dropped by about half (compared to the in-house genome) based on spot-checking mapdamage plots. However, about 12% of the Iridian genome has no coverage, even for individuals with high read depth.
+See `results-iridian` for the output. Mapdamage has dropped by about half (compared to the in-house genome) based on spot-checking mapdamage plots. However, amber plots suggest about 12% of the Iridian genome has no coverage, even for individuals with high read depth.
 
 ### 11.4.1 Softclipping for Iridian genome
 Modified the fasta, input, and output file paths, then ran mapdamage diagnostics on the modern Cvi files to check if they also have less soft-clipping:
 ```
 sbatch scripts/run_mapdamage_diagnostics.sbatch
 ```
-Output is in `output/mapdamage-iridian`. Moderns alignments also have a lot of soft-clipping (~20% at read ends), like the historical alignments (~30% at read ends). 
+Output is in `output/mapdamage-iridian`. Moderns alignments also have a lot of soft-clipping (~20% at read ends), like the historical alignments (~15% at read ends). 
 
 Modified the output file paths, and then made histograms of fraction soft-clipped by individual and by contig:
 ```
@@ -659,7 +659,7 @@ rm -r nf-pipelines/nf-trim-generode/work/
 ## 12 ANGSD structure and diversity from nf-trim-generode 
 Malin, 2026 July. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-generode`.
 
-Run nf-angsd-diversity on the nf-trim-generode reads from [Step 11](#11-retrim-and-map-with-nf-trim-generode). This is also trimmed to only the _C. viridis_ individuals. Start by copying over the base of the pipeline from an old run of nf-angsd-diversity:
+Run nf-angsd-diversity on the nf-trim-generode reads mapped to the Iridian genome from [Step 11.4](#11.4-map-against-a-new-reference). This is also trimmed to only the _C. viridis_ individuals. Start by copying over the base of the pipeline from an old run of nf-angsd-diversity:
 ```
 rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-cvi-only/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-generode/
 
@@ -668,12 +668,17 @@ cd nf-pipelines/nf-angsd-diversity-generode
 
 Make bam list by combining modern bams with historical rescaled bams:
 ```
-find /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results/data/bam_rescaled/ -maxdepth 1 -type f -name 'CviAPal*.bam' | sort > inputfiles/bam_list.txt
+find /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results-iridian/data/bam_rescaled/ -maxdepth 1 -type f -name 'CviAPal*.bam' | sort > inputfiles/bam_list.txt
 
-find /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results/data/bam/ -maxdepth 1 -type f -name 'CviCPal*.bam' | sort >> inputfiles/bam_list.txt
-
+find /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results-iridian/data/bam/ -maxdepth 1 -type f -name 'CviCPal*.bam' | sort >> inputfiles/bam_list.txt
 ```
-Both `inputfiles/samplesheet.csv` and `inputfiles/bam_list.txt` are already trimmed to the _Chromis viridis_ individuals (removing _Chromis atripectoralis_). Manually updated `samplesheet.csv` to the correct bam paths (easy enough to do).
+
+Make a contig list for the Iridian genome, keeping only the first column when contig names have spaces in them:
+```
+awk '/^>/ {sub(/^>/, ""); print $1}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna > inputfiles/contig_list.txt
+```
+
+Trim `inputfiles/samplesheet.csv` to the _Chromis viridis_ individuals (removing _Chromis atripectoralis_). Kept CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (removed other modern). Removed APal_004, APal016, APal_028, APal_040 (kept other historical). Left n=35 historical and n=9 modern individuals. Manually updated `samplesheet.csv` to the correct bam paths (easy enough to do) and updated to L98 (the new trimming length). The `inputfiles/bam_list.txt` is already trimmed.
 
 Calculate the expected coverage from the dpstats files in nf-trim-generode, using the individuals in the samplesheet:
 ```
@@ -681,21 +686,22 @@ bash
 awk -F, 'NR>1 {print $1}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-generode/inputfiles/samplesheet.csv \
 | while read -r id; do
     awk '{for(i=1;i<=NF;i++) if($i ~ /^-?[0-9]+([.][0-9]+)?([eE][+-]?[0-9]+)?$/) s+=$i} END{print s+0}' \
-      /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results/depth/"$id"*.bam.dpstats.txt
+      /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results-iridian/depth/"$id"*.bam.dpstats.txt
   done \
 | awk '{t+=$1} END{print t}'
 ```
-Outputs 103.4
+Outputs 49.2
 
-Modified `main.nf` and `modules/pcangsd/main.nf` to run optional LD-pruning, use this for the PCA, use this for a new admixture plot, and use this for the diversity calculation.
+Modified `main.nf`, `modules/pcangsd/main.nf`, `modules/angsd_gl/main.nf` to run optional LD-pruning and use this for the PCA and a new admixture plot. Don't do LD-pruning and keep monomorphic sites for the diversity calculation.
 
 Update the parameters in `main.nf` for this run:
-- set maxdepth to 10x the expected depth = 1034
+- use the Iridian genome
+- set maxdepth to 10x the expected depth = 492
 - set minind to 34, which is 70% of the 48 individuals we have in this round
 - use the repeat-masked bed file output by nf-trim-generode
 - use 50kb with 10kb steps for ld-pruning, and turn this on
 
-Start nextflow (Wahab had restarted, older tmux windows closed):
+Start nextflow (Wahab had restarted, older tmux window had closed):
 ```
 tmux new -s nextflow
 bash

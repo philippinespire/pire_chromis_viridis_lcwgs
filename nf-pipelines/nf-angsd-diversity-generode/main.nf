@@ -4,10 +4,10 @@ nextflow.enable.dsl=2
 params.samplesheet = "${projectDir}/inputfiles/samplesheet.csv"
 params.contigs     = "${projectDir}/inputfiles/contig_list.txt"
 params.outdir      = "${projectDir}/results"
-params.reference   = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/data/reference/reference.ssl.Cvi20k_rename.fasta"
-params.bed_file    = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results/data/reference/reference.ssl.Cvi20k_rename.repma.angsd.txt"
+params.reference   = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna"
+params.bed_file    = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results-iridian/data/reference/GCA_051013605.1_ASM5101360v1_genomic_20kb.repma.angsd.txt"
 params.species     = "Cvi"
-params.maxdepth    = 1034 // maximum depth to include in analysis. 10x the expected depth across the 48 individuals.
+params.maxdepth    = 492 // maximum depth to include in analysis. 10x the expected depth across the 48 individuals.
 params.minind      = 34 // minimum number of individuals to include in analysis. 70 percent of 48 individuals.
 params.ld_prune    = true  // Set to true to enable LD pruning
 params.max_kb_dist = 50     // Maximum pairwise distance in kb to test for LD if pruning
@@ -20,30 +20,7 @@ include { PCANGSD; PLOT_PCANGSD; PLOT_ADMIXTURE } from './modules/pcangsd'
 include { ANGSD_GL_POP } from './modules/angsd_gl_pop'
 include { ANGSD_DIVERSITY } from './modules/angsd_diversity'
 
-// --- Input Channels ---
-
-// Read in samplesheet and collect metadata
-
-samples = Channel
-    .fromPath(params.samplesheet, checkIfExists: true)
-    .splitCsv(header: true)
-    .map { row -> tuple(row.sample, row.pop, row.era, row.region, row.bam) }
-
-all_bams = samples
-    .map { sample, pop, era, region, bam -> bam }
-    .collect()
-
-contigs = Channel
-    .fromPath(params.contigs, checkIfExists: true)
-    .splitText()
-    .map { it.trim() }
-    .filter { it }
-
-pop_bams = samples
-    .groupTuple(by: [1, 2])
-    .map { samples, pop, era, regions, bams -> tuple(pop, era, bams)}
-
-// Proceses
+// Processes
 process LD_PRUNE {
     tag "LD Pruning"
     publishDir "${params.outdir}/ld_pruning", mode: 'copy'
@@ -209,8 +186,27 @@ process SUBSET_BEAGLE {
 // Workflow 
 
 workflow {
+    // --- Input Channels (Defined inside workflow for DSL2 scope compliance) ---
+    samples = channel
+        .fromPath(params.samplesheet, checkIfExists: true)
+        .splitCsv(header: true)
+        .map { row -> tuple(row.sample, row.pop, row.era, row.region, row.bam) }
 
-    samplesheet_file = Channel.fromPath(params.samplesheet)
+    all_bams = samples
+        .map { sample, pop, era, region, bam -> bam }
+        .collect()
+
+    contigs = channel
+        .fromPath(params.contigs, checkIfExists: true)
+        .splitText()
+        .map { it.trim() }
+        .filter { it }
+
+    pop_bams = samples
+        .groupTuple(by: [1, 2])
+        .map { sample_list, pop, era, regions, bams -> tuple(pop, era, bams) }
+
+    samplesheet_file = channel.fromPath(params.samplesheet)
 
     bamlist = COLLECT_BAM_ALL(all_bams)
     bamlist_pop = COLLECT_BAM_POP(pop_bams)
@@ -229,7 +225,7 @@ workflow {
 
     // Setup channel paths for PCA (filtered & pruned) and Diversity (unpruned)
     def final_beagle = collected.all_beagle
-    def pruned_files = Channel.of([])
+    def pruned_files = []
 
     if (params.ld_prune) {
     	// Run ngsLD and prune_graph

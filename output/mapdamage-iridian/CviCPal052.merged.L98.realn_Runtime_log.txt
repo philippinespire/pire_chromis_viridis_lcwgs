@@ -1,4 +1,4 @@
-2026-07-20 10:52:15,279	INFO	main: Started with the command: /opt/mapdamage2/bin/mapDamage -i nf-pipelines/nf-trim-generode/results-iridian/data/bam/CviCPal052.merged.L98.realn.bam -r /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna -d output/mapdamage-iridian/tmp_CviCPal052.merged.L98.realn --no-stats
-2026-07-20 11:17:18,027	DEBUG	main: BAM read in 1505.811946 seconds
-2026-07-20 11:17:20,980	INFO	main: Successful run
-2026-07-20 11:17:20,981	DEBUG	main: Run completed in 1508.766478 seconds
+2026-08-04 14:43:06,574	INFO	main: Started with the command: /opt/mapdamage2/bin/mapDamage -i nf-pipelines/nf-trim-generode/results-iridian/data/bam/CviCPal052.merged.L98.realn.bam -r /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna -d output/mapdamage-iridian/tmp_CviCPal052.merged.L98.realn --no-stats
+2026-08-04 15:07:36,717	DEBUG	main: BAM read in 1472.948933 seconds
+2026-08-04 15:07:39,547	INFO	main: Successful run
+2026-08-04 15:07:39,548	DEBUG	main: Run completed in 1475.780290 seconds
