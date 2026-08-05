@@ -634,7 +634,7 @@ Modified the fasta, input, and output file paths, then ran mapdamage diagnostics
 ```
 sbatch scripts/run_mapdamage_diagnostics.sbatch
 ```
-Output is in `output/mapdamage-iridian`. Moderns alignments also have a lot of soft-clipping (~20% at read ends), like the historical alignments (~15% at read ends). 
+Output is in `output/mapdamage-iridian`. Moderns alignments also have a lot of soft-clipping (~10-12% at read ends), like the historical alignments (~15% at read ends). 
 
 Modified the output file paths, and then made histograms of fraction soft-clipped by individual and by contig:
 ```
@@ -647,9 +647,9 @@ Made a script to plot fraction softclipped vs. depth per individual:
 ```
 sbatch scripts/plot_softclip_vs_depth.sbatch
 ```
-The [plot](output/softclip_analysis-iridian/softclip_vs_depth_plot.png) shows that all individuals have ~5% softclipping, and the individuals with depth <1x have 10-30% softclipping. 
+The [plot](output/softclip_analysis-iridian/softclip_vs_depth_plot.png) shows that all individuals have at least 5% softclipping, and the individuals with depth <1x have 10-30% softclipping. 
 
-## 11.X Clean up
+## 11.5 Clean up
 Remove the temporary work directory:
 ```
 rm -r nf-pipelines/nf-trim-generode/work/
@@ -720,16 +720,41 @@ crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-g
 
 The [plot of pi](output/tp_historic_vs_modern_mean_ci-generode.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
 
+### 12.2 ACER selection scan
+Used the `run_acer.R` script to iteratively identify loci under selection (adapted chi-squared test from the ACER package in R) and the effective population size (Ne) from the base directory:
+```
+module load container_env R
+crun Rscript scripts/run_acer.R \
+--hist_mafs=nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop/CviAPal_historic.mafs.gz \
+--mod_mafs=nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop/CviCPal_modern.mafs.gz \
+--region_names=Pop1 \
+--out_dir=output/acer \
+--helpers=scripts/acer_helpers.R \
+--ne_generations=114 \
+--test_gen_start=0 \
+--test_gen_end=113 \
+--fdr_cutoff=0.05 \
+--max_rounds=20 \
+--n_boot=1000 \
+--min_ind=4
+```
+See the output in [output/acer](output/acer/), including the [Manhattan Plot](output/acer/chisq_manhattan_Pop1_final.png).
+
+--- ACER Summary ---  
+Converged after 1 rounds   
+Total SNPs tested: 46648  
+Total SNPs under selection: 0  
+Neutral SNPs remaining: 46648  
+
+### 12.3 FST historical-modern
+Calculate FST between the eras with a slurm job:
+```
+bash scripts/calc_fst_modern_historic.sbatch --results-dir "nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop" --outdir "output/fst_historic_vs_modern-generode"
+```
+
+Created `output/fst_historic_vs_modern-generode/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is XX. Seems reasonable, though on the high side.
 
 ## TO DO (old code)
-### FST historical-modern
-Calculate FST between the eras (note this script submits a slurm job):
-```
-bash scripts/calc_fst_modern_historic.sbatch --results-dir "nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop" --outdir "output/fst_historic_vs_modern-cvi-only"
-```
-
-Created `output/fst_historic_vs_modern-cvi-only/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.0502. Seems reasonable, though on the high side.
-
 ### Dystruct
 Dystruct wants ld-pruned genotypes. This script submits a slurm job to prune:
 ```
@@ -777,42 +802,6 @@ bash scripts/run_continuity_from_mafs.sbatch \
   --output-prefix output/continuity/cvi-only
 ```
 It ran on small test batches of individuals, but the full set ran out of time after 4 days.
-
-### Whole-genome diversity
-Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses our custom script that calculates per-site pi and bootstraps to get 95% CIs:
-```
-bash
-module load container_env R
-crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci-cvi-only.png
-```
-
-The [plot of pi](output/tp_historic_vs_modern_mean_ci-cvi-only.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
-
-### ACER selection scan
-Used the `run_acer.R` script to iteratively identify loci under selection (adapted chi-squared test from the ACER package in R) and the effective population size (Ne) from the base directory:
-```
-module load container_env R
-crun Rscript scripts/run_acer.R \
---hist_mafs=nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop/CviAPal_historic.mafs.gz \
---mod_mafs=nf-pipelines/nf-angsd-diversity-cvi-only/results/angsd_pop/CviCPal_modern.mafs.gz \
---region_names=Pop1 \
---out_dir=output/acer \
---helpers=scripts/acer_helpers.R \
---ne_generations=114 \
---test_gen_start=0 \
---test_gen_end=113 \
---fdr_cutoff=0.05 \
---max_rounds=20 \
---n_boot=1000 \
---min_ind=4
-```
-See the output in [output/acer](output/acer/), including the [Manhattan Plot](output/acer/chisq_manhattan_Pop1_final.png).
-
---- ACER Summary ---  
-Converged after 1 rounds   
-Total SNPs tested: 47770  
-Total SNPs under selection: 0  
-Neutral SNPs remaining: 47770  
 
 ### Neutral diversity
 The same as in [Section 10.5](#105-whole-genome-diversity), since no loci identified as being under selection.

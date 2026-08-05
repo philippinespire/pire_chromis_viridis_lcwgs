@@ -251,6 +251,7 @@ workflow {
     // 4. Run ANGSD_GL_POP on ALL callable sites (No SNP_pval filter, No LD pruning)
     ANGSD_GL_POP(bamlist_pop, all_sites.snps, all_sites.bin, all_sites.idx, regions)
 
-    // 5. Diversity Calculations: Pi & Theta calculated on full SFS; Outputs both ld-pruned and un-pruned SFS versions
+    // 5. Diversity Calculations: Pi & Theta calculated on full SFS; 
+    // Outputs both ld-pruned and un-pruned SFS versions for downstream uses.
     ANGSD_DIVERSITY(ANGSD_GL_POP.out.saf_files, pruned_files.first())
 }
