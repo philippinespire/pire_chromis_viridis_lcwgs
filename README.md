@@ -659,7 +659,7 @@ rm -r nf-pipelines/nf-trim-generode/work/
 ## 12 ANGSD structure and diversity from nf-trim-generode 
 Malin, 2026 July. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-generode`.
 
-Run nf-angsd-diversity on the nf-trim-generode reads mapped to the Iridian genome from [Step 11.4](#11.4-map-against-a-new-reference). This is also trimmed to only the _C. viridis_ individuals. Start by copying over the base of the pipeline from an old run of nf-angsd-diversity:
+Run nf-angsd-diversity on the nf-trim-generode reads mapped to the Iridian genome from [Step 11.4](#114-map-against-a-new-reference). This is also trimmed to only the _C. viridis_ individuals. Start by copying over the base of the pipeline from an old run of nf-angsd-diversity that is no longer used:
 ```
 rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-cvi-only/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-generode/
 
@@ -754,46 +754,63 @@ bash scripts/calc_fst_modern_historic.sbatch --results-dir "nf-pipelines/nf-angs
 
 Created `output/fst_historic_vs_modern-generode/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.038. Seems reasonable.
 
-## TO DO (old code)
-### Dystruct
-Dystruct wants ld-pruned genotypes. This script submits a slurm job to prune:
-```
-bash scripts/ld_prune_slurm.sh --probs nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --pos nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.sites.txt --out output/ngsld/cvi-only.ld --prune-out output/ngsld/cvi-only.unlinked.pos --max-kb-dist 50 --min-weight 0.4
-```
-Key output is a list of unlinked positions, `output/ngsld/cvi-only.unlinked.pos`.
-Note that git ignores the large .ld output file.
-
-Manually made a generation time file for dystruct at `scripts/Cvi-only.generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 and 2022. __Note I need to swap the times so that time counts forward.__
+### 12.4 Dystruct
+Manually made a generation time file for dystruct at `data/generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 (gen 0) and 2022 (gen 1113).
 
 Run dystruct script that reads in a beagle file and submits a slurm job using K=2:
 ```
-bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 2 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-generode/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct --npops 2 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
 ```
-See `output/dystruct/Cvi_K2.*`. hold-out log-likelihood was -2548 in [log file](output/dystruct/logs/dystruct_5976233.out).
+See `output/dystruct/pruned_K2.*`. Hold-out log-likelihood was -4312 in [log file](output/dystruct/logs/dystruct_6605566.out).
 
 Plot the dystruct proportions:
 ```
 module load container_env R
-
-crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K2.dystruct_theta nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/dystruct/Cvi.dystruct.cvi-only.K2.pdf
+crun Rscript scripts/plot_dystruct.R output/dystruct/pruned_K2.dystruct_theta nf-pipelines/nf-angsd-diversity-generode/inputfiles/samplesheet.csv output/dystruct/dystruct.generode.K2.pdf
 ```
 
-The [output proportions plot](output/dystruct/Cvi.dystruct.cvi-only.K2.pdf) suggest a lot of the modern ancestry is mixed in with the historical population, though to varying proportions across historical individuals.
+The [output proportions plot](output/dystruct/dystruct.generode.K2.pdf) looks a lot like the [admixture plot](nf-pipelines/nf-angsd-diversity-generode/results/PCAngsd/Cvi.admixture.pdf), though with greater membership in group 1.
 
 For comparison, run dystruct script with K=1 and K=3, and plot K=3:
 ```
-bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 1 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-generode/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct --npops 1 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
 
-bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-cvi-only/results/GL/Cvi.beagle.gz --sites-file output/ngsld/cvi-only.unlinked.pos --out-dir output/dystruct --npops 3 --generation-times scripts/Cvi-only.generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-generode/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct --npops 3 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
 
-crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K3.dystruct_theta nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv output/dystruct/Cvi.dystruct.cvi-only.K3.pdf
+crun Rscript scripts/plot_dystruct.R output/dystruct/pruned_K3.dystruct_theta nf-pipelines/nf-angsd-diversity-generode/inputfiles/samplesheet.csv output/dystruct/dystruct.generode.K3.pdf
 ```
-K=1 hold-out log-likelihood -2786 (see the [log file](output/dystruct/logs/dystruct_5978242.out).  
-K=3 hold-out log-likelihood -2580 (see the [log file](output/dystruct/logs/dystruct_5978243.out). K=3 [further divides up the historical samples](output/dystruct/Cvi.dystruct.cvi-only.K3.pdf).  
+K=1 hold-out log-likelihood -4499 (see the [log file](output/dystruct/logs/dystruct_6605604.out).  
+K=3 hold-out log-likelihood -4414 (see the [log file](output/dystruct/logs/dystruct_6605605.out). K=3 [further divides up the historical samples](output/dystruct/dystruct.generode.K3.pdf).  
 This leaves K=2 as the best supported option.
 
-### Continuity
-I also tried running Josh Schraiber's [genomic continuity calculations](https://github.com/schraiber/continuity/). Modified his `ancient_genotypes.py` to work with python3 (it was written in python2). Created a script to make the input file from the angsd sample sheet, angsd .mafs.gz, and the bam files. It ended up being complex to sort out environments for python and samtools:
+#### 12.5 Low depth and admixture
+Plotted admixture proportion vs. depth (latter from BAM_QC process):
+```
+module load container_env R
+crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-diversity-generode/results/inputfiles/bamlist.txt nf-pipelines/nf-angsd-diversity-generode/results/PCAngsd/Cvi.admix.2.Q nf-pipelines/nf-trim-generode/results/depth/ 1 output/admix_vs_depth-generode.png
+```
+Yes, the [output plot](output/admix_vs_depth-generode.png) shows that low depth is associated with membership in the "yellow" group from the [admixture plot](nf-pipelines/nf-angsd-diversity-generode/results/PCAngsd/Cvi.admixture.pdf).
+
+### 12.6 Neutral diversity
+The same as in [Section 12.1](#121-whole-genome-diversity), since no loci identified as being under selection.
+
+### 12.7 Sliding window FST
+Use plot_windowed_fst.R to make a Manhattan plot from the angsd sliding-window Fst (50kb windows, 10kb steps):
+```
+module load container_env R
+crun Rscript scripts/plot_windowed_fst.R output/fst_historic_vs_modern-generode/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.txt output/fst_historic_vs_modern-generode/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png
+```
+The [output figure](output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png) has a handful of windows with Fst>0.3, but they are scattered and not obviously pointing towards a region with strong divergence.
+
+### Clean up
+Remove the 674M temporary directory:
+```
+rm -r nf-pipelines/nf-angsd-diversity-generode/work/
+```
+
+## Unused
+### Continuity [not used]
+I tried running Josh Schraiber's [genomic continuity calculations](https://github.com/schraiber/continuity/). Modified his `ancient_genotypes.py` to work with python3 (it was written in python2). Created a script to make the input file from the angsd sample sheet, angsd .mafs.gz, and the bam files. It ended up being complex to sort out environments for python and samtools:
 ```
 bash scripts/run_continuity_from_mafs.sbatch \
   --samplesheet nf-pipelines/nf-angsd-diversity-cvi-only/inputfiles/samplesheet.csv \
@@ -802,31 +819,3 @@ bash scripts/run_continuity_from_mafs.sbatch \
   --output-prefix output/continuity/cvi-only
 ```
 It ran on small test batches of individuals, but the full set ran out of time after 4 days.
-
-### Neutral diversity
-The same as in [Section 10.5](#105-whole-genome-diversity), since no loci identified as being under selection.
-
-### Sliding window FST
-Use plot_windowed_fst.R to make a Manhattan plot from the angsd sliding-window Fst (50kb windows, 10kb steps):
-```
-module load container_env R
-crun Rscript scripts/plot_windowed_fst.R output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.txt output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png
-```
-The [output figure](output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png) has a handful of windows with Fst>0.3, but they are scattered and not obviously pointing towards a region with strong selection.
-
-### Investigating outlier individuals
-Admixture and PCA plots show four outlier individuals: CviAPal004, CviAPal016, CviAPal028, CviAPal040.
-
-#### Low depth?
-Made a script to plot admixture proportion vs. depth (latter from BAM_QC process):
-```
-module load container_env R
-crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-diversity-cvi-only/results/inputfiles/bamlist.txt output/Cvi.pcangsd.cvi-only.admix.2.Q nf-pipelines/nf-trim-merged-unmerged/results/results/stats/ 1 output/admix_vs_depth.png
-```
-Yes, the [output plot](output/admix_vs_depth.png) shows that low depth is associated with membership in the "yellow" group from the [admixture plot](output/Cvi.pcangsd.cvi-only.admix.pdf).
-
-## Clean up
-Remove the 674M temporary directory:
-```
-rm -r nf-pipelines/nf-angsd-diversity-cvi-only/work/
-```
