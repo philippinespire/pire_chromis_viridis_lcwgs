@@ -574,14 +574,14 @@ Finished in 7 hrs. Found 103 bp average historical length and mapped with `bwa m
 
 Inspecting the [AMBER plots](nf-pipelines/nf-trim-generode/results/amber), the read length gap from 50-60bp has been fixed by the new `split_reads.sh` script. The historical reads have a wider read length distribution than the modern since there is a substantial fraction of short historical reads, plus some merged historical reads. The [mapdamage plots](nf-pipelines/nf-trim-generode/results/mapdamage/) still show many soft-clipped historical reads, despite stricter mapping, but very little evidence of historical damage patterns. Could summarize the `*_misincorporation.txt` files into a multi-individual plot.
 
-## 11.2 Depth vs. reads
+### 11.2 Depth vs. reads
 Plot read depth vs. number of reads
 ```
 sbatch scripts/plot_depth_vs_reads.sbatch nf-pipelines/nf-trim-generode/data/symlinks nf-pipelines/nf-trim-generode/results/depth output/depth_vs_reads_nf-trim-generode.txt output/depth_vs_reads_nf-trim-generode.pdf
 ```
 [Plot](output/depth_vs_reads_nf-trim-generode.pdf) shows that, as expected, depth increases with the number of reads. Depth increases much more strongly for modern than for historical individuals.
 
-## 11.3 Softclipping
+### 11.3 Softclipping
 Run mapdamage diagnostics on the modern Cvi files with a custom script to check if they also have soft-clipping:
 ```
 sbatch scripts/run_mapdamage_diagnostics.sbatch
@@ -594,7 +594,7 @@ sbatch scripts/soft_clip_analysis.sbatch nf-pipelines/nf-trim-generode/results/d
 ```
 The [histogram by contig](output/softclip_analysis/histogram_soft_clipped_per_contig.png) shows a handful of contigs with >30% clipping. A [handful of individuals](output/softclip_analysis/histogram_soft_clipped_per_individual.png) also have a lot of soft-clipping.
 
-## 11.4 Map against a new reference
+### 11.4 Map against a new reference
 Will this reduce soft-clipping?
 Download the Iridian genome, trim to contigs >20kb, create a dictionary, and index it for use:
 ```
@@ -629,7 +629,7 @@ nextflow run main-iridian.nf -profile standard
 ```
 See `results-iridian` for the output. Mapdamage has dropped by about half (compared to the in-house genome) based on spot-checking mapdamage plots. However, amber plots suggest about 12% of the Iridian genome has no coverage, even for individuals with high read depth.
 
-### 11.4.1 Softclipping for Iridian genome
+#### 11.4.1 Softclipping for Iridian genome
 Modified the fasta, input, and output file paths, then ran mapdamage diagnostics on the modern Cvi files to check if they also have less soft-clipping:
 ```
 sbatch scripts/run_mapdamage_diagnostics.sbatch
@@ -642,14 +642,14 @@ sbatch scripts/soft_clip_analysis.sbatch nf-pipelines/nf-trim-generode/results-i
 ```
 The [histogram by contig](output/softclip_analysis-iridian/histogram_soft_clipped_per_contig.png) shows all contigs with <15% clipping. Only [one individual](output/softclip_analysis-iridian/histogram_soft_clipped_per_individual.png) has 30% soft-clipping (CviAPal011).
 
-## 11.4.2 Softclipping vs. depth for Iridian genome
+#### 11.4.2 Softclipping vs. depth for Iridian genome
 Made a script to plot fraction softclipped vs. depth per individual:
 ```
 sbatch scripts/plot_softclip_vs_depth.sbatch
 ```
 The [plot](output/softclip_analysis-iridian/softclip_vs_depth_plot.png) shows that all individuals have at least 5% softclipping, and the individuals with depth <1x have 10-30% softclipping. 
 
-## 11.5 Clean up
+### 11.5 Clean up
 Remove the temporary work directory:
 ```
 rm -r nf-pipelines/nf-trim-generode/work/
@@ -657,7 +657,7 @@ rm -r nf-pipelines/nf-trim-generode/work/
 
 
 ## 12 ANGSD structure and diversity from nf-trim-generode 
-Malin, 2026 July. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-generode`.
+Malin, 2026 July. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-generode`.
 
 Run nf-angsd-diversity on the nf-trim-generode reads mapped to the Iridian genome from [Step 11.4](#114-map-against-a-new-reference). This is also trimmed to only the _C. viridis_ individuals. Start by copying over the base of the pipeline from an old run of nf-angsd-diversity that is no longer used:
 ```
@@ -809,6 +809,45 @@ Remove the 674M temporary directory:
 ```
 rm -r nf-pipelines/nf-angsd-diversity-generode/work/
 ```
+## 13 ANGSD with >1x depth
+Malin, 2026 August. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-1x`.
+
+Run nf-angsd-diversity-generode on the nf-trim-generode reads mapped to the Iridian genome from [Step 11.4](#114-map-against-a-new-reference). This is also trimmed to only the _C. viridis_ individuals with >1x depth. Start by copying over the base of the pipeline:
+```
+rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-generode/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-1x/
+
+cd nf-pipelines/nf-angsd-diversity-1x
+```
+
+From the [softclip analysis by individual](output/softclip_analysis-iridian/per_individual_stats.txt), we need to remove CviAPal001, CviAPal002, CviAPal003, CviAPal007, CviAPal008, CviAPal009, CviAPal011, CviAPal015, CviAPal018, CviAPal025, CviAPal029, CviAPal030, CviAPal033 CviAPal034, CviAPal036, CviAPal037, CviAPal038, CviAPal039. Leaves n=17 historical and n=9 modern individuals.
+
+Modify the [bam list](nf-pipelines/nf-angsd-diversity-1x/inputfiles/bam_list.txt) and [sample sheet](nf-pipelines/nf-angsd-diversity-1x/inputfiles/samplesheet.csv) by hand to remove these individuals.
+
+Calculate the expected coverage from the dpstats files in nf-trim-generode, using the individuals in the samplesheet:
+```
+bash
+awk -F, 'NR>1 {print $1}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-diversity-1x/inputfiles/samplesheet.csv \
+| while read -r id; do
+    awk '{for(i=1;i<=NF;i++) if($i ~ /^-?[0-9]+([.][0-9]+)?([eE][+-]?[0-9]+)?$/) s+=$i} END{print s+0}' \
+      /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results-iridian/depth/"$id"*.bam.dpstats.txt
+  done \
+| awk '{t+=$1} END{print t}'
+```
+Outputs 46.1
+
+Update the parameters in `main.nf` for this run:
+- set maxdepth to 10x the expected depth = 461
+- set minind to 18, which is 70% of the 26 individuals we have in this round
+
+Start nextflow in a new tmux window:
+```
+tmux new -s nextflow2
+bash
+module load container_env nextflow
+cd nf-pipelines/nf-angsd-diversity-1x
+nextflow run main.nf -profile standard
+```
+
 
 ## Unused
 ### Continuity [not used]
