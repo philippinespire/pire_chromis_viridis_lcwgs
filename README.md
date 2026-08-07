@@ -412,7 +412,7 @@ Remove the 1.2G temporary directory:
 rm -r nf-pipelines/nf-angsd-diversity/work/
 ```
 
-## 9. MitoZ
+## 9. MitoZ species identification
 Malin Pinsky, June 2026. Working in `/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/`
 
 Put the mitoz scripts in the `scripts/` directory:
@@ -469,7 +469,7 @@ Trimmed to top two in `MitoZ_output_vs_nt_top2.tsv` and with headers and labeled
 
 Bingo! The CPal individuals that matched Cvi are the "purple" individuals in the [admixture plot](output/Cvi.pcangsd.admix.pdf). The others are _C. atripectoralis_. We mostly collected _C. atripectoralis_.
 
-## 10. MIA to find historical mitogenomes
+## 10. MIA species identification for historical samples
 Installed mapping-iterative-assembler (MIA) in carpenterlab/pire/softwares/. 
 Downloaded the [Chromis viridis mitogenome MT199208.1](https://www.ncbi.nlm.nih.gov/nuccore/MT199208.1/) and stored in [data/](data/chromis_virids_mitogenome_MT199208.1.fasta)
 Wrote [run_MIA.sbatch](scripts/run_MIA.sbatch) for MIA that uses the [Illumina PE substitution matrix](data/ancient.submat.solexa.pe.txt) from MIA, finds the reverse read file if given the forward reads, and specifies output directories, etc., at the top of the sbatch script. Submit a job for each historical individual with another script:
@@ -510,8 +510,8 @@ sbatch scripts/blastn_coi_local_top5.sbatch
 Note: this overwrote the COI barcode results file. See `output/mia/all_samples_coi_blast_results.txt`.  
 APal_016 matches to _C. atripectoralis_. This was one of the admixture outliers. The APal_004 and APal_016 unfortunately did not return any mtDNA sequence. MIA repeatedly segfaulted on the APal_040 outlier. Despite limited information, removing all four seems appropriate. They have low depth, group together, and one is _C. atripectoralis_.
 
-## 11. Retrim and map with nf-trim-generode
-Try new trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed `split_reads.sh`, and does mapdamage rescaling of bam files. Get the files from an updated branch in my home directory (in the future, it will be available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo)
+## 11. Retrim and map only Cvi individuals with nf-trim-generode
+Trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed `split_reads.sh`, and does mapdamage rescaling of bam files. Get the files from an updated branch in my home directory (in the future, it will be available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo)
 ```
 cd /archive/carpenterlab/pire/mpinsky/
 rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow*' --exclude='.nextflow/' --exclude='examples/' nf-pipelines/nf-trim-generode pire_chromis_viridis_lcwgs/nf-pipelines/
@@ -803,6 +803,8 @@ crun Rscript scripts/plot_windowed_fst.R output/fst_historic_vs_modern-generode/
 The [output figure](output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png) has a handful of windows with Fst>0.3, but they are scattered and not obviously pointing towards a region with strong divergence.
 
 ### Clean up
+Manually added some smaller subdirectories in nf-pipelines/.../results to git (QA/QC files, depth statistics, etc.). Avoided the large data files.
+
 Remove the 674M temporary directory:
 ```
 rm -r nf-pipelines/nf-angsd-diversity-generode/work/
