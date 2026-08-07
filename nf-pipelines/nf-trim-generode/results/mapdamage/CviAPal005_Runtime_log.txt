@@ -1,0 +1,11 @@
+2026-07-17 16:12:19,365	INFO	main: Started with the command: /opt/mapdamage2/bin/mapDamage -i CviAPal005.merged.L103.realn.bam -r reference.ssl.Cvi20k_rename.fasta -d mapd_output --rescale --merge-reference-sequences
+2026-07-17 16:23:31,341	DEBUG	main: BAM read in 675.335546 seconds
+2026-07-17 16:23:35,367	INFO	mapdamage.rscript: Performing Bayesian estimates
+2026-07-17 16:23:35,367	DEBUG	mapdamage.rscript: Call: Rscript /opt/mapdamage2/lib/python3.7/site-packages/mapdamage/Rscripts/stats/runGeneral.R --args 30 10000 10 50000 0 0 1 1 0 0 1 12 mapd_output/ /opt/mapdamage2/lib/python3.7/site-packages/mapdamage/Rscripts/stats/ mapd_output/Stats_out 0 0 0 mapd_output/acgt_ratio.csv 0 0
+2026-07-17 16:30:40,175	DEBUG	mapdamage.rscript: Bayesian estimates completed in 424.807675 seconds
+2026-07-17 16:30:40,177	INFO	mapdamage.rescale: Rescaling BAM: 'CviAPal005.merged.L103.realn.bam' -> 'mapd_output/CviAPal005.merged.L103.realn.rescaled.bam'
+2026-07-17 16:30:40,220	WARNING	mapdamage.rescale: Warning! Assuming the pairs are non-overlapping, facing inwards and correctly paired.
+2026-07-17 16:47:41,781	WARNING	mapdamage.rescale: Number of non-rescaled reads due to improper pairing:  394236
+2026-07-17 16:47:41,793	DEBUG	mapdamage.rescale: Rescaling completed in 1021.615139 seconds
+2026-07-17 16:47:41,794	INFO	main: Successful run
+2026-07-17 16:47:41,794	DEBUG	main: Run completed in 2125.788610 seconds
