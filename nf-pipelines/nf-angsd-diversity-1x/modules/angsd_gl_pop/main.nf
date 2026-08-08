@@ -31,8 +31,7 @@ process ANGSD_GL_POP {
         -anc ${params.reference} \
         -sites ${snps} \
         -rf ${regions} \
-        -out ${pop}_${era}
-        # remove transitions to avoid bias from historical damage
-        -noTrans 1
+        -out ${pop}_${era} \
+        -noTrans 1 # remove transitions to avoid bias from historical damage
     """
 }
