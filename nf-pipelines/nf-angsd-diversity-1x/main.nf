@@ -21,90 +21,104 @@ include { ANGSD_GL_POP } from './modules/angsd_gl_pop'
 include { ANGSD_DIVERSITY } from './modules/angsd_diversity'
 
 // Processes
-process LD_PRUNE {
-    tag "LD Pruning"
-    publishDir "${params.outdir}/ld_pruning", mode: 'copy'
+process LD_PRUNE_CONTIG {
+    tag "LD Pruning ${contig}"
+    // Note: publishDir is removed here so it doesn't flood your results folder with 100s of tiny files
 
     input:
-    path beagle
-    path pos
+    tuple val(contig), path(beagle), path(maf)
 
     output:
-    path "pruned_sites.pos", emit: pruned_sites
-    path "all.ld", emit: ld_table
+    path "${contig}_pruned_sites.pos"
 
     script:
     """
-    # Load required HPC container environment modules
     module load container_env ngsTools
 
-    # Count fields in beagle header to infer number of individuals
+    # 1. Create a pos file directly from the MAF file for this specific contig
+    zcat ${maf} | tail -n +2 | awk 'BEGIN{OFS="\t"} {print \$1, \$2}' > ${contig}.pos
+
+    # 2. Count fields and sites
     beagle_ncols=\$(zcat ${beagle} | head -n 1 | awk '{print NF}')
     n_ind=\$(( (beagle_ncols - 3) / 3 ))
-    
-    # Safely count total number of sites (handling both plain text and gzipped files)
-    if [[ "${pos}" == *.gz ]]; then
-        n_sites=\$(zcat ${pos} | wc -l)
-    else
-        n_sites=\$(wc -l < ${pos})
+    n_sites=\$(wc -l < ${contig}.pos)
+
+    # 3. If contig has < 2 sites, skip ngsLD and return empty file
+    if [ "\$n_sites" -lt 2 ]; then
+        touch ${contig}_pruned_sites.pos
+        exit 0
     fi
 
-    # Run ngsLD
+    # 4. Run ngsLD on just this contig
     crun ngsLD \\
         --geno ${beagle} \\
         --probs \\
-        --pos ${pos} \\
+        --pos ${contig}.pos \\
         --n_ind \$n_ind \\
         --n_sites \$n_sites \\
         --max_kb_dist ${params.max_kb_dist} \\
-        --n_threads ${task.cpus ?: 8} \\
-        --out all.ld
+        --n_threads ${task.cpus ?: 1} \\
+        --out ${contig}.ld
 
-    # Format the pairwise table for prune_graph
+    # 5. If ngsLD found no linked edges, keep all sites
+    if [ ! -s ${contig}.ld ]; then
+        cp ${contig}.pos ${contig}_pruned_sites.pos
+        exit 0
+    fi
+
+    # 6. Format the pairwise table (Filter out empty r2 columns)
     max_bp_dist=\$(awk -v kb="${params.max_kb_dist}" 'BEGIN{printf "%.6f", kb*1000}')
     
-    # Safely handle header / lines formatting
-    first_dist_field=\$(awk 'NR==1 {print \$7; exit}' all.ld)
+    first_dist_field=\$(awk 'NR==1 {print \$7; exit}' ${contig}.ld)
     if [[ "\$first_dist_field" =~ ^[0-9]+([.][0-9]+)?\$ ]]; then
-        awk 'BEGIN{OFS="\\t"; print "site1","site2","dist","r2"} {print \$1,\$4,\$7,\$8}' all.ld > prune_graph_input.tsv
+        awk 'BEGIN{OFS="\t"; print "site1","site2","dist","r2"} \$8 != "" {print \$1,\$4,\$7,\$8}' ${contig}.ld > ${contig}_prune_input.tsv
     else
-        awk 'BEGIN{OFS="\\t"; print "site1","site2","dist","r2"} NR>1 {print \$1,\$4,\$7,\$8}' all.ld > prune_graph_input.tsv
+        awk 'BEGIN{OFS="\t"; print "site1","site2","dist","r2"} NR>1 && \$8 != "" {print \$1,\$4,\$7,\$8}' ${contig}.ld > ${contig}_prune_input.tsv
+    fi
+
+    # 7. Safety check: If the TSV only has a header (<= 1 line), skip prune_graph
+    if [ \$(wc -l < ${contig}_prune_input.tsv) -le 1 ]; then
+        cp ${contig}.pos ${contig}_pruned_sites.pos
+        exit 0
     fi
 
     weight_filter="dist <= \${max_bp_dist} && r2 >= ${params.min_weight}"
 
-    # Run prune_graph
+    # 8. Run prune_graph on this tiny graph
     crun prune_graph \\
         --header \\
-        --in prune_graph_input.tsv \\
+        --in ${contig}_prune_input.tsv \\
         --weight-field "r2" \\
         --weight-filter "\$weight_filter" \\
-        --out pruned_sites.raw.pos
+        --out ${contig}_pruned.raw.pos
 
-    # Reconstruct the 2-column, tab-separated, sorted, headerless sites file for angsd. 
-    # We need to match the pruned site IDs back to their original chromosome and position values. 
-    # The pruned_sites.raw.pos file contains site IDs in the format "chr_pos" or "chr:pos", 
-    # so we create a lookup table from the original pos file to map these back to their 
-    # original chromosome and position.
-    # We use gzip -cd -f to safely read the original pos file whether it is gzipped or not.
+    # 9. Reconstruct the 2-column pos file mapping
     awk '
       FNR == NR {
-        chr = \$1
-        pos = \$2
-        lines[chr "_" pos] = chr "\\t" pos
-        lines[chr ":" pos] = chr "\\t" pos
-        lines[pos] = chr "\\t" pos
+        chr = \$1; pos = \$2;
+        lines[chr "_" pos] = chr "\t" pos;
+        lines[chr ":" pos] = chr "\t" pos;
+        lines[pos] = chr "\t" pos;
         next
       }
-      {
-        if (\$1 in lines) {
-          print lines[\$1]
-        }
-      }
-    ' <(gzip -cd -f ${pos}) pruned_sites.raw.pos | sort -k1,1 -k2,2n > pruned_sites.pos
+      { if (\$1 in lines) print lines[\$1] }
+    ' ${contig}.pos ${contig}_pruned.raw.pos > ${contig}_pruned_sites.pos
+    """
+}
 
-    # Clean up temporary tables
-    rm -f prune_graph_input.tsv pruned_sites.raw.pos
+process MERGE_PRUNED_SITES {
+    tag "Merge Pruned Sites"
+    publishDir "${params.outdir}/ld_pruning", mode: 'copy'
+
+    input:
+    path pos_files
+
+    output:
+    path "pruned_sites.pos"
+
+    script:
+    """
+    cat ${pos_files} | sort -k1,1 -k2,2n > pruned_sites.pos
     """
 }
 
@@ -228,30 +242,36 @@ workflow {
     def pruned_files = []
 
     if (params.ld_prune) {
-    	// Run ngsLD and prune_graph
-        pruned = LD_PRUNE(collected.all_beagle, sites.snps)
+        // Match the per-contig beagle and maf files together
+        contig_ld_input = genotypes.beagle.join(genotypes.mafs)
         
+        // Run ngsLD and prune_graph on a per-contig basis
+        pruned_contig_sites = LD_PRUNE_CONTIG(contig_ld_input)
+        
+        // Merge the individual contig pos files into one complete list
+        merged_sites = MERGE_PRUNED_SITES(pruned_contig_sites.collect())
+                
         // Index pruned sites for downstream ANGSD runs
-        indexed = INDEX_PRUNED_SITES(pruned.pruned_sites)
+        indexed = INDEX_PRUNED_SITES(merged_sites)
         
         // Subset the Beagle file using the pruned positions
-        subset_beagle = SUBSET_BEAGLE(collected.all_beagle, pruned.pruned_sites)
+        subset_beagle = SUBSET_BEAGLE(collected.all_beagle, merged_sites)
         
         final_beagle = subset_beagle.pruned_beagle
-        pruned_files = indexed.snps.combine(indexed.bin).combine(indexed.idx)
+        pruned_files = indexed.snps.combine(indexed.bin).combine(indexed.idx).first()
     }
 
     regions = sites.regions
 
     // 3. Run PCAngsd on filtered (+ pruned) beagle file
     pcangsd_results = PCANGSD(final_beagle)
-    PLOT_PCANGSD(pcangsd_results.pcangsd_cov, samplesheet_file)
-    PLOT_ADMIXTURE(pcangsd_results.q_matrix, samplesheet_file)
+    PLOT_PCANGSD(pcangsd_results.pcangsd_cov, file(params.samplesheet))
+    PLOT_ADMIXTURE(pcangsd_results.q_matrix, file(params.samplesheet))
     
     // 4. Run ANGSD_GL_POP on ALL callable sites (No SNP_pval filter, No LD pruning)
     ANGSD_GL_POP(bamlist_pop, all_sites.snps, all_sites.bin, all_sites.idx, regions)
 
     // 5. Diversity Calculations: Pi & Theta calculated on full SFS; 
     // Outputs both ld-pruned and un-pruned SFS versions for downstream uses.
-    ANGSD_DIVERSITY(ANGSD_GL_POP.out.saf_files, pruned_files.first())
+    ANGSD_DIVERSITY(ANGSD_GL_POP.out.saf_files, pruned_files)
 }

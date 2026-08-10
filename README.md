@@ -692,7 +692,7 @@ awk -F, 'NR>1 {print $1}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridi
 ```
 Outputs 49.2
 
-Modified `main.nf`, `modules/pcangsd/main.nf`, `modules/angsd_gl/main.nf` to run optional LD-pruning and use this for the PCA and a new admixture plot. Don't do LD-pruning and keep monomorphic sites for the diversity calculation.
+Modified `main.nf`, `modules/pcangsd/main.nf`, `modules/angsd_gl/main.nf` to run optional LD-pruning (parellelized by contig) and use this for the PCA and a new admixture plot. Don't do LD-pruning and keep monomorphic sites for the diversity calculation.
 
 Update the parameters in `main.nf` for this run:
 - use the Iridian genome
@@ -709,6 +709,8 @@ module load container_env nextflow
 cd nf-pipelines/nf-angsd-diversity-generode # switch to the new pipeline
 nextflow run main.nf -profile standard
 ```
+
+Diversity calculations at the end took a couple days.
 
 ### 12.1 Whole-genome diversity
 Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses our custom script that calculates per-site pi and bootstraps to get 95% CIs:
@@ -755,7 +757,7 @@ bash scripts/calc_fst_modern_historic.sbatch --results-dir "nf-pipelines/nf-angs
 Created `output/fst_historic_vs_modern-generode/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.038. Seems reasonable.
 
 ### 12.4 Dystruct
-Manually made a generation time file for dystruct at `data/generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 (gen 0) and 2022 (gen 1113).
+Manually made a generation time file for dystruct at `data/generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 (gen 0) and 2022 (gen 113).
 
 Run dystruct script that reads in a beagle file and submits a slurm job using K=2:
 ```
@@ -848,9 +850,90 @@ cd nf-pipelines/nf-angsd-diversity-1x
 nextflow run main.nf -profile standard
 ```
 
+LD-pruning is slow, likely because of noise in the linkage calculations from fewer individuals.
+
+[PCA](nf-pipelines/nf-angsd-diversity-1x/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-diversity-1x/results/PCAngsd/Cvi.admixture.pdf) show some separation by era, but not a whole lot. Less than without trimming out low-depth individuals.
+
+### 12.1 Whole-genome diversity
+Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses our custom script that calculates per-site pi and bootstraps to get 95% CIs:
+```
+bash
+module load container_env R
+crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci-generode.png
+```
+
+The [plot of pi](output/tp_historic_vs_modern_mean_ci-generode.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
+
+### 12.3 ACER selection scan
+Used the `run_acer.R` script to iteratively identify loci under selection (adapted chi-squared test from the ACER package in R) and the effective population size (Ne) from the base directory:
+```
+salloc
+module load container_env R
+crun Rscript scripts/run_acer.R \
+--hist_mafs=nf-pipelines/nf-angsd-diversity-1x/results/angsd_pop/CviAPal_historic.mafs.gz \
+--mod_mafs=nf-pipelines/nf-angsd-diversity-1x/results/angsd_pop/CviCPal_modern.mafs.gz \
+--region_names=Pop1 \
+--out_dir=output/acer-1x \
+--helpers=scripts/acer_helpers.R \
+--ne_generations=114 \
+--test_gen_start=0 \
+--test_gen_end=113 \
+--fdr_cutoff=0.05 \
+--max_rounds=20 \
+--n_boot=1000 \
+--min_ind=4
+```
+Much slower to run with so few individuals. See the output in [output/acer-1x](output/acer-1x/), including the [Manhattan Plot](output/acer-1x/chisq_manhattan_Pop1_final.png).
+
+--- ACER Summary ---  
+Converged after 1 rounds   
+Total SNPs tested: 46648  
+Total SNPs under selection: 0  
+Neutral SNPs remaining: 46648  
+
+### 12.3 FST historical-modern
+Calculate FST between the eras with a slurm job:
+```
+bash scripts/calc_fst_modern_historic.sbatch --results-dir "nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop" --outdir "output/fst_historic_vs_modern-1x"
+```
+
+Created `output/fst_historic_vs_modern-generode/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.038. Seems reasonable.
+
+### 12.4 Dystruct
+Manually made a generation time file for dystruct at `data/generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 (gen 0) and 2022 (gen 113).
+
+Run dystruct script and submit slurm jobs using K=1, 2, and 3:
+```
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-1x/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct-1x --npops 1 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-1x/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct-1x --npops 2 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-1x/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct-1x --npops 3 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+```
+See `output/dystruct/pruned_K*.*`. Hold-out log-likelihoods from [log files](output/dystruct-1x/logs/) (jobs 614847, 6614848, 6614849) were:
+| K | LL |
+|---|----|
+| 1 | |
+| 2 | |
+| 3 | |
+
+This leaves K=2 as the best supported option.
+
+Plot the dystruct proportions:
+```
+module load container_env R
+crun Rscript scripts/plot_dystruct.R output/dystruct-1x/pruned_K2.dystruct_theta nf-pipelines/nf-angsd-diversity-1x/inputfiles/samplesheet.csv output/dystruct-1x/dystruct.generode.K2.pdf
+
+crun Rscript scripts/plot_dystruct.R output/dystruct-1x/pruned_K3.dystruct_theta nf-pipelines/nf-angsd-diversity-1x/inputfiles/samplesheet.csv output/dystruct-1x/dystruct.generode.K3.pdf
+```
+
+The [output proportions plot](output/dystruct-1x/dystruct.generode.K2.pdf) looks a lot like the [admixture plot](nf-pipelines/nf-angsd-diversity-1x/results/PCAngsd/Cvi.admixture.pdf), though with greater membership in group 1.
+
+
+
 
 ## Unused
-### Continuity [not used]
+### Continuity
 I tried running Josh Schraiber's [genomic continuity calculations](https://github.com/schraiber/continuity/). Modified his `ancient_genotypes.py` to work with python3 (it was written in python2). Created a script to make the input file from the angsd sample sheet, angsd .mafs.gz, and the bam files. It ended up being complex to sort out environments for python and samtools:
 ```
 bash scripts/run_continuity_from_mafs.sbatch \
