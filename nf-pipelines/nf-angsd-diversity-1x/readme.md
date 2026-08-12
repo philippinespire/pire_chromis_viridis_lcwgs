@@ -126,3 +126,14 @@ nextflow run main.nf -profile standard -resume
 
 If everything went well, the pipeline will run and submit jobs to the queue. 
 On the first run, a new conda environment will be created. This can take some time.
+
+## Output
+See `results/`
+
+* __angsd_pop__: saf, mafs, and beagle files for the full genome (including monomorphic sites) by historical and modern populations separately
+* __angsd_pop_theta__: thetas (large file), sfs, and .pestPG files calculated on the full genome (including monomorphic sites) for historical and for modern populations. Also sfs for those two populations trimmed only to the variant and ld-pruned sites.
+* __GL__: beagle, mafs, and sites files for the full set of individuals (not divided by modern vs. historical) for the variant sites (not ld-pruned)
+* __inputfiles__: list of bam files by population and overall
+* __ld_pruning__: .pos file of sites after ld-pruning, plus beagle file trimmed to these sites.
+* __PCAngsd__: .cov and .Q files from PCA and admixture calculations, plus plots of both
+* __sites__: .pos file for all sites, including monomorphic (large file)

@@ -712,24 +712,37 @@ nextflow run main.nf -profile standard
 
 Diversity calculations at the end took a couple days.
 
+Summary of the output (not organized that well)
+
+* __angsd_pop__: saf, mafs, and beagle files for the full genome (including monomorphic sites) by historical and modern populations separately
+* __angsd_pop_theta__: thetas (large file), sfs, and .pestPG files calculated on the full genome (including monomorphic sites) for historical and for modern populations. Also sfs for those two populations trimmed only to the variant and ld-pruned sites.
+* __GL__: beagle, mafs, and sites files for the full set of individuals (not divided by modern vs. historical) for the variant sites (not ld-pruned)
+* __inputfiles__: list of bam files by population and overall
+* __ld_pruning__: .pos file of sites after ld-pruning, plus beagle file trimmed to these sites.
+* __PCAngsd__: .cov and .Q files from PCA and admixture calculations, plus plots of both
+* __sites__: .pos file for all sites, including monomorphic (large file)
+
 ### 12.1 Whole-genome diversity
 Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses our custom script that calculates per-site pi and bootstraps to get 95% CIs:
 ```
+salloc
 bash
 module load container_env R
 crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci-generode.png
 ```
 
-The [plot of pi](output/tp_historic_vs_modern_mean_ci-generode.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
+The [plot of pi](output/tp_historic_vs_modern_mean_ci-generode.png) suggests lower diversity in the modern samples. As expected from the PCA.
 
 ### 12.2 ACER selection scan
-Used the `run_acer.R` script to iteratively identify loci under selection (adapted chi-squared test from the ACER package in R) and the effective population size (Ne) from the base directory:
+Used a new sbatch script wrapper and a modified R script that can take the all-variant-sites beagle and samplesheet inputs (since these outputs from the nf pipeline don't have monomorphic sites):
 ```
-module load container_env R
-crun Rscript scripts/run_acer.R \
---hist_mafs=nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop/CviAPal_historic.mafs.gz \
---mod_mafs=nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop/CviCPal_modern.mafs.gz \
---region_names=Pop1 \
+sbatch scripts/run_acer.sbatch \
+--beagle=nf-pipelines/nf-angsd-diversity-generode/results/GL/Cvi.beagle.gz \
+--sample_info=nf-pipelines/nf-angsd-diversity-generode/inputfiles/samplesheet.csv \
+--ind_col=sample \
+--group_col=era \
+--hist_group=historic \
+--mod_group=modern \
 --out_dir=output/acer \
 --helpers=scripts/acer_helpers.R \
 --ne_generations=114 \
@@ -743,47 +756,54 @@ crun Rscript scripts/run_acer.R \
 See the output in [output/acer](output/acer/), including the [Manhattan Plot](output/acer/chisq_manhattan_Pop1_final.png).
 
 --- ACER Summary ---  
-Converged after 1 rounds   
-Total SNPs tested: 46648  
-Total SNPs under selection: 0  
-Neutral SNPs remaining: 46648  
+Converged after 1 rounds.
+Total SNPs tested: 137384
+Total SNPs under selection: 0
+Neutral SNPs remaining: 137384
+
 
 ### 12.3 FST historical-modern
-Calculate FST between the eras with a slurm job:
+Calculate FST between the eras with a slurm job. Updated script that can take the ld-pruned list of sites:
 ```
-bash scripts/calc_fst_modern_historic.sbatch --results-dir "nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop" --outdir "output/fst_historic_vs_modern-generode"
+bash scripts/calc_fst_modern_historic.sbatch \
+--results-dir nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop \
+--sites nf-pipelines/nf-angsd-diversity-generode/results/ld_pruning/pruned_sites.pos \
+--outdir output/fst_historic_vs_modern-generode \
+--threads 36
 ```
 
-Created `output/fst_historic_vs_modern-generode/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.038. Seems reasonable.
+Created `output/fst_historic_vs_modern-generode/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.021467. Low as expected.
 
 ### 12.4 Dystruct
 Manually made a generation time file for dystruct at `data/generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 (gen 0) and 2022 (gen 113).
 
-Run dystruct script that reads in a beagle file and submits a slurm job using K=2:
-```
-bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-generode/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct --npops 2 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
-```
-See `output/dystruct/pruned_K2.*`. Hold-out log-likelihood was -4312 in [log file](output/dystruct/logs/dystruct_6605566.out).
-
-Plot the dystruct proportions:
-```
-module load container_env R
-crun Rscript scripts/plot_dystruct.R output/dystruct/pruned_K2.dystruct_theta nf-pipelines/nf-angsd-diversity-generode/inputfiles/samplesheet.csv output/dystruct/dystruct.generode.K2.pdf
-```
-
-The [output proportions plot](output/dystruct/dystruct.generode.K2.pdf) looks a lot like the [admixture plot](nf-pipelines/nf-angsd-diversity-generode/results/PCAngsd/Cvi.admixture.pdf), though with greater membership in group 1.
-
-For comparison, run dystruct script with K=1 and K=3, and plot K=3:
+Run dystruct script that reads in a beagle file and submits slurm jobs using K=1,2,3:
 ```
 bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-generode/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct --npops 1 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
 
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-generode/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct --npops 2 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+
 bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-generode/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct --npops 3 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+
+```
+See `output/dystruct/pruned_K*.*`. Hold-out log-likelihoods from [log files](output/dystruct/logs/) (jobs 6627619, 6627620, 6627621) were:
+| K | LL |
+|---|----|
+| 1 | -8806.3 |
+| 2 | -8286.5 |
+| 3 | -8383.6 |
+
+This leaves K=2 as the best supported option.
+
+Plot the dystruct proportions for K=2 and K=3:
+```
+module load container_env R
+crun Rscript scripts/plot_dystruct.R output/dystruct/pruned_K2.dystruct_theta nf-pipelines/nf-angsd-diversity-generode/inputfiles/samplesheet.csv output/dystruct/dystruct.generode.K2.pdf
 
 crun Rscript scripts/plot_dystruct.R output/dystruct/pruned_K3.dystruct_theta nf-pipelines/nf-angsd-diversity-generode/inputfiles/samplesheet.csv output/dystruct/dystruct.generode.K3.pdf
 ```
-K=1 hold-out log-likelihood -4499 (see the [log file](output/dystruct/logs/dystruct_6605604.out).  
-K=3 hold-out log-likelihood -4414 (see the [log file](output/dystruct/logs/dystruct_6605605.out). K=3 [further divides up the historical samples](output/dystruct/dystruct.generode.K3.pdf).  
-This leaves K=2 as the best supported option.
+
+The [K=2 proportions plot](output/dystruct/dystruct.generode.K2.pdf) looks a lot like the [admixture plot](nf-pipelines/nf-angsd-diversity-generode/results/PCAngsd/Cvi.admixture.pdf), though with greater membership in the modern group. K=3 just divides up historical more.
 
 #### 12.5 Low depth and admixture
 Plotted admixture proportion vs. depth (latter from BAM_QC process):
@@ -791,7 +811,7 @@ Plotted admixture proportion vs. depth (latter from BAM_QC process):
 module load container_env R
 crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-diversity-generode/results/inputfiles/bamlist.txt nf-pipelines/nf-angsd-diversity-generode/results/PCAngsd/Cvi.admix.2.Q nf-pipelines/nf-trim-generode/results/depth/ 1 output/admix_vs_depth-generode.png
 ```
-Yes, the [output plot](output/admix_vs_depth-generode.png) shows that low depth is associated with membership in the "yellow" group from the [admixture plot](nf-pipelines/nf-angsd-diversity-generode/results/PCAngsd/Cvi.admixture.pdf).
+Yes, the [output plot](output/admix_vs_depth-generode.png) shows that low depth is associated with membership in Group 2 (the "yellow" group) from the [admixture plot](nf-pipelines/nf-angsd-diversity-generode/results/PCAngsd/Cvi.admixture.pdf).
 
 ### 12.6 Neutral diversity
 The same as in [Section 12.1](#121-whole-genome-diversity), since no loci identified as being under selection.
@@ -802,12 +822,12 @@ Use plot_windowed_fst.R to make a Manhattan plot from the angsd sliding-window F
 module load container_env R
 crun Rscript scripts/plot_windowed_fst.R output/fst_historic_vs_modern-generode/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.txt output/fst_historic_vs_modern-generode/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png
 ```
-The [output figure](output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png) has a handful of windows with Fst>0.3, but they are scattered and not obviously pointing towards a region with strong divergence.
+The [output figure](output/fst_historic_vs_modern-cvi-only/CviAPal_historic_vs_CviCPal_modern.fst.win50kb.step10kb.png) has a handful of windows with high Fst, but they are scattered and not obviously pointing towards a region with strong divergence.
 
 ### Clean up
 Manually added some smaller subdirectories in nf-pipelines/.../results to git (QA/QC files, depth statistics, etc.). Avoided the large data files.
 
-Remove the 674M temporary directory:
+Remove the 133G temporary directory:
 ```
 rm -r nf-pipelines/nf-angsd-diversity-generode/work/
 ```
@@ -852,27 +872,38 @@ nextflow run main.nf -profile standard
 
 LD-pruning is slow, likely because of noise in the linkage calculations from fewer individuals.
 
+Summary of the output (not organized that well)
+
+* __angsd_pop__: saf, mafs, and beagle files for the full genome (including monomorphic sites) by historical and modern populations separately
+* __angsd_pop_theta__: thetas (large file), sfs, and .pestPG files calculated on the full genome (including monomorphic sites) for historical and for modern populations. Also sfs for those two populations trimmed only to the variant and ld-pruned sites.
+* __GL__: beagle, mafs, and sites files for the full set of individuals (not divided by modern vs. historical) for the variant sites (not ld-pruned)
+* __inputfiles__: list of bam files by population and overall
+* __ld_pruning__: .pos file of sites after ld-pruning, plus beagle file trimmed to these sites.
+* __PCAngsd__: .cov and .Q files from PCA and admixture calculations, plus plots of both
+* __sites__: .pos file for all sites, including monomorphic (large file)
+
 [PCA](nf-pipelines/nf-angsd-diversity-1x/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-diversity-1x/results/PCAngsd/Cvi.admixture.pdf) show some separation by era, but not a whole lot. Less than without trimming out low-depth individuals.
 
-### 12.1 Whole-genome diversity
+### 13.1 Whole-genome diversity
 Plot the mean pi values by historical vs. modern with whiskers for the 95% CIs. Uses our custom script that calculates per-site pi and bootstraps to get 95% CIs:
 ```
 bash
 module load container_env R
-crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci-generode.png
+crun Rscript scripts/plot_tp_historic_modern.R nf-pipelines/nf-angsd-diversity-1x/results/angsd_pop_theta/CviAPal_historic.pestPG nf-pipelines/nf-angsd-diversity-1x/results/angsd_pop_theta/CviCPal_modern.pestPG output/tp_historic_vs_modern_mean_ci-1x.png
 ```
 
-The [plot of pi](output/tp_historic_vs_modern_mean_ci-generode.png) suggests higher diversity in the modern samples. This is odd given how much diversity among historical samples appeared on the PCA.
+The [plot of pi](output/tp_historic_vs_modern_mean_ci-1x.png) suggests lower diversity in the modern samples compared to historical, just as before the 1x trimming. However, historical diversity is lower with them trimmed out (pi~0.0103) than with them included (pi~0.0107).
 
-### 12.3 ACER selection scan
-Used the `run_acer.R` script to iteratively identify loci under selection (adapted chi-squared test from the ACER package in R) and the effective population size (Ne) from the base directory:
+### 13.2 TO CHECK OUTPUT: ACER selection scan
+Used a new sbatch script wrapper and a modified R script that can take the all-variant-sites beagle and samplesheet inputs (since these outputs from the nf pipeline don't have monomorphic sites):
 ```
-salloc
-module load container_env R
-crun Rscript scripts/run_acer.R \
---hist_mafs=nf-pipelines/nf-angsd-diversity-1x/results/angsd_pop/CviAPal_historic.mafs.gz \
---mod_mafs=nf-pipelines/nf-angsd-diversity-1x/results/angsd_pop/CviCPal_modern.mafs.gz \
---region_names=Pop1 \
+sbatch scripts/run_acer.sbatch \
+--beagle=nf-pipelines/nf-angsd-diversity-1x/results/GL/Cvi.beagle.gz \
+--sample_info=nf-pipelines/nf-angsd-diversity-1x/inputfiles/samplesheet.csv \
+--ind_col=sample \
+--group_col=era \
+--hist_group=historic \
+--mod_group=modern \
 --out_dir=output/acer-1x \
 --helpers=scripts/acer_helpers.R \
 --ne_generations=114 \
@@ -883,41 +914,48 @@ crun Rscript scripts/run_acer.R \
 --n_boot=1000 \
 --min_ind=4
 ```
-Much slower to run with so few individuals. See the output in [output/acer-1x](output/acer-1x/), including the [Manhattan Plot](output/acer-1x/chisq_manhattan_Pop1_final.png).
+Took 6 hrs when I first ran this on all 397M sites (including monomorphic), which was unnecessary. With just variable sites (16M of them), it took 2.75 hrs.
 
---- ACER Summary ---  
-Converged after 1 rounds   
-Total SNPs tested: 46648  
-Total SNPs under selection: 0  
-Neutral SNPs remaining: 46648  
+See the output in [output/acer-1x](output/acer-1x/), including the [Manhattan Plot](output/acer-1x/chisq_manhattan_Pop1_final.png).
 
-### 12.3 FST historical-modern
-Calculate FST between the eras with a slurm job:
+--- ACER Summary ---
+Converged after 1 rounds.
+Total SNPs tested: 16963468
+Total SNPs under selection: 0
+Neutral SNPs remaining: 16963468
+
+
+### 13.3 FST historical-modern
+Calculate FST on the LD-pruned sites between the eras with a slurm job:
 ```
-bash scripts/calc_fst_modern_historic.sbatch --results-dir "nf-pipelines/nf-angsd-diversity-generode/results/angsd_pop" --outdir "output/fst_historic_vs_modern-1x"
+bash scripts/calc_fst_modern_historic.sbatch \
+--results-dir nf-pipelines/nf-angsd-diversity-1x/results/angsd_pop \
+--sites nf-pipelines/nf-angsd-diversity-1x/results/ld_pruning/pruned_sites.pos \
+--outdir output/fst_historic_vs_modern-1x \
+--threads 36
+
 ```
+Ran in 30 min, much better than a previous run with the all-sites SAF files that took >12 hrs. Created `output/fst_historic_vs_modern-1x/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.023091. About the same as without the 1x trimming.
 
-Created `output/fst_historic_vs_modern-generode/` with the output files, including 2D sfs and windowed fsts. The weighted global FST is 0.038. Seems reasonable.
+### TO CHECK OUTPUT: 13.4 Dystruct
+Manually made a generation time file for dystruct at `data/generation_times-1x.txt`.
 
-### 12.4 Dystruct
-Manually made a generation time file for dystruct at `data/generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 (gen 0) and 2022 (gen 113).
-
-Run dystruct script and submit slurm jobs using K=1, 2, and 3:
+Run dystruct script and submit slurm jobs using K=1, 2, and 3 and long job times since 24 hrs wasn't enough:
 ```
-bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-1x/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct-1x --npops 1 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-1x/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct-1x --npops 1 --generation-times data/generation_times-1x.txt --time 96:00:00 -- --epochs 100 --hold-out-fraction 0.1
 
-bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-1x/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct-1x --npops 2 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-1x/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct-1x --npops 2 --generation-times data/generation_times-1x.txt --time 96:00:00 -- --epochs 100 --hold-out-fraction 0.1
 
-bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-1x/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct-1x --npops 3 --generation-times data/generation_times.txt -- --epochs 100 --hold-out-fraction 0.1
+bash scripts/dystruct_slurm.sh --beagle nf-pipelines/nf-angsd-diversity-1x/results/ld_pruning/pruned.beagle.gz --out-dir output/dystruct-1x --npops 3 --generation-times data/generation_times-1x.txt --time 96:00:00 -- --epochs 100 --hold-out-fraction 0.1
 ```
-See `output/dystruct/pruned_K*.*`. Hold-out log-likelihoods from [log files](output/dystruct-1x/logs/) (jobs 614847, 6614848, 6614849) were:
+See `output/dystruct/pruned_K*.*`. Hold-out log-likelihoods from [log files](output/dystruct-1x/logs/) (jobs 6627576, 6627577, 6627578) were:
 | K | LL |
 |---|----|
 | 1 | |
 | 2 | |
 | 3 | |
 
-This leaves K=2 as the best supported option.
+This leaves K=X as the best supported option.
 
 Plot the dystruct proportions:
 ```
