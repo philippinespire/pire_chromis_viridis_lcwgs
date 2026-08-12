@@ -2,8 +2,8 @@
 
 # Script to iteratively use Chi-sq and CMH tests from the ACER package
 # to calculate genomic sites under selection and Ne.
-# Sample size is calculated from the number of individuals in the ANGSD input files.
-# Needs acer_helpers.r
+# Sample size is calculated from the number of individuals in the ANGSD input files or Beagle file.
+# Needs acer_helpers.R
 # Original by Marianne Dehasque 2026
 # Updated to handle one or more population with ANGSD input by Malin Pinsky, July 2026, 
 #   with the assistance of Google Gemini.
@@ -12,34 +12,40 @@
 # 
 # On Wahab, probably need to run:
 #   module load container_env R
-# How to run for a single population:
+#
+# -----------------------------------------------------------------------------
+# MODE 1: MAF Files Input
+# -----------------------------------------------------------------------------
 # crun Rscript run_acer.R \
 #  --hist_mafs=/path/to/hist1.mafs.gz \
 #  --mod_mafs=/path/to/mod1.mafs.gz \
 #  --region_names=Pop1 \
 #  --out_dir=/path/to/output_directory \
 #  --helpers=scripts/acer_helpers.R \
-#  --ne_generations=114 \ # Number of generations for Ne calculation
-#  --test_gen_start=0 \ # Start generation for testing
-#  --test_gen_end=113 \ # End generation for testing
-#  --fdr_cutoff=0.05 \ # FDR cutoff for multiple testing correction
-#  --max_rounds=20 \ # Maximum number of iterations
-#  --n_boot=1000 \ # Number of bootstrap replicates
+#  --ne_generations=114 \
+#  --test_gen_start=0 \
+#  --test_gen_end=113 \
+#  --fdr_cutoff=0.05 \
+#  --max_rounds=20 \
+#  --n_boot=1000 \
 #  --min_ind=4
 #
-# How to run for multiple populations:
+# -----------------------------------------------------------------------------
+# MODE 2: Beagle + Sample Metadata CSV Input
+# -----------------------------------------------------------------------------
 # crun Rscript run_acer.R \
-#  --hist_mafs=/path/hist1.mafs.gz,/path/hist2.mafs.gz \
-#  --mod_mafs=/path/mod1.mafs.gz,/path/mod2.mafs.gz \
-#  --region_names=Pop1,Pop2 \
+#  --beagle=/path/to/all_samples.beagle.gz \
+#  --sample_info=/path/to/samples.csv \
+#  --ind_col=sample \         # Column name for sample ID (default: sample)
+#  --group_col=era \       # Column name for era/group (default: era)
+#  --region_col=region \     # Column name for region (optional)
+#  --hist_group=historic \   # Group label for historic samples (default: historic)
+#  --mod_group=modern \      # Group label for modern samples (default: modern)
 #  --out_dir=/path/to/output_directory \
 #  --helpers=scripts/acer_helpers.R \
-#  --ne_generations=114 \ # Number of generations for Ne calculation
-#  --test_gen_start=0 \ # Start generation for testing
-#  --test_gen_end=113 \ # End generation for testing
-#  --fdr_cutoff=0.05 \ # FDR cutoff for multiple testing correction
-#  --max_rounds=20 \ # Maximum number of iterations
-#  --n_boot=1000 \ # Number of bootstrap replicates
+#  --ne_generations=114 \
+#  --test_gen_start=0 \
+#  --test_gen_end=113 \
 #  --min_ind=4
 
 suppressPackageStartupMessages({
@@ -53,11 +59,22 @@ suppressPackageStartupMessages({
 # -----------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
-# Set defaults
 opt <- list(
-  hist_mafs = NULL,     # Comma-separated list of historical maf files
-  mod_mafs = NULL,      # Comma-separated list of modern maf files
-  region_names = NULL,  # Comma-separated list of region names
+  # Mode 1: MAF input arguments
+  hist_mafs = NULL,
+  mod_mafs = NULL,
+  region_names = NULL,
+  
+  # Mode 2: Beagle input arguments
+  beagle = NULL,
+  sample_info = NULL,
+  ind_col = "sample",
+  group_col = "group",
+  region_col = "region",
+  hist_group = "historic",
+  mod_group = "modern",
+
+  # Pipeline options
   out_dir = "./results/selection",
   helpers = "acer_helpers.R",
   ne_generations = 114,
@@ -69,16 +86,24 @@ opt <- list(
   min_ind = 4
 )
 
-# Parse --key=value arguments
+# Parse both --key=value and --key value styles
 if (length(args) > 0) {
-  for (arg in args) {
-    if (grepl("^--", arg) && grepl("=", arg)) {
-      parts <- strsplit(sub("^--", "", arg), "=")[[1]]
-      key <- parts[1]
-      val <- parts[2]
+  i <- 1
+  while (i <= length(args)) {
+    arg <- args[i]
+    if (grepl("^--", arg)) {
+      if (grepl("=", arg)) {
+        parts <- strsplit(sub("^--", "", arg), "=")[[1]]
+        key <- parts[1]
+        val <- paste(parts[-1], collapse = "=")
+        i <- i + 1
+      } else {
+        key <- sub("^--", "", arg)
+        val <- args[i + 1]
+        i <- i + 2
+      }
       
       if (key %in% names(opt)) {
-        # Cast to numeric if the default is numeric
         if (is.numeric(opt[[key]])) {
           opt[[key]] <- as.numeric(val)
         } else {
@@ -87,21 +112,18 @@ if (length(args) > 0) {
       } else {
         warning(paste("Unknown argument ignored:", key))
       }
+    } else {
+      i <- i + 1
     }
   }
 }
 
-# Validate mandatory arguments
-if (is.null(opt$hist_mafs) || is.null(opt$mod_mafs) || is.null(opt$region_names)) {
-  stop("Error: --hist_mafs, --mod_mafs, and --region_names must all be provided.", call.=FALSE)
-}
+# Determine input mode
+has_mafs <- !is.null(opt$hist_mafs) && !is.null(opt$mod_mafs) && !is.null(opt$region_names)
+has_beagle <- !is.null(opt$beagle) && !is.null(opt$sample_info)
 
-hist_files <- strsplit(opt$hist_mafs, ",")[[1]]
-mod_files  <- strsplit(opt$mod_mafs, ",")[[1]]
-reg_names  <- strsplit(opt$region_names, ",")[[1]]
-
-if (length(hist_files) != length(mod_files) || length(hist_files) != length(reg_names)) {
-  stop("Error: --hist_mafs, --mod_mafs, and --region_names must have the same number of comma-separated items.", call.=FALSE)
+if (!has_mafs && !has_beagle) {
+  stop("Error: Must provide either (--hist_mafs, --mod_mafs, and --region_names) OR (--beagle and --sample_info).", call.=FALSE)
 }
 
 # -----------------------------
@@ -115,51 +137,170 @@ source(opt$helpers)
 dir.create(opt$out_dir, recursive = TRUE, showWarnings = FALSE)
 test_generations <- c(opt$test_gen_start, opt$test_gen_end)
 
-# -----------------------------
-# Input and Pre-filtering
-# -----------------------------
 merged_regions_list <- list()
 regions <- list()
 
-for (i in seq_along(reg_names)) {
-  r_name <- reg_names[i]
-  h_file <- hist_files[i]
-  m_file <- mod_files[i]
+# -------------------------------------------------------------
+# INPUT PROCESSING MODE 1: Legacy MAF files
+# -------------------------------------------------------------
+if (has_mafs) {
+  message("Input mode: MAF files")
+  hist_files <- strsplit(opt$hist_mafs, ",")[[1]]
+  mod_files  <- strsplit(opt$mod_mafs, ",")[[1]]
+  reg_names  <- strsplit(opt$region_names, ",")[[1]]
+
+  if (length(hist_files) != length(mod_files) || length(hist_files) != length(reg_names)) {
+    stop("Error: --hist_mafs, --mod_mafs, and --region_names must have the same number of items.", call.=FALSE)
+  }
+
+  for (i in seq_along(reg_names)) {
+    r_name <- reg_names[i]
+    h_file <- hist_files[i]
+    m_file <- mod_files[i]
+    
+    message(sprintf("Processing Region: %s...", r_name))
+    hist_df <- read.table(gzfile(h_file), header = TRUE, stringsAsFactors = FALSE)
+    mod_df  <- read.table(gzfile(m_file), header = TRUE, stringsAsFactors = FALSE)
+    
+    af_col_hist <- ifelse("knownEM" %in% names(hist_df), "knownEM", "freq")
+    af_col_mod  <- ifelse("knownEM" %in% names(mod_df), "knownEM", "freq")
+    
+    merged <- merge(hist_df, mod_df, by = c("chromo", "position"), suffixes = c("_H", "_M"))
+    
+    valid_sites <- (merged$major_H == merged$major_M & merged$minor_H == merged$minor_M) | 
+                   (merged$major_H == merged$minor_M & merged$minor_H == merged$major_M)
+    merged <- merged[valid_sites, , drop = FALSE]
+    
+    is_flipped <- merged$major_H == merged$minor_M & merged$minor_H == merged$major_M
+    merged$AF_mod_adj <- merged[[paste0(af_col_mod, "_M")]]
+    merged$AF_mod_adj[is_flipped] <- 1 - merged$AF_mod_adj[is_flipped]
+    
+    reg_df <- data.frame(
+      CHR = merged$chromo,
+      BP  = merged$position
+    )
+    reg_df[[paste0(r_name, "_A_AF")]] <- merged[[paste0(af_col_hist, "_H")]]
+    reg_df[[paste0(r_name, "_C_AF")]] <- merged$AF_mod_adj
+    reg_df[[paste0(r_name, "_A_N")]]  <- merged$nInd_H
+    reg_df[[paste0(r_name, "_C_N")]]  <- merged$nInd_M
+    
+    merged_regions_list[[i]] <- reg_df
+    regions[[r_name]] <- c(A = paste0(r_name, "_A"), C = paste0(r_name, "_C"))
+  }
+
+# -------------------------------------------------------------
+# INPUT PROCESSING MODE 2: Beagle + Sample Metadata CSV
+# -------------------------------------------------------------
+} else {
+  message("Input mode: Beagle + CSV metadata")
   
-  message(sprintf("Processing Region: %s...", r_name))
-  hist_df <- read.table(gzfile(h_file), header = TRUE, stringsAsFactors = FALSE)
-  mod_df  <- read.table(gzfile(m_file), header = TRUE, stringsAsFactors = FALSE)
+  if (!file.exists(opt$sample_info)) stop(paste("Sample info file not found:", opt$sample_info))
+  meta <- read.csv(opt$sample_info, stringsAsFactors = FALSE)
   
-  af_col_hist <- ifelse("knownEM" %in% names(hist_df), "knownEM", "freq")
-  af_col_mod  <- ifelse("knownEM" %in% names(mod_df), "knownEM", "freq")
+  if (!opt$ind_col %in% names(meta)) stop(paste("Column", opt$ind_col, "not found in sample_info CSV."))
+  if (!opt$group_col %in% names(meta)) stop(paste("Column", opt$group_col, "not found in sample_info CSV."))
   
-  merged <- merge(hist_df, mod_df, by = c("chromo", "position"), suffixes = c("_H", "_M"))
+  if (opt$region_col %in% names(meta)) {
+    reg_names <- unique(meta[[opt$region_col]])
+  } else if (!is.null(opt$region_names)) {
+    reg_names <- strsplit(opt$region_names, ",")[[1]]
+  } else {
+    reg_names <- "Pop1"
+    meta$region_temp <- "Pop1"
+    opt$region_col <- "region_temp"
+  }
   
-  # Ensure alleles match; drop totally differing alleles
-  valid_sites <- (merged$major_H == merged$major_M & merged$minor_H == merged$minor_M) | 
-                 (merged$major_H == merged$minor_M & merged$minor_H == merged$major_M)
-  merged <- merged[valid_sites, , drop = FALSE]
+  message(paste("Reading Beagle file:", opt$beagle))
+  beagle_con <- if (grepl("\\.gz$", opt$beagle)) gzfile(opt$beagle) else file(opt$beagle)
+  beagle_df <- read.table(beagle_con, header = TRUE, stringsAsFactors = FALSE)
   
-  # Adjust modern frequencies for flipped sites
-  is_flipped <- merged$major_H == merged$minor_M & merged$minor_H == merged$major_M
-  merged$AF_mod_adj <- merged[[paste0(af_col_mod, "_M")]]
-  merged$AF_mod_adj[is_flipped] <- 1 - merged$AF_mod_adj[is_flipped]
+  # Parse CHR and BP
+  marker_split <- do.call(rbind, strsplit(beagle_df$marker, "_(?=[^_]+$)", perl = TRUE))
+  if (ncol(marker_split) == 2) {
+    chr_vec <- marker_split[, 1]
+    bp_vec  <- as.numeric(marker_split[, 2])
+  } else {
+    chr_vec <- beagle_df$marker
+    bp_vec  <- seq_len(nrow(beagle_df))
+  }
   
-  # Format specific to this region
-  reg_df <- data.frame(
-    CHR = merged$chromo,
-    BP  = merged$position
-  )
-  reg_df[[paste0(r_name, "_A_AF")]] <- merged[[paste0(af_col_hist, "_H")]]
-  reg_df[[paste0(r_name, "_C_AF")]] <- merged$AF_mod_adj
-  reg_df[[paste0(r_name, "_A_N")]]  <- merged$nInd_H
-  reg_df[[paste0(r_name, "_C_N")]]  <- merged$nInd_M
+  # Extract individual sample IDs or total count from Beagle headers
+  gl_cols <- colnames(beagle_df)[4:ncol(beagle_df)]
+  if (length(gl_cols) %% 3 != 0) stop("Error: Beagle genotype likelihood columns are not a multiple of 3.")
+  n_beagle_ind <- length(gl_cols) / 3
+  beagle_samples <- unique(sub("[_\\.][012]$", "", gl_cols))
   
-  merged_regions_list[[i]] <- reg_df
-  regions[[r_name]] <- c(A = paste0(r_name, "_A"), C = paste0(r_name, "_C"))
+  # Check if sample IDs match or if fallback to 1-to-1 order is required
+  use_positional_matching <- FALSE
+  if (!any(meta[[opt$ind_col]] %in% beagle_samples)) {
+    message("Notice: Beagle header contains generic IDs (e.g. Ind0, Ind1). Falling back to positional order matching.")
+    if (nrow(meta) != n_beagle_ind) {
+      stop(sprintf("Error: CSV contains %d rows, but Beagle file contains %d individuals.", nrow(meta), n_beagle_ind))
+    }
+    use_positional_matching <- TRUE
+    meta$ind_index <- seq_len(nrow(meta))
+  }
+  
+  # Calculation function using sample 1-based indices
+  calc_af_from_indices <- function(df_gl, ind_indices) {
+    if (length(ind_indices) == 0) return(list(AF = rep(NA, nrow(df_gl)), N = rep(0, nrow(df_gl))))
+    
+    tot_dosage <- numeric(nrow(df_gl))
+    n_ind      <- numeric(nrow(df_gl))
+    
+    for (k in ind_indices) {
+      col_start <- 3 + (k - 1) * 3 + 1
+      p0 <- df_gl[[col_start]]
+      p1 <- df_gl[[col_start + 1]]
+      p2 <- df_gl[[col_start + 2]]
+      
+      is_valid <- (abs(p0 - 1/3) > 1e-4) | (abs(p1 - 1/3) > 1e-4) | (abs(p2 - 1/3) > 1e-4)
+      dosage <- p1 + 2 * p2
+      
+      tot_dosage <- tot_dosage + ifelse(is_valid, dosage, 0)
+      n_ind      <- n_ind + as.integer(is_valid)
+    }
+    
+    af <- ifelse(n_ind > 0, tot_dosage / (2 * n_ind), NA)
+    list(AF = af, N = n_ind)
+  }
+
+  for (i in seq_along(reg_names)) {
+    r_name <- reg_names[i]
+    message(sprintf("Processing Region: %s from Beagle data...", r_name))
+    
+    region_meta <- if (opt$region_col %in% names(meta)) meta[meta[[opt$region_col]] == r_name, ] else meta
+    
+    if (use_positional_matching) {
+      hist_indices <- region_meta[tolower(region_meta[[opt$group_col]]) == tolower(opt$hist_group), "ind_index"]
+      mod_indices  <- region_meta[tolower(region_meta[[opt$group_col]]) == tolower(opt$mod_group), "ind_index"]
+    } else {
+      hist_samples <- region_meta[tolower(region_meta[[opt$group_col]]) == tolower(opt$hist_group), opt$ind_col]
+      mod_samples  <- region_meta[tolower(region_meta[[opt$group_col]]) == tolower(opt$mod_group), opt$ind_col]
+      hist_indices <- match(hist_samples, beagle_samples)
+      mod_indices  <- match(mod_samples, beagle_samples)
+    }
+    
+    hist_stats <- calc_af_from_indices(beagle_df, hist_indices)
+    mod_stats  <- calc_af_from_indices(beagle_df, mod_indices)
+    
+    reg_df <- data.frame(
+      CHR = chr_vec,
+      BP  = bp_vec
+    )
+    reg_df[[paste0(r_name, "_A_AF")]] <- hist_stats$AF
+    reg_df[[paste0(r_name, "_C_AF")]] <- mod_stats$AF
+    reg_df[[paste0(r_name, "_A_N")]]  <- hist_stats$N
+    reg_df[[paste0(r_name, "_C_N")]]  <- mod_stats$N
+    
+    merged_regions_list[[i]] <- reg_df
+    regions[[r_name]] <- c(A = paste0(r_name, "_A"), C = paste0(r_name, "_C"))
+  }
 }
 
-# Combine all regions (inner join to test only shared sites across all provided regions)
+# -----------------------------
+# Combine and Filter Regions
+# -----------------------------
 message("Combining all regions into a single dataframe...")
 df_unfiltered <- merged_regions_list[[1]]
 if (length(merged_regions_list) > 1) {
@@ -168,9 +309,11 @@ if (length(merged_regions_list) > 1) {
   }
 }
 
-# Apply minimum individuals filter across ALL columns ending in _N
+af_cols <- grep("_AF$", names(df_unfiltered), value = TRUE)
+df_unfiltered <- df_unfiltered[complete.cases(df_unfiltered[, af_cols]), , drop = FALSE]
+
 all_n_cols <- grep("_N$", names(df_unfiltered), value = TRUE)
-df <- df_unfiltered[apply(df_unfiltered[, all_n_cols, drop = FALSE] > opt$min_ind, 1, all), , drop = FALSE]
+df <- df_unfiltered[apply(df_unfiltered[, all_n_cols, drop = FALSE] >= opt$min_ind, 1, all), , drop = FALSE]
 
 message(sprintf("Total SNPs ready for testing (shared & passing filters): %d", nrow(df)))
 
@@ -201,7 +344,6 @@ write.table(iteration_summary,   file.path(opt$out_dir, "iteration_summary.tsv")
 write.table(final_test_results,  file.path(opt$out_dir, "final_test_results.tsv"),  sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(final_cmh_results_full, file.path(opt$out_dir, "final_cmh_results_full.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
 
-# Bootstrap Ne CIs from the final neutral SNP set
 message("Bootstrapping Ne from final neutral SNP set...")
 final_selected_idx <- iterative_result$final$selected_idx
 df_neutral_final <- if (length(final_selected_idx) > 0) df[-final_selected_idx, , drop = FALSE] else df
@@ -247,7 +389,6 @@ if (nrow(chisq_dat) > 0 && all(c("CHR", "BP") %in% names(chisq_dat))) {
       fdr_col  <- paste0(r_name, "_chisq_fdr")
       
       if (pval_col %in% names(chisq_dat)) {
-        # Filter out NA and 0 p-values for log transformation
         plt_dat <- chisq_dat[!is.na(chisq_dat[[pval_col]]) & chisq_dat[[pval_col]] > 0, ]
         
         if (nrow(plt_dat) > 0) {
@@ -316,7 +457,7 @@ if (length(regions) > 1) {
         theme(legend.position = "none")
   
       ggsave(file.path(opt$out_dir, "cmh_manhattan_final.png"), p, width = 12, height = 5, dpi = 300)
-      message("Manhattan plot saved successfully.")
+      message("CMH Manhattan plot saved successfully.")
     }
   }
 } else {
