@@ -130,3 +130,9 @@ reference/
 .java/
 .snakemake/
 conda_cache/
+
+# Special handling for nf-angsd-selection
+# Un-ignore this specific pipeline's results folder
+!nf-angsd-selection/results/
+# Ignore large_data inside the un-ignored results folder
+nf-angsd-selection/results/large_data/
