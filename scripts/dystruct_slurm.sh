@@ -3,6 +3,7 @@
 # Malin Pinsky 2026
 # This script was written with AI assistance using GitHub Copilot
 # with the GPT-5.3-Codex model.
+# NOTE: superceded by run_dystruct.sbatch in August 2026
 
 set -euo pipefail
 
