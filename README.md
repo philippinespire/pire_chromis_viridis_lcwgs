@@ -745,24 +745,24 @@ See `output/dystruct/pruned_K*.*`. Hold-out log-likelihoods from [log files](log
 | K | LL |
 |---|----|
 | 1 | -3667.0 |
-| 2 | X |
-| 3 | X |
+| 2 | -3333.1 |
+| 3 | -3377.3 |
 
-This leaves K=X as the best supported option.
+This leaves K=2 as the best supported option.
 
 Plot the dystruct proportions for K=2 and K=3:
 ```
 module load container_env R
-crun Rscript scripts/plot_dystruct.R output/dystruct/pruned_K2.dystruct_theta nf-pipelines/nf-angsd-selection/inputfiles/samplesheet.csv output/dystruct/dystruct.generode.K2.pdf
+crun Rscript scripts/plot_dystruct.R output/dystruct/pruned_K2.dystruct_theta nf-pipelines/nf-angsd-selection/inputfiles/samplesheet.csv output/dystruct/dystruct.selection.K2.pdf
 
-crun Rscript scripts/plot_dystruct.R output/dystruct/pruned_K3.dystruct_theta nf-pipelines/nf-angsd-selection/inputfiles/samplesheet.csv output/dystruct/dystruct.generode.K3.pdf
+crun Rscript scripts/plot_dystruct.R output/dystruct/pruned_K3.dystruct_theta nf-pipelines/nf-angsd-selection/inputfiles/samplesheet.csv output/dystruct/dystruct.selection.K3.pdf
 ```
 
-The [K=2 proportions plot](output/dystruct/dystruct.generode.K2.pdf) looks a lot like the [admixture plot](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf), though with greater membership in the modern group. K=3 just divides up historical more.
+The [K=2 proportions plot](output/dystruct/dystruct.selection.K2.pdf) looks a lot like the [admixture plot](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf), though with greater membership in either group. K=3 just divides up historical more.
 
 
 ### Clean up
-Manually added some smaller subdirectories in nf-pipelines/.../results to git (QA/QC files, depth statistics, etc.). Avoided the large data files.
+Modify .gitignore to track results/, but keep ignoring results/large_data.
 
 Remove the 133G temporary directory:
 ```
