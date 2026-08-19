@@ -683,7 +683,7 @@ Update the parameters in `main.nf` for this run:
 - set species to Cvi
 - set maxdepth multiplier to 10x
 - set minind fraction to 70% of the individuals
-- use 50kb with 10kb steps for ld-pruning, and turn this on
+- use 50kb for ld-pruning, and turn this on
 - use 50kb with 10kb steps for windowed fst
 
 Start nextflow
@@ -696,6 +696,15 @@ nextflow run main.nf -profile wahab
 ```
 Ran in 2.5 hrs. The loci identified are in [site_counts.tsv](nf-pipelines/nf-angsd-selection/results/sites/site_counts.tsv).
 
+Which minind and maxdepth cutoffs were used? Look at the relevant angsd calls:
+```
+grep -E "minInd|setMaxDepth" work/*/*/.command.sh | less
+```
+| era | minInd | maxDepth |
+|-----|--------|----------|
+| Historic | 25 | 338 |
+| Modern | 6 | 307 |
+
 Found no SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-angsd-selection/results/selection/iteration_summary.tsv)). [Manhattan Plot](nf-pipelines/nf-angsd-selection/results/selection/chisq_manhattan_Bali_final.png) doesn't show any strong outlier loci.
 
 The [PCA](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf) plots don't show strong outlier individuals.
@@ -704,7 +713,19 @@ The weighted global FST is 0.0276. Low as expected. The [sliding window FST figu
 
 The [plot of pi](nf-pipelines/nf-angsd-selection/results/diversity/pi_historic_vs_modern_Bali.png) shows stable diversity through time.
 
-### 12.1 Low depth and admixture
+### 12.1 Compare to a previous run
+An earlier pipeline (`nf-angsd-diversity-generode`) that didn't trim by maximum depth or minimum number of individuals, and that didn't enforce using the same loci between historical and modern populations produced a different diversity change result. Check how much the loci in that run differed between historical and modern:
+```
+sbatch scripts/run_loci_comparison.sbatch
+```
+==== LOCI COMPARISON RESULTS =====
+Historic-only loci: 1,563,052
+Modern-only loci:   2,698,682
+Shared loci:        451,583,420
+
+Less than 1% of loci differed between historical and modern. However, compare to 2,041,668 loci identified as callable by the nf-angsd-selection pipeline.
+
+### 12.2 Low depth and admixture
 Plotted admixture proportion vs. depth (latter from BAM_QC process):
 ```
 module load container_env R
@@ -712,7 +733,7 @@ crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-selection/results/
 ```
 Yes, the [output plot](output/admix_vs_depth-selection.png) shows that low depth is associated with membership in Group 2 (the "yellow" group) from the [admixture plot](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf).
 
-### 12.2 Dystruct
+### 12.3 Dystruct
 Manually made a generation time file for dystruct at `data/generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 (gen 0) and 2022 (gen 113).
 
 Run dystruct script that reads in a beagle file and trims to a set of pruned & putatively neutral snps using K=1,2,3. It helps to use up to K cpus:
@@ -764,7 +785,7 @@ The [K=2 proportions plot](output/dystruct/dystruct.selection.K2.pdf) looks a lo
 ### Clean up
 Modify .gitignore to track results/, but keep ignoring results/large_data.
 
-Remove the 133G temporary directory:
+Remove the 5.9G temporary directory:
 ```
 rm -r nf-pipelines/nf-angsd-selection/work/
 ```
@@ -780,11 +801,14 @@ cd nf-pipelines/nf-angsd-selection-1x
 
 From the [softclip analysis by individual](output/softclip_analysis-iridian/per_individual_stats.txt), we need to remove CviAPal001, CviAPal002, CviAPal003, CviAPal007, CviAPal008, CviAPal009, CviAPal011, CviAPal015, CviAPal018, CviAPal025, CviAPal029, CviAPal030, CviAPal033 CviAPal034, CviAPal036, CviAPal037, CviAPal038, CviAPal039. Leaves n=17 historical and n=9 modern individuals. Modify the [sample sheet](nf-pipelines/nf-angsd-selection-1x/inputfiles/samplesheet.csv) by hand to remove these individuals.
 
-Can otherwise keep the same parameters in `main.nf`.
+Set parameters in `main.nf`:
+- use 10kb windows for ld-pruning to speed this up. Fish have low linkage, so this seems ok.
+- Leave the rest as for `nf-angsd-selection`
+
 
 Start nextflow in a tmux window:
 ```
-tmux a -t nextflow
+tmux a -t nextflow2
 cd nf-pipelines/nf-angsd-selection-1x
 nextflow run main.nf -profile wahab
 ```

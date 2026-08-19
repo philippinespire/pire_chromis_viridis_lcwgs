@@ -103,7 +103,8 @@ workflow {
     )
     
     // 7. Run ANGSD_GL_ALL to identify SNPs (uses SNP_pval 1e-6)
-    genotypes = ANGSD_GL_ALL(contigs, bamlist.first(), ch_sites_bundle.first(), ch_ref)
+    // only consider the sites that pass the QC filters in both historical and modern populations (i.e. the intersected site set)
+    genotypes = ANGSD_GL_ALL(contigs, bamlist.first(), ch_intersect_bundle.first(), ch_ref)
 
     mafs = genotypes.mafs.map { contig, file -> file }.collect()
     beagle = genotypes.beagle.map { contig, file -> file }.collect()

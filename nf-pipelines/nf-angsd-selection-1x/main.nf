@@ -10,7 +10,7 @@ params.species     = "Cvi"   // 3-letter species code for output file naming. us
 params.min_ind_frac   = 0.70 // Minimum percentage of individuals required per site (default 0.70)
 params.max_depth_mult = 10   // Max depth threshold as a multiplier of the average total expected coverage (default 10)
 params.ld_prune    = true    // Set to true to enable LD pruning (default true)
-params.max_kb_dist = 50      // Maximum pairwise distance in kb to test for LD if pruning
+params.max_kb_dist = 10      // Maximum pairwise distance in kb to test for LD if pruning
 params.min_weight  = 0.2     // Minimum r2 threshold for pruning filter (default 0.2)
 params.run_selection = true  // Set to false to skip ACER by default (default true)
 params.generations = 114     // Number of generations to use for Ne calculations. Default is 114 for Albatross to contemporary populations with a 1 year generation time. Adjust for other species as needed.
@@ -103,7 +103,7 @@ workflow {
     )
     
     // 7. Run ANGSD_GL_ALL to identify SNPs (uses SNP_pval 1e-6)
-    genotypes = ANGSD_GL_ALL(contigs, bamlist.first(), ch_sites_bundle.first(), ch_ref)
+    genotypes = ANGSD_GL_ALL(contigs, bamlist.first(), ch_intersect_bundle.first(), ch_ref)
 
     mafs = genotypes.mafs.map { contig, file -> file }.collect()
     beagle = genotypes.beagle.map { contig, file -> file }.collect()
