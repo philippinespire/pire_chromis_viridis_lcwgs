@@ -694,13 +694,13 @@ module load container_env nextflow
 cd nf-pipelines/nf-angsd-selection
 nextflow run main.nf -profile wahab
 ```
-Ran in 2.5 hrs. The loci identified are in [site_counts.tsv](nf-pipelines/nf-angsd-selection/results/sites/site_counts.tsv).
+Ran in 5.5 hrs. The loci identified are in [site_counts.tsv](nf-pipelines/nf-angsd-selection/results/sites/site_counts.tsv).
 
 Which minind and maxdepth cutoffs were used? Look at the relevant angsd calls:
 ```
 grep -E "minInd|setMaxDepth" work/*/*/.command.sh | less
 ```
-| era | minInd | maxDepth |
+| era | minInd | setMaxDepth |
 |-----|--------|----------|
 | Historic | 25 | 338 |
 | Modern | 6 | 307 |
@@ -709,12 +709,12 @@ Found no SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-ang
 
 The [PCA](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf) plots don't show strong outlier individuals.
 
-The weighted global FST is 0.0276. Low as expected. The [sliding window FST figure](nf-pipelines/nf-angsd-selection/results/fst/Bali_fst_manhattan.png) has a handful of windows with high Fst, but they are scattered and not obviously pointing towards a region with strong divergence.
+The [weighted global FST is 0.0264](nf-pipelines/nf-angsd-selection/results/fst/Bali_hist_vs_mod.global_fst.txt). Low as expected. The [sliding window FST figure](nf-pipelines/nf-angsd-selection/results/fst/Bali_fst_manhattan.png) has some windows with high Fst, but they are scattered and not obviously pointing towards a region with strong divergence.
 
 The [plot of pi](nf-pipelines/nf-angsd-selection/results/diversity/pi_historic_vs_modern_Bali.png) shows stable diversity through time.
 
 ### 12.1 Compare to a previous run
-An earlier pipeline (`nf-angsd-diversity-generode`) that didn't trim by maximum depth or minimum number of individuals, and that didn't enforce using the same loci between historical and modern populations produced a different diversity change result. Check how much the loci in that run differed between historical and modern:
+An earlier pipeline (`nf-angsd-diversity-generode`) that didn't trim by maximum depth or minimum number of individuals, and that didn't enforce using the same loci between historical and modern populations produced a different diversity change result (decline through time). Check how much the loci in that run differed between historical and modern eras:
 ```
 sbatch scripts/run_loci_comparison.sbatch
 ```
@@ -723,7 +723,7 @@ Historic-only loci: 1,563,052
 Modern-only loci:   2,698,682
 Shared loci:        451,583,420
 
-Less than 1% of loci differed between historical and modern. However, compare to 2,041,668 loci identified as callable by the nf-angsd-selection pipeline.
+Less than 1% of loci differed between historical and modern. However, compare to the only 2,041,668 loci identified as callable by the `nf-angsd-selection pipeline`. The `nf-angsd-diversity-generode` run seems to have included a lot of loci that failed to pass quality filters in one era or the other (likely not enough individuals represented in the historic era, since these were low depth).
 
 ### 12.2 Low depth and admixture
 Plotted admixture proportion vs. depth (latter from BAM_QC process):
@@ -785,10 +785,11 @@ The [K=2 proportions plot](output/dystruct/dystruct.selection.K2.pdf) looks a lo
 ### Clean up
 Modify .gitignore to track results/, but keep ignoring results/large_data.
 
-Remove the 5.9G temporary directory:
+Remove the 4.7G temporary directory:
 ```
 rm -r nf-pipelines/nf-angsd-selection/work/
 ```
+
 ## 13 ANGSD with >1x depth
 Malin, 2026 August. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection-1x`.
 
