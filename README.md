@@ -814,15 +814,26 @@ cd nf-pipelines/nf-angsd-selection-1x
 nextflow run main.nf -profile wahab
 ```
 
-LD-pruning was slow, likely because of noise in the linkage calculations from fewer individuals.
+LD-pruning was slow, likely because of noise in the linkage calculations from fewer individuals. Took 3.5 days in total.
 
-Found XX SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-angsd-selection-1x/results/selection/iteration_summary.tsv)). [Manhattan Plot](nf-pipelines/nf-angsd-selection-1x/results/selection/chisq_manhattan_Bali_final.png) XX show any strong outliers.
+[Loci analyzed](nf-pipelines/nf-angsd-selection-1x/results/sites/site_counts.tsv) and compared to [previous run]((nf-pipelines/nf-angsd-selection-1x/results/sites/site_counts.tsv)). Many more loci retained in this run because low-depth individuals were dropped:
+| site_set	| count (this run) | count (nf-angsd-selection run)
+|---|---|---|
+|all_callable	| 139,246,906 | 2,041,668 |
+|all_snps	| 8,270,327 | 223,159 |
+|selected_loci	|0 | 0 |
+|callable_neutral	| 139,246,906 | 2,041,668 |
+|snps_neutral	| 8,270,327 | 223,159 |
+|snps_pruned	| 1,465,184 | 79,665 |
+snps_pruned_neutral	| 1,465,184 | 79,665 |
 
-The [PCA](nf-pipelines/nf-angsd-selection-1x/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](f-pipelines/nf-angsd-selection-1x/results/PCAngsd/Cvi.admixture.pdf) plots XX show strong outlier individuals.
+Found 0 SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-angsd-selection-1x/results/selection/iteration_summary.tsv)). [Manhattan Plot](nf-pipelines/nf-angsd-selection-1x/results/selection/chisq_manhattan_Bali_final.png) does not show any strong outliers.
 
-The weighted global FST is XX. [Low as expected]. The [sliding window FST figure](nf-pipelines/nf-angsd-selection-1x/results/fst/Bali_fst_manhattan.png) has a XX with high Fst.
+The [PCA](nf-pipelines/nf-angsd-selection-1x/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection-1x/results/PCAngsd/Cvi.admixture.pdf) plots do not show strong outlier individuals. A bit less temporal differentiation than [with the low-depth individuals](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf).
 
-The [plot of pi](nf-pipelines/nf-angsd-selection-1x/results/pi_historic_vs_modern_Bali.png) shows XX diversity in the modern samples.
+The weighted global FST is [0.025795](nf-pipelines/nf-angsd-selection-1x/results/fst/Bali_hist_vs_mod.global_fst.txt). Low as expected, and slightly lower than [FST with the low-depth individuals included](nf-pipelines/nf-angsd-selection/results/fst/Bali_hist_vs_mod.global_fst.txt). The [sliding window FST figure](nf-pipelines/nf-angsd-selection-1x/results/fst/Bali_fst_manhattan.png) has a few regions with higher Fst. Could be interesting to investigate.
+
+The [plot of pi](nf-pipelines/nf-angsd-selection-1x/results/diversity/pi_historic_vs_modern_Bali.png) shows lower diversity in the modern samples. This contrasts with the [stable pi](nf-pipelines/nf-angsd-selection/results/diversity/pi_historic_vs_modern_Bali.png) when the low-depth individuals are included. Likely because of the much larger coverage across the genome.
 
 ### 13.1 Dystruct
 Manually made a generation time file for dystruct at `data/generation_times-1x.txt`.
@@ -853,12 +864,30 @@ sbatch --time=96:00:00 --cpus-per-task=3 scripts/run_dystruct.sbatch \
   --generation-times data/generation_times-1x.txt \
   -- --epochs 100 --hold-out-fraction 0.1
 ```
+See `output/dystruct-1x/pruned_K*.*`. Hold-out log-likelihoods from [log files](logs/) (jobs 6717595, 6717596, 6717597) were:
+| K | LL |
+|---|----|
+| 1 | -117602 |
+| 2 | -111643 |
+| 3 | -118923 |
+
+This leaves K=2 as the best supported option.
+
+Plot the dystruct proportions for K=2 and K=3:
+```
+module load container_env R
+crun Rscript scripts/plot_dystruct.R output/dystruct-1x/Cvi_K2.dystruct_theta nf-pipelines/nf-angsd-selection-1x/inputfiles/samplesheet.csv output/dystruct-1x/dystruct.selection.K2.pdf
+
+crun Rscript scripts/plot_dystruct.R output/dystruct-1x/Cvi_K3.dystruct_theta nf-pipelines/nf-angsd-selection-1x/inputfiles/samplesheet.csv output/dystruct-1x/dystruct.selection.K3.pdf
+```
+
+The [K=2 proportions plot](output/dystruct-1x/dystruct.selection.K2.pdf) looks reasonably different from the [admixture plot](nf-pipelines/nf-angsd-selection-1x/results/PCAngsd/Cvi.admixture.pdf), though both don't show clear divisions into two groups. K=3 just divides up historical and modern more.
 
 
 ### 13.2 Clean up
 Manually added some smaller subdirectories in nf-pipelines/.../results to git (QA/QC files, depth statistics, etc.). Avoided the large data files.
 
-Remove the 1.4T temporary directory:
+Remove the 900G temporary directory:
 ```
 rm -r nf-pipelines/nf-angsd-selection-1x/work/
 ```
