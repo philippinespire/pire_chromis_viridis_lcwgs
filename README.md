@@ -892,6 +892,62 @@ Remove the 900G temporary directory:
 rm -r nf-pipelines/nf-angsd-selection-1x/work/
 ```
 
+## 14 Test for paralogs
+Some SFS plots made for a different project (`pire_synthesis`) have an excess of loci with alleles at 50:50. Let's test for paralogs by
+
+1. Testing for excess heterozygosity and depth >1.75x with angsd
+2. Running `ngsParalog`
+
+Start by copying over the base of the nf-trim-generode pipeline:
+```
+rsync -a --exclude='work/' --exclude='results/' --exclude='results-iridian/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-paralog/
+
+cd nf-pipelines/nf-paralog
+```
+
+Wrote a new `main.nf` that maps the modern reads (without trimming to match the historical read length) with very few quality filters, then runs ANGSD (HWE and depth tests) and ngsParalog. Updated the `nextflow.config` file to match.
+
+The same parameters and input files as `nf-trim-generode` should be good.
+
+Start it in the existing tmux shell:
+```
+tmux a -t nextflow
+cd ../nf-paralog/
+nextflow run main.nf -profile wahab -resume
+```
+
+## 15 Re-run ANGSD without soft-clipped reads
+As a sensitivity test, let's re-run `nf-angsd-selection-1x` after stripping out all soft-clipped reads. Create a `temp/` directory and put the bams from `nf-trim-generode`'s `results-iridian` there after stripping out unmapped and reads with any soft-clipping:
+```
+salloc
+bash
+mkdir -p temp/bams_noclip
+module load container_env samtools
+for bam in nf-pipelines/nf-trim-generode/results-iridian/data/bam_rescaled/*.bam; do # historical reads
+    base=$(basename "$bam" .bam)
+    crun samtools view -h -e '!flag.unmap && cigar !~ "S"' -b -@ 4 "$bam" > "temp/bams_noclip/${base}.bam"
+    crun samtools index "temp/bams_noclip/${base}.bam"
+done
+for bam in nf-pipelines/nf-trim-generode/results-iridian/data/bam/*.bam; do # modern and un-rescaled historical reads
+    base=$(basename "$bam" .bam)
+    crun samtools view -h -e '!flag.unmap && cigar !~ "S"' -b -@ 4 "$bam" > "temp/bams_noclip/${base}.bam"
+    crun samtools index "temp/bams_noclip/${base}.bam"
+done
+```
+
+Make a new samplesheet:
+```
+cp nf-pipelines/nf-angsd-selection-1x/inputfiles/samplesheet.csv nf-pipelines/nf-angsd-selection-1x/inputfiles/samplesheet_noclip.csv
+```
+Then hand-edit to point to `temp/bam_noclip`.
+
+Make a new nextflow file and hand-edit to point it to the new `samplesheet_noclip.csv` with a new `results-noclip/` directory:
+```
+cp nf-pipelines/nf-angsd-selection-1x/main.nf nf-pipelines/nf-angsd-selection-1x/main-noclip.nf
+```
+
+Still need to run this.
+
 ## Unused
 ### Continuity
 I tried running Josh Schraiber's [genomic continuity calculations](https://github.com/schraiber/continuity/). Modified his `ancient_genotypes.py` to work with python3 (it was written in python2). Created a script to make the input file from the angsd sample sheet, angsd .mafs.gz, and the bam files. It ended up being complex to sort out environments for python and samtools:
