@@ -12,6 +12,7 @@ params.outdir       = "${projectDir}/results" // Directory where all output file
 params.reference    = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna" // Path to reference genome FASTA file.
 params.reference_prefix = params.reference.tokenize('/').last().replaceAll(/\.(fa|fasta|fna)$/, '') // Extracts base name of reference.
 params.modern_era   = "modern" // label in the "era" column of the samplesheet that identifies modern individuals
+params.min_ind_ratio = 0.5 // Require coverage in at least 50% of samples
 params.rmdup_script = "${projectDir}/scripts/samremovedup.py"
 params.ngsparalog_bin = "/archive/carpenterlab/pire/softwares/ngsParalog/ngsParalog" // path to ngsParalog binary
 
@@ -208,6 +209,8 @@ process BWA_UNMERGED {
 
 process ANGSD_HWE_DEPTH {
     tag "ANGSD_Analysis"
+    debug true  // Streams standard output directly into .nextflow.log and console for capturing the mean depth calc
+
 	// Large output: Raw ANGSD calculations routed to large_data/angsd
     publishDir "${params.outdir}/large_data/angsd", mode: 'copy', pattern: "cvi_angsd.*"
     // Lightweight BED file routed to top-level angsd folder
@@ -223,6 +226,12 @@ process ANGSD_HWE_DEPTH {
     path "hwe_excess_het.bed"
 
     script:
+    def num_bams = bams instanceof List ? bams.size() : 1
+    def min_ind  = Math.max(1, Math.floor(num_bams * params.min_ind_ratio) as int)
+
+    // 1. Logs min_ind to .nextflow.log
+    log.info "[ANGSD_HWE_DEPTH] Total BAMs: ${num_bams} | Calculated minInd: ${min_ind}"
+
     """
 	ls *.bam > bam.filelist
 
@@ -296,12 +305,17 @@ process NGSPARALOG_CALCLR {
 
     script:
 	def num_bams = bams instanceof List ? bams.size() : 1
-    def min_ind  = Math.floor(num_bams / 2) as int    
+    def min_ind  = Math.max(1, Math.floor(num_bams * params.min_ind_ratio) as int)
     """
     ls *.bam > bam.filelist
 
     samtools mpileup -b bam.filelist -f ${ref_bundle[0]} -l ${contig_bed} -q 0 -Q 0 | \
-        ${params.ngsparalog_bin} calcLR -infile - -outfile - -minQ 20 -minind ${min_ind} > ${contig_bed.baseName}.lr.txt
+        ${params.ngsparalog_bin} calcLR \
+            -infile - \
+            -outfile ${contig_bed.baseName}.lr.txt \
+            -minQ 20 \
+            -minind ${min_ind} \
+            -allow_overwrite 1
     """
 }
 
