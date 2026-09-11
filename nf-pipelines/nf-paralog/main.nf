@@ -13,8 +13,13 @@ params.reference    = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_l
 params.reference_prefix = params.reference.tokenize('/').last().replaceAll(/\.(fa|fasta|fna)$/, '') // Extracts base name of reference.
 params.modern_era   = "modern" // label in the "era" column of the samplesheet that identifies modern individuals
 params.min_ind_ratio = 0.5 // Require coverage in at least 50% of samples
+params.high_depth_quantile = 0.995 // target high depth percentile cutoff
+params.lr_quantile = 0.999  // Target percentile cutoff (e.g., 0.999 = top 0.1% highest LR sites)
 params.rmdup_script = "${projectDir}/scripts/samremovedup.py"
 params.ngsparalog_bin = "/archive/carpenterlab/pire/softwares/ngsParalog/ngsParalog" // path to ngsParalog binary
+params.run_duphmm    = true          // Toggle dupHMM execution
+params.duphmm_script = "/archive/carpenterlab/pire/softwares/ngsParalog/dupHMM.R"     // Path to dupHMM.R (or place inside pipeline bin/)
+params.duphmm_emit   = 0              // 0 = LR only, 1 = both LR and Coverage
 
 def resolve_reads = { String sample_id ->
     def r1 = file("${params.indir}/${sample_id}_R1.fastq.gz")
@@ -214,7 +219,7 @@ process ANGSD_HWE_DEPTH {
 	// Large output: Raw ANGSD calculations routed to large_data/angsd
     publishDir "${params.outdir}/large_data/angsd", mode: 'copy', pattern: "cvi_angsd.*"
     // Lightweight BED file routed to top-level angsd folder
-    publishDir "${params.outdir}/angsd", mode: 'copy', pattern: "hwe_excess_het.bed"
+    publishDir "${params.outdir}/angsd", mode: 'copy', pattern: "*.bed"
 
     input:
     path bams
@@ -224,6 +229,7 @@ process ANGSD_HWE_DEPTH {
     output:
     path "cvi_angsd.*"
     path "hwe_excess_het.bed"
+    path "high_depth_regions.bed"
 
     script:
     def num_bams = bams instanceof List ? bams.size() : 1
@@ -245,15 +251,21 @@ process ANGSD_HWE_DEPTH {
         total_reads=\$((total_reads + r))
     done
 
-    # 3. Estimate mean total population depth (assuming ~130bp average read length)
-    mean_depth=\$(awk -v tr="\$total_reads" -v gs="\$genome_size" 'BEGIN { print (tr * 130) / gs }')
+    # 3. Empirically calculate average read length by sampling 1,000 reads per BAM
+    avg_read_len=\$(for b in *.bam; do samtools view "\$b" | head -n 1000; done | awk '{sum += length(\$10); count++} END {if (count > 0) print sum/count; else print 150}')
 
-    # 4. Set maxDepth as 5x mean total depth (with a safety floor of 500 for low-coverage runs)
+    # 4. Estimate mean total population depth using empirical read length
+    mean_depth=\$(awk -v tr="\$total_reads" -v rl="\$avg_read_len" -v gs="\$genome_size" 'BEGIN { print (tr * rl) / gs }')
+
+    # 5. Set maxDepth as 5x mean total depth (with a safety floor of 500 for low-coverage runs)
+    # max_depth is an input filter that prevents extreme coverage spikes from distorting ANGSD calculations
     max_depth=\$(awk -v md="\$mean_depth" 'BEGIN { m = int(md * 5); print (m > 500 ? m : 500) }')
 
+    echo "Calculated Average Read Length: \${avg_read_len} bp"
     echo "Estimated Mean Population Depth: \${mean_depth}x"
     echo "Setting ANGSD -setMaxDepth to: \${max_depth}"
 
+    # Run ANGSD to generate cvi_angsd.depthGlobal histogram
     angsd -bam bam.filelist -ref ${ref_bundle[0]} -out cvi_angsd \
         -minMapQ 25 \
         -minQ 30 \
@@ -266,8 +278,44 @@ process ANGSD_HWE_DEPTH {
         -skipTriallelic 0 \
         -doHWE 1 -doCounts 1 -doDepth 1 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 -P ${task.cpus}
 
-    # Extract sites with excess heterozygosity (p-value < 1e-4) into 1-based BED
-    zcat cvi_angsd.hwe.gz | awk 'NR>1 && \$9 < 1e-4 {print \$1 "\t" \$2 "\t" \$2}' > hwe_excess_het.bed
+    # Extract sites with excess heterozygosity (p-value < 1e-3) and F<0 into 1-based BED
+    zcat cvi_angsd.hwe.gz | awk 'NR>1 && \$7 < 0 && \$9 < 1e-3 {print \$1 "\t" \$2 - 1 "\t" \$2}' > hwe_excess_het.bed
+
+    # Calculate Total Depth Cutoff at Target Quantile (e.g., 99.5th percentile) from ANGSD Histogram
+    # DEPTH_CUTOFF is a diagnostic threshold used post-analysis to extract and output those specific high-depth regions into a BED file
+    DEPTH_CUTOFF=\$(Rscript -e '
+        counts <- scan("cvi_angsd.depthGlobal", quiet = TRUE)
+        depths <- 0:(length(counts) - 1)
+        cdf <- cumsum(counts) / sum(counts)
+        cutoff <- depths[min(which(cdf >= ${params.high_depth_quantile}))]
+        cat(cutoff)
+    ')
+
+    echo "High depth cutoff (${params.high_depth_quantile} quantile): \$DEPTH_CUTOFF total depth"
+
+    # Stream genome depths and write contiguous regions exceeding the quantile cutoff
+    samtools depth -q 25 -Q 30 -f bam.filelist | awk -v cutoff="\$DEPTH_CUTOFF" '
+    {
+        sum = 0
+        for (i = 3; i <= NF; i++) sum += \$i
+        if (sum >= cutoff) {
+            chrom = \$1
+            start = \$2 - 1
+            end   = \$2
+
+            if (chrom == prev_chrom && start == prev_end) {
+                prev_end = end
+            } else {
+                if (prev_chrom != "") print prev_chrom "\t" prev_start "\t" prev_end
+                prev_chrom = chrom
+                prev_start = start
+                prev_end   = end
+            }
+        }
+    }
+    END {
+        if (prev_chrom != "") print prev_chrom "\t" prev_start "\t" prev_end
+    }' > high_depth_regions.bed
     """
 }
 
@@ -282,13 +330,27 @@ process GENERATE_CONTIG_BEDS {
 
     script:
     """
-    # Extract each scaffold/contig from the FASTA index (.fai) into a full-length BED (0 to length)
-	if [ ! -f *.fai ]; then
+    # Ensure reference index exists
+    if [ ! -f *.fai ]; then
         samtools faidx ${ref_bundle[0]}
     fi
     fai_file=\$(ls *.fai)
-	awk 'OFS="\t" { print \$1, 0, \$2 > (\$1 ".bed"); close(\$1 ".bed") }' \$fai_file    
-	"""
+
+    # Slice scaffolds into 30 Mb BED windows
+    awk -v chunk=30000000 'OFS="\t" {
+        chrom = \$1
+        len = \$2
+        start = 0
+        while (start < len) {
+            end = start + chunk
+            if (end > len) end = len
+            filename = sprintf("%s_%d_%d.bed", chrom, start, end)
+            print chrom, start, end > filename
+            close(filename)
+            start = end
+        }
+    }' \$fai_file
+    """
 }
 
 process NGSPARALOG_CALCLR {
@@ -307,38 +369,215 @@ process NGSPARALOG_CALCLR {
 	def num_bams = bams instanceof List ? bams.size() : 1
     def min_ind  = Math.max(1, Math.floor(num_bams * params.min_ind_ratio) as int)
     """
+    set -e -o pipefail # fail immediately if any command fails in the pipeline
+    # Increase stack size to avoid potential segmentation faults in ngsParalog
+    ulimit -s unlimited
+
     ls *.bam > bam.filelist
 
-    samtools mpileup -b bam.filelist -f ${ref_bundle[0]} -l ${contig_bed} -q 0 -Q 0 | \
+    # Uses mpileup -d 1000 to truncate extreme coverage spikes at repetitive loci before data reaches ngsParalog
+    # to avoid excessive memory usage and potential crashes
+    # Redirects ngsParalog standard error (2> ngsParalog_calcLR.log) so verbose site warnings 
+    # write to a file rather than overflowing the Bash process buffer.
+    samtools mpileup -d 1000 -b bam.filelist -f ${ref_bundle[0]} -l ${contig_bed} -q 0 -Q 0 | \
         ${params.ngsparalog_bin} calcLR \
             -infile - \
             -outfile ${contig_bed.baseName}.lr.txt \
             -minQ 20 \
             -minind ${min_ind} \
-            -allow_overwrite 1
+            -allow_overwrite 1 2> ngsParalog_calcLR.log
     """
 }
 
 process COMBINE_PARALOGS {
     tag "Combine_Paralogs"
-	// Large output: Full likelihood-ratio table sent to large_data/paralogs
-    publishDir "${params.outdir}/large_data/paralogs", mode: 'copy', pattern: "cvi_ngsparalog.lr.txt"
-    // Lightweight filtered BED file sent to paralogs folder
-    publishDir "${params.outdir}/paralogs", mode: 'copy', pattern: "ngsparalog_sites.bed"
+	// Combined likelihood ratio table and BED file routed to large_data/paralogs
+    publishDir "${params.outdir}/large_data/paralogs", mode: 'copy'
     
     input:
     path lr_files
 
     output:
-    path "cvi_ngsparalog.lr.txt"
-    path "ngsparalog_sites.bed"
+    path "cvi_ngsparalog.lr.txt", emit: lr_txt
+    path "ngsparalog_sites.bed", emit: bed
+    path "ngsparalog_threshold.txt", emit: threshold
 
     script:
     """
-	cat *.lr.txt > cvi_ngsparalog.lr.txt
-    awk '\$3 > 10 {print \$1 "\t" \$2 "\t" \$2}' cvi_ngsparalog.lr.txt > ngsparalog_sites.bed    """
+    # 1. Concatenate all chunk outputs and sort numerically by chromosome and position
+    cat *.lr.txt | sort -k1,1 -k2,2n > cvi_ngsparalog.lr.txt
+    
+    # 2. Compute dynamic LR cutoff at the targeted quantile via stride sampling
+    SAMPLE_COUNT=\$(awk 'NR % 1000 == 0' cvi_ngsparalog.lr.txt | wc -l)
+    if [ "\$SAMPLE_COUNT" -gt 0 ]; then
+        SAMPLER="awk 'NR % 1000 == 0 {print \$3}' cvi_ngsparalog.lr.txt"
+    else
+        SAMPLER="awk '{print \$3}' cvi_ngsparalog.lr.txt"
+    fi
+
+    THRESHOLD=\$(eval \$SAMPLER | \
+        Rscript -e '
+            x <- scan("stdin", quiet = TRUE)
+            cutoff <- quantile(x, probs = ${params.lr_quantile}, na.rm = TRUE)
+            cat(sprintf("%.4f", cutoff))
+        ')
+
+    echo "Calculated LR threshold (${params.lr_quantile} quantile): \$THRESHOLD" > ngsparalog_threshold.txt
+
+    # 3. Filter using calculated dynamic threshold and merge contiguous coordinates
+    awk -v threshold="\$THRESHOLD" '
+    \$3 > threshold {
+        chrom = \$1
+        start = \$2 - 1
+        end   = \$2
+
+        if (chrom == prev_chrom && start == prev_end) {
+            prev_end = end
+        } else {
+            if (prev_chrom != "") {
+                print prev_chrom "\\t" prev_start "\\t" prev_end
+            }
+            prev_chrom = chrom
+            prev_start = start
+            prev_end   = end
+        }
+    }
+    END {
+        if (prev_chrom != "") {
+            print prev_chrom "\\t" prev_start "\\t" prev_end
+        }
+    }' cvi_ngsparalog.lr.txt > ngsparalog_sites.bed    
+    """
 }
 
+process CALCULATE_AVG_DEPTH {
+    tag "Avg_Depth"
+    publishDir "${params.outdir}/large_data/paralogs", mode: 'copy'
+
+    input:
+    path lr_file
+    path bams
+    path bais
+    path ref_bundle
+
+    output:
+    path "cvi_avg_depth.tsv", emit: avg_depth
+
+    script:
+    def num_bams = bams instanceof List ? bams.size() : 1
+    """
+    ls *.bam > bam.filelist
+
+    # 1. Create a temporary BED file of targeted LR sites
+    awk '{print \$1 "\t" \$2 - 1 "\t" \$2}' ${lr_file} > lr_sites.bed
+
+    # 2. Run mpileup restricted strictly to those sites
+    samtools mpileup -d 1000 -b bam.filelist -f ${ref_bundle[0]} -l lr_sites.bed -q 0 -Q 0 | \
+        awk -v n_samples=${num_bams} '{print \$1 "\t" \$2 "\t" \$4 / n_samples}' > depth_raw.tsv
+
+    # 3. Map depths back to match lr_file line-for-line (default 0 depth for uncovered sites)
+    awk 'NR==FNR { depth[\$1 "\t" \$2] = \$3; next } { d = ((\$1 "\t" \$2) in depth) ? depth[\$1 "\t" \$2] : 0; print \$1 "\t" \$2 "\t" d }' depth_raw.tsv ${lr_file} > cvi_avg_depth.tsv
+
+    rm -f lr_sites.bed depth_raw.tsv
+    """
+}
+
+// Train HMM parameters globally across all genome sites
+process DUPHMM_TRAIN {
+    tag "dupHMM_Train"
+
+    input:
+    path lr_file
+    path cov_file
+
+    output:
+    path "genome_trained.par", emit: param_file
+
+    script:
+    def cov_arg = (params.duphmm_emit == 1 && cov_file) ? "--covfile=${cov_file}" : ""
+    """
+    if [ "${params.duphmm_emit}" -eq 1 ]; then
+        LR_LINES=\$(wc -l < ${lr_file})
+        COV_LINES=\$(wc -l < ${cov_file})
+
+        if [ "\$LR_LINES" -ne "\$COV_LINES" ]; then
+            echo "ERROR: Site mismatch detected between LR (\$LR_LINES sites) and Depth (\$COV_LINES sites) files!" >&2
+            exit 1
+        fi
+    fi
+
+    Rscript ${params.duphmm_script} \
+        --lrfile=${lr_file} \
+        ${cov_arg} \
+        --emit=${params.duphmm_emit} \
+        --paramOnly=1 \
+        --outfile=genome_trained
+    """
+}
+
+process SPLIT_SCAFFOLDS {
+    tag "Split_Scaffolds"
+
+    input:
+    path lr_file
+    path cov_file
+
+    output:
+    path "*.lr.txt", emit: lr_files
+    path "*.cov.txt", emit: cov_files, optional: true
+
+    script:
+    """
+    awk '{file = \$1 ".lr.txt"; print >> file; close(file)}' ${lr_file}
+    if [ "${params.duphmm_emit}" -eq 1 ]; then
+        awk '{file = \$1 ".cov.txt"; print >> file; close(file)}' ${cov_file}
+    fi
+    """
+}
+
+// Infer duplication states scaffold-by-scaffold using trained parameters
+process DUPHMM_INFER {
+    tag "$scaff"
+
+    input:
+    tuple val(scaff), path(scaff_lr), path(scaff_cov)
+    path param_file
+
+    output:
+    path "${scaff}_duphmm.rf", emit: rf, optional: true
+
+    script:
+    def cov_arg = params.duphmm_emit == 1 ? "--covfile=${scaff_cov}" : ""
+    """
+    if [ \$(wc -l < ${scaff_lr}) -gt 20 ]; then
+        Rscript ${params.duphmm_script} \
+            --lrfile=${scaff_lr} \
+            ${cov_arg} \
+            --emit=${params.duphmm_emit} \
+            --paramfile=${param_file} \
+            --outfile="${scaff}_duphmm"
+    fi
+    """
+}
+
+process COMBINE_DUPHMM {
+    tag "Combine_dupHMM"
+    publishDir "${params.outdir}/paralogs", mode: 'copy'
+
+    input:
+    path rf_files
+
+    output:
+    path "ngsparalog_duphmm_regions.bed"
+
+    script:
+    """
+    touch ngsparalog_duphmm_regions.bed
+    if ls *_duphmm.rf 1> /dev/null 2>&1; then
+        cat *_duphmm.rf | awk -v OFS="\\t" '(\$2 + 0 == \$2 && \$2 != "") {print \$1, \$2 - 1, \$3, \$4}' > ngsparalog_duphmm_regions.bed
+    fi
+    """
+}
 
 workflow {
     // Package the reference files into a channel
@@ -396,4 +635,35 @@ workflow {
     // 9. Combine into final output files
     COMBINE_PARALOGS(lr_chunks.collect())
 
+    if (params.run_duphmm) {
+        // Calculate per-site average depth from mpileup if it will be used (emit=1)   
+        if (params.duphmm_emit == 1) {
+            CALCULATE_AVG_DEPTH(COMBINE_PARALOGS.out.lr_txt, all_bams_ch, all_bais_ch, ref_bundle_ch)
+            ch_cov = CALCULATE_AVG_DEPTH.out.avg_depth
+        } else {
+            ch_cov = Channel.of([])
+        }
+
+        // Train global HMM parameters
+        DUPHMM_TRAIN(COMBINE_PARALOGS.out.lr_txt, ch_cov)
+
+        // Split whole genome files into scaffold-level channels
+        SPLIT_SCAFFOLDS(COMBINE_PARALOGS.out.lr_txt, ch_cov)
+
+        // Match LR and Depth chunks by scaffold name into a unified tuple channel
+        ch_lr = SPLIT_SCAFFOLDS.out.lr_files.flatten().map { f -> tuple(f.name.replace('.lr.txt', ''), f) }
+
+        if (params.duphmm_emit == 1) {
+            ch_cov_split = SPLIT_SCAFFOLDS.out.cov_files.flatten().map { f -> tuple(f.name.replace('.cov.txt', ''), f) }
+            ch_duphmm_inputs = ch_lr.join(ch_cov_split)
+        } else {
+            ch_duphmm_inputs = ch_lr.map { scaff, lr -> tuple(scaff, lr, []) }
+        }
+
+        // Infer duplication states concurrently per scaffold
+        DUPHMM_INFER(ch_duphmm_inputs, DUPHMM_TRAIN.out.param_file)
+
+        // Collect all scaffold output files into the final BED
+        COMBINE_DUPHMM(DUPHMM_INFER.out.rf.collect().ifEmpty([]))
+    }
 }
