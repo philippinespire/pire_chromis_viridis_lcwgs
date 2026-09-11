@@ -790,17 +790,17 @@ Remove the 4.7G temporary directory:
 rm -r nf-pipelines/nf-angsd-selection/work/
 ```
 
-## 13 ANGSD with >1x depth
-Malin, 2026 August. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection-1x`.
+## 13 ANGSD with <10% softclipping
+Malin, 2026 August. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection-10perc`.
 
-Run nf-angsd-selection on the _C. viridis_ individuals with >1x depth. Start by copying over the base of the pipeline:
+Run nf-angsd-selection on the _C. viridis_ individuals with <10% soft-clipping. Start by copying over the base of the pipeline:
 ```
-rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection-1x/
+rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection-10perc/
 
-cd nf-pipelines/nf-angsd-selection-1x
+cd nf-pipelines/nf-angsd-selection-10perc
 ```
 
-From the [softclip analysis by individual](output/softclip_analysis-iridian/per_individual_stats.txt), we need to remove CviAPal001, CviAPal002, CviAPal003, CviAPal007, CviAPal008, CviAPal009, CviAPal011, CviAPal015, CviAPal018, CviAPal025, CviAPal029, CviAPal030, CviAPal033 CviAPal034, CviAPal036, CviAPal037, CviAPal038, CviAPal039. Leaves n=17 historical and n=9 modern individuals. Modify the [sample sheet](nf-pipelines/nf-angsd-selection-1x/inputfiles/samplesheet.csv) by hand to remove these individuals.
+From the [softclip analysis by individual](output/softclip_analysis-iridian/per_individual_stats.txt), we need to remove CviAPal001, CviAPal002, CviAPal003, CviAPal007, CviAPal008, CviAPal009, CviAPal011, CviAPal015, CviAPal018, CviAPal025, CviAPal029, CviAPal030, CviAPal033 CviAPal034, CviAPal036, CviAPal037, CviAPal038, CviAPal039. Leaves n=17 historical and n=9 modern individuals. Modify the [sample sheet](nf-pipelines/nf-angsd-selection-10perc/inputfiles/samplesheet.csv) by hand to remove these individuals.
 
 Set parameters in `main.nf`:
 - use 10kb windows for ld-pruning to speed this up. Fish have low linkage, so this seems ok.
@@ -816,7 +816,7 @@ nextflow run main.nf -profile wahab
 
 LD-pruning was slow, likely because of noise in the linkage calculations from fewer individuals. Took 3.5 days in total.
 
-[Loci analyzed](nf-pipelines/nf-angsd-selection-1x/results/sites/site_counts.tsv) and compared to [previous run]((nf-pipelines/nf-angsd-selection-1x/results/sites/site_counts.tsv)). Many more loci retained in this run because low-depth individuals were dropped:
+[Loci analyzed](nf-pipelines/nf-angsd-selection-10perc/results/sites/site_counts.tsv) and compared to [previous run](nf-pipelines/nf-angsd-selection/results/sites/site_counts.tsv). Many more loci retained in this run, maybe because some low-depth individuals were also dropped (soft-clipping and low depth are correlated):
 | site_set	| count (this run) | count (nf-angsd-selection run)
 |---|---|---|
 |all_callable	| 139,246,906 | 2,041,668 |
@@ -827,44 +827,44 @@ LD-pruning was slow, likely because of noise in the linkage calculations from fe
 |snps_pruned	| 1,465,184 | 79,665 |
 snps_pruned_neutral	| 1,465,184 | 79,665 |
 
-Found 0 SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-angsd-selection-1x/results/selection/iteration_summary.tsv)). [Manhattan Plot](nf-pipelines/nf-angsd-selection-1x/results/selection/chisq_manhattan_Bali_final.png) does not show any strong outliers.
+Found 0 SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-angsd-selection-10perc/results/selection/iteration_summary.tsv)). [Manhattan Plot](nf-pipelines/nf-angsd-selection-10perc/results/selection/chisq_manhattan_Bali_final.png) does not show any strong outliers.
 
-The [PCA](nf-pipelines/nf-angsd-selection-1x/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection-1x/results/PCAngsd/Cvi.admixture.pdf) plots do not show strong outlier individuals. A bit less temporal differentiation than [with the low-depth individuals](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf).
+The [PCA](nf-pipelines/nf-angsd-selection-10perc/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection-10perc/results/PCAngsd/Cvi.admixture.pdf) plots do not show strong outlier individuals. A bit less temporal differentiation than [with all individuals](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf).
 
-The weighted global FST is [0.025795](nf-pipelines/nf-angsd-selection-1x/results/fst/Bali_hist_vs_mod.global_fst.txt). Low as expected, and slightly lower than [FST with the low-depth individuals included](nf-pipelines/nf-angsd-selection/results/fst/Bali_hist_vs_mod.global_fst.txt). The [sliding window FST figure](nf-pipelines/nf-angsd-selection-1x/results/fst/Bali_fst_manhattan.png) has a few regions with higher Fst. Could be interesting to investigate.
+The weighted global FST is [0.025795](nf-pipelines/nf-angsd-selection-10perc/results/fst/Bali_hist_vs_mod.global_fst.txt). Low as expected, and slightly lower than [FST with the all individuals included](nf-pipelines/nf-angsd-selection/results/fst/Bali_hist_vs_mod.global_fst.txt). The [sliding window FST figure](nf-pipelines/nf-angsd-selection-10perc/results/fst/Bali_fst_manhattan.png) has a few regions with higher Fst. Could be interesting to investigate.
 
-The [plot of pi](nf-pipelines/nf-angsd-selection-1x/results/diversity/pi_historic_vs_modern_Bali.png) shows lower diversity in the modern samples. This contrasts with the [stable pi](nf-pipelines/nf-angsd-selection/results/diversity/pi_historic_vs_modern_Bali.png) when the low-depth individuals are included. Likely because of the much larger coverage across the genome.
+The [plot of pi](nf-pipelines/nf-angsd-selection-10perc/results/diversity/pi_historic_vs_modern_Bali.png) shows lower diversity in the modern samples. This contrasts with the [stable pi](nf-pipelines/nf-angsd-selection/results/diversity/pi_historic_vs_modern_Bali.png) when all individuals included. Likely because of the much larger coverage across the genome.
 
 ### 13.1 Dystruct
-Manually made a generation time file for dystruct at `data/generation_times-1x.txt`.
+Manually made a generation time file for dystruct at `data/generation_times-10perc.txt`.
 
 Run dystruct script and submit slurm jobs using K=1, 2, and 3 and long job times since 24 hrs wasn't enough:
 ```
 sbatch --time=96:00:00 --cpus-per-task=1 scripts/run_dystruct.sbatch \
-  --beagle nf-pipelines/nf-angsd-selection-1x/results/large_data/beagle/Cvi.beagle.gz \
-  --pos-file nf-pipelines/nf-angsd-selection-1x/results/large_data/sites/snps_pruned_neutral.pos \
-  --out-dir output/dystruct-1x \
+  --beagle nf-pipelines/nf-angsd-selection-10perc/results/large_data/beagle/Cvi.beagle.gz \
+  --pos-file nf-pipelines/nf-angsd-selection-10perc/results/large_data/sites/snps_pruned_neutral.pos \
+  --out-dir output/dystruct-10perc \
   --npops 1 \
-  --generation-times data/generation_times-1x.txt \
+  --generation-times data/generation_times-10perc.txt \
   -- --epochs 100 --hold-out-fraction 0.1
 
 sbatch --time=96:00:00 --cpus-per-task=2 scripts/run_dystruct.sbatch \
-  --beagle nf-pipelines/nf-angsd-selection-1x/results/large_data/beagle/Cvi.beagle.gz \
-  --pos-file nf-pipelines/nf-angsd-selection-1x/results/large_data/sites/snps_pruned_neutral.pos \
-  --out-dir output/dystruct-1x \
+  --beagle nf-pipelines/nf-angsd-selection-10perc/results/large_data/beagle/Cvi.beagle.gz \
+  --pos-file nf-pipelines/nf-angsd-selection-10perc/results/large_data/sites/snps_pruned_neutral.pos \
+  --out-dir output/dystruct-10perc \
   --npops 2 \
-  --generation-times data/generation_times-1x.txt \
+  --generation-times data/generation_times-10perc.txt \
   -- --epochs 100 --hold-out-fraction 0.1
 
 sbatch --time=96:00:00 --cpus-per-task=3 scripts/run_dystruct.sbatch \
-  --beagle nf-pipelines/nf-angsd-selection-1x/results/large_data/beagle/Cvi.beagle.gz \
-  --pos-file nf-pipelines/nf-angsd-selection-1x/results/large_data/sites/snps_pruned_neutral.pos \
-  --out-dir output/dystruct-1x \
+  --beagle nf-pipelines/nf-angsd-selection-10perc/results/large_data/beagle/Cvi.beagle.gz \
+  --pos-file nf-pipelines/nf-angsd-selection-10perc/results/large_data/sites/snps_pruned_neutral.pos \
+  --out-dir output/dystruct-10perc \
   --npops 3 \
-  --generation-times data/generation_times-1x.txt \
+  --generation-times data/generation_times-10perc.txt \
   -- --epochs 100 --hold-out-fraction 0.1
 ```
-See `output/dystruct-1x/pruned_K*.*`. Hold-out log-likelihoods from [log files](logs/) (jobs 6717595, 6717596, 6717597) were:
+See `output/dystruct-10perc/pruned_K*.*`. Hold-out log-likelihoods from [log files](logs/) (jobs 6717595, 6717596, 6717597) were:
 | K | LL |
 |---|----|
 | 1 | -117602 |
@@ -876,20 +876,18 @@ This leaves K=2 as the best supported option.
 Plot the dystruct proportions for K=2 and K=3:
 ```
 module load container_env R
-crun Rscript scripts/plot_dystruct.R output/dystruct-1x/Cvi_K2.dystruct_theta nf-pipelines/nf-angsd-selection-1x/inputfiles/samplesheet.csv output/dystruct-1x/dystruct.selection.K2.pdf
+crun Rscript scripts/plot_dystruct.R output/dystruct-10perc/Cvi_K2.dystruct_theta nf-pipelines/nf-angsd-selection-10perc/inputfiles/samplesheet.csv output/dystruct-10perc/dystruct.selection.K2.pdf
 
-crun Rscript scripts/plot_dystruct.R output/dystruct-1x/Cvi_K3.dystruct_theta nf-pipelines/nf-angsd-selection-1x/inputfiles/samplesheet.csv output/dystruct-1x/dystruct.selection.K3.pdf
+crun Rscript scripts/plot_dystruct.R output/dystruct-10perc/Cvi_K3.dystruct_theta nf-pipelines/nf-angsd-selection-10perc/inputfiles/samplesheet.csv output/dystruct-10perc/dystruct.selection.K3.pdf
 ```
 
-The [K=2 proportions plot](output/dystruct-1x/dystruct.selection.K2.pdf) looks reasonably different from the [admixture plot](nf-pipelines/nf-angsd-selection-1x/results/PCAngsd/Cvi.admixture.pdf), though both don't show clear divisions into two groups. K=3 just divides up historical and modern more.
+The [K=2 proportions plot](output/dystruct-10perc/dystruct.selection.K2.pdf) looks reasonably different from the [admixture plot](nf-pipelines/nf-angsd-selection-10perc/results/PCAngsd/Cvi.admixture.pdf), though both don't show clear divisions into two groups. K=3 just divides up historical and modern more.
 
 
 ### 13.2 Clean up
-Manually added some smaller subdirectories in nf-pipelines/.../results to git (QA/QC files, depth statistics, etc.). Avoided the large data files.
-
 Remove the 900G temporary directory:
 ```
-rm -r nf-pipelines/nf-angsd-selection-1x/work/
+rm -r nf-pipelines/nf-angsd-selection-10perc/work/
 ```
 
 ## 14 Test for paralogs
