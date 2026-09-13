@@ -227,9 +227,9 @@ process ANGSD_HWE_DEPTH {
     path ref_bundle
 
     output:
-    path "cvi_angsd.*"
-    path "hwe_excess_het.bed"
-    path "high_depth_regions.bed"
+    path "cvi_angsd.*",            emit: angsd_files
+    path "hwe_excess_het.bed",     emit: hwe_bed
+    path "high_depth_regions.bed", emit: high_depth_bed
 
     script:
     def num_bams = bams instanceof List ? bams.size() : 1
@@ -263,7 +263,7 @@ process ANGSD_HWE_DEPTH {
 
     echo "Calculated Average Read Length: \${avg_read_len} bp"
     echo "Estimated Mean Population Depth: \${mean_depth}x"
-    echo "Setting ANGSD -setMaxDepth to: \${max_depth}"
+    echo "Setting ANGSD -setMaxDepth input filter for depthGlobal histogram to \${max_depth} to filter out coverage spikes"
 
     # Run ANGSD to generate cvi_angsd.depthGlobal histogram
     angsd -bam bam.filelist -ref ${ref_bundle[0]} -out cvi_angsd \
@@ -283,15 +283,21 @@ process ANGSD_HWE_DEPTH {
 
     # Calculate Total Depth Cutoff at Target Quantile (e.g., 99.5th percentile) from ANGSD Histogram
     # DEPTH_CUTOFF is a diagnostic threshold used post-analysis to extract and output those specific high-depth regions into a BED file
-    DEPTH_CUTOFF=\$(Rscript -e '
-        counts <- scan("cvi_angsd.depthGlobal", quiet = TRUE)
-        depths <- 0:(length(counts) - 1)
-        cdf <- cumsum(counts) / sum(counts)
-        cutoff <- depths[min(which(cdf >= ${params.high_depth_quantile}))]
-        cat(cutoff)
-    ')
+    DEPTH_CUTOFF=\$(awk -v q="${params.high_depth_quantile}" '{
+        total = 0;
+        for (i = 1; i <= NF; i++) total += \$i;
+        target = total * q;
+        cum = 0;
+        for (i = 1; i <= NF; i++) {
+            cum += \$i;
+            if (cum >= target) {
+                print (i - 1);
+                exit;
+            }
+        }
+    }' cvi_angsd.depthGlobal)
 
-    echo "High depth cutoff (${params.high_depth_quantile} quantile): \$DEPTH_CUTOFF total depth"
+    echo "High depth cutoff (${params.high_depth_quantile} quantile) for flagging problematic high-depth regions: \$DEPTH_CUTOFF total depth"
 
     # Stream genome depths and write contiguous regions exceeding the quantile cutoff
     samtools depth -q 25 -Q 30 -f bam.filelist | awk -v cutoff="\$DEPTH_CUTOFF" '
@@ -391,36 +397,44 @@ process NGSPARALOG_CALCLR {
 
 process COMBINE_PARALOGS {
     tag "Combine_Paralogs"
-	// Combined likelihood ratio table and BED file routed to large_data/paralogs
-    publishDir "${params.outdir}/large_data/paralogs", mode: 'copy'
-    
+    publishDir "${params.outdir}/paralogs", mode: 'copy'
+    publishDir "${params.outdir}/large_data/paralogs", mode: 'copy', pattern: "cvi_ngsparalog.lr.txt"
+
     input:
     path lr_files
 
     output:
-    path "cvi_ngsparalog.lr.txt", emit: lr_txt
-    path "ngsparalog_sites.bed", emit: bed
-    path "ngsparalog_threshold.txt", emit: threshold
+    path "cvi_ngsparalog.lr.txt",    emit: lr_txt
+    path "ngsparalog_threshold.txt", emit: threshold_txt
+    path "ngsparalog_sites.bed",     emit: paralog_bed
 
     script:
     """
     # 1. Concatenate all chunk outputs and sort numerically by chromosome and position
     cat *.lr.txt | sort -k1,1 -k2,2n > cvi_ngsparalog.lr.txt
-    
-    # 2. Compute dynamic LR cutoff at the targeted quantile via stride sampling
-    SAMPLE_COUNT=\$(awk 'NR % 1000 == 0' cvi_ngsparalog.lr.txt | wc -l)
-    if [ "\$SAMPLE_COUNT" -gt 0 ]; then
-        SAMPLER="awk 'NR % 1000 == 0 {print \$3}' cvi_ngsparalog.lr.txt"
-    else
-        SAMPLER="awk '{print \$3}' cvi_ngsparalog.lr.txt"
-    fi
 
-    THRESHOLD=\$(eval \$SAMPLER | \
-        Rscript -e '
-            x <- scan("stdin", quiet = TRUE)
-            cutoff <- quantile(x, probs = ${params.lr_quantile}, na.rm = TRUE)
-            cat(sprintf("%.4f", cutoff))
-        ')
+    # 2. Compute dynamic LR threshold (99.9th percentile) using AWK & sort -g (No R dependency)
+    LINE_COUNT=\$(wc -l < cvi_ngsparalog.lr.txt)
+
+    if [ "\$LINE_COUNT" -gt 100000 ]; then
+        THRESHOLD=\$(awk 'NR % 100 == 0 {print \$3}' cvi_ngsparalog.lr.txt | sort -g | awk -v q="${params.lr_quantile}" '
+            { a[NR] = \$1 }
+            END {
+                if (NR == 0) { print 0; exit }
+                idx = int(NR * q);
+                if (idx < 1) idx = 1;
+                printf "%.4f", a[idx]
+            }')
+    else
+        THRESHOLD=\$(awk '{print \$3}' cvi_ngsparalog.lr.txt | sort -g | awk -v q="${params.lr_quantile}" '
+            { a[NR] = \$1 }
+            END {
+                if (NR == 0) { print 0; exit }
+                idx = int(NR * q);
+                if (idx < 1) idx = 1;
+                printf "%.4f", a[idx]
+            }')
+    fi
 
     echo "Calculated LR threshold (${params.lr_quantile} quantile): \$THRESHOLD" > ngsparalog_threshold.txt
 
@@ -435,7 +449,7 @@ process COMBINE_PARALOGS {
             prev_end = end
         } else {
             if (prev_chrom != "") {
-                print prev_chrom "\\t" prev_start "\\t" prev_end
+                print prev_chrom "\t" prev_start "\t" prev_end
             }
             prev_chrom = chrom
             prev_start = start
@@ -444,9 +458,9 @@ process COMBINE_PARALOGS {
     }
     END {
         if (prev_chrom != "") {
-            print prev_chrom "\\t" prev_start "\\t" prev_end
+            print prev_chrom "\t" prev_start "\t" prev_end
         }
-    }' cvi_ngsparalog.lr.txt > ngsparalog_sites.bed    
+    }' cvi_ngsparalog.lr.txt > ngsparalog_sites.bed
     """
 }
 
@@ -494,7 +508,8 @@ process DUPHMM_TRAIN {
     path "genome_trained.par", emit: param_file
 
     script:
-    def cov_arg = (params.duphmm_emit == 1 && cov_file) ? "--covfile=${cov_file}" : ""
+    def cov_arg = (params.duphmm_emit == 1 && cov_file) ? "--covfile=${cov_file}" : "" // Only pass --covfile if emit 1 is active and a coverage file exists
+    def rcmd = task.ext.rscript ?: 'Rscript' // allow nextflow.config to override Rscript path if needed (eg, with crun Rscript)
     """
     if [ "${params.duphmm_emit}" -eq 1 ]; then
         LR_LINES=\$(wc -l < ${lr_file})
@@ -506,7 +521,7 @@ process DUPHMM_TRAIN {
         fi
     fi
 
-    Rscript ${params.duphmm_script} \
+    ${rcmd} ${params.duphmm_script} \
         --lrfile=${lr_file} \
         ${cov_arg} \
         --emit=${params.duphmm_emit} \
@@ -547,10 +562,11 @@ process DUPHMM_INFER {
     path "${scaff}_duphmm.rf", emit: rf, optional: true
 
     script:
-    def cov_arg = params.duphmm_emit == 1 ? "--covfile=${scaff_cov}" : ""
+    def cov_arg = params.duphmm_emit == 1 ? "--covfile=${scaff_cov}" : "" // Only pass --covfile if emit 1 is active and a coverage file exists
+    def rcmd = task.ext.rscript ?: 'Rscript' // allow nextflow.config to override Rscript path if needed (eg, with crun Rscript)
     """
     if [ \$(wc -l < ${scaff_lr}) -gt 20 ]; then
-        Rscript ${params.duphmm_script} \
+        ${rcmd} ${params.duphmm_script} \
             --lrfile=${scaff_lr} \
             ${cov_arg} \
             --emit=${params.duphmm_emit} \
