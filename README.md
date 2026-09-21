@@ -903,7 +903,7 @@ rsync -a --exclude='work/' --exclude='results/' --exclude='results-iridian/' --e
 cd nf-pipelines/nf-paralog
 ```
 
-Wrote a new `main.nf` that maps the modern reads (without trimming to match the historical read length) with very few quality filters, then runs ANGSD (HWE and depth tests) and ngsParalog. Updated the `nextflow.config` file to match.
+Wrote a new `main.nf` that maps the modern reads (without trimming to match the historical read length) with very few quality filters, then runs ANGSD (HWE and depth tests) and ngsParalog. Updated the `nextflow.config` file to match. Set parameters for runnning dupHMM with both LR and coverage.
 
 The same parameters and input files as `nf-trim-generode` should be good.
 
@@ -913,6 +913,31 @@ tmux a -t nextflow
 cd ../nf-paralog/
 nextflow run main.nf -profile wahab -resume
 ```
+
+Output:
+```
+[ANGSD_HWE_DEPTH] Total BAMs: 9 | Calculated minInd: 4
+Calculated Average Read Length: 147.359 bp
+Estimated Mean Population Depth: 49.5492x
+Setting ANGSD -setMaxDepth input filter for depthGlobal histogram to 500 to filter out coverage spikes
+High depth cutoff (0.995 quantile) for flagging problematic high-depth regions: 98 total depth
+```
+
+BED files, fastp reports, site allele balance, bam files and other results in the `results/` directory (including `large_data/` not tracked by git). Key plots are:
+![Allele balance](nf-pipelines/nf-paralog/results/plots/allele_balance_vs_het.png)
+
+![Manhattan plot of mapped depth](nf-pipelines/nf-paralog/results/plots/angsd_depth_manhattan.png)
+
+![Manhattan plot of HWE disequilibrium](nf-pipelines/nf-paralog/results/plots/angsd_hwe_manhattan.png)
+
+![Manhattan plot of ngsParalog likelihood ratios for paralogous regions](nf-pipelines/nf-paralog/results/plots/ngsparalog_lr_manhattan.png)
+
+![Histogram of the length of regions flagged by each method](nf-pipelines/nf-paralog/results/plots/filter_region_length_histograms.png)
+
+![Barplot of overlap among the regions flagged by each methods](nf-pipelines/nf-paralog/results/plots/paralog_filter_overlaps.png)
+
+![Manhattan plot of the overlap among regions flagged by each method](nf-pipelines/nf-paralog/results/plots/filter_overlaps_manhattan.png)
+
 
 ## 15 Re-run ANGSD without soft-clipped reads
 As a sensitivity test, let's re-run `nf-angsd-selection-1x` after stripping out all soft-clipped reads. Create a `temp/` directory and put the bams from `nf-trim-generode`'s `results-iridian` there after stripping out unmapped and reads with any soft-clipping:
