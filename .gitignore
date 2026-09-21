@@ -131,8 +131,10 @@ reference/
 .snakemake/
 conda_cache/
 
-# Special handling for nf-angsd-selection
+# Special handling for nf-angsd-selection and nf-paralog results
 # Un-ignore this specific pipeline's results folder
 !nf-pipelines/nf-angsd-selection/results/
+!nf-pipelines/nf-paralog/results/
 # Ignore large_data inside the un-ignored results folder
 nf-pipelines/nf-angsd-selection/results/large_data/
+nf-pipelines/nf-paralog/results/large_data/

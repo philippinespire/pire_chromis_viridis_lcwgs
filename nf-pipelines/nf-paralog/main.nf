@@ -19,7 +19,7 @@ params.rmdup_script = "${projectDir}/scripts/samremovedup.py"
 params.ngsparalog_bin = "/archive/carpenterlab/pire/softwares/ngsParalog/ngsParalog" // path to ngsParalog binary
 params.run_duphmm    = true          // Toggle dupHMM execution
 params.duphmm_script = "/archive/carpenterlab/pire/softwares/ngsParalog/dupHMM.R"     // Path to dupHMM.R (or place inside pipeline bin/)
-params.duphmm_emit   = 0              // 0 = LR only, 1 = both LR and Coverage
+params.duphmm_emit   = 1              // 0 = LR only, 1 = both LR and Coverage
 
 def resolve_reads = { String sample_id ->
     def r1 = file("${params.indir}/${sample_id}_R1.fastq.gz")
@@ -212,6 +212,7 @@ process BWA_UNMERGED {
     """
 }
 
+// find HWE and depth outliers using ANGSD, also get ready to calculate allele balance at heterozygote sites and proportion heterozygotes at each site
 process ANGSD_HWE_DEPTH {
     tag "ANGSD_Analysis"
     debug true  // Streams standard output directly into .nextflow.log and console for capturing the mean depth calc
@@ -228,8 +229,13 @@ process ANGSD_HWE_DEPTH {
 
     output:
     path "cvi_angsd.*",            emit: angsd_files
+    path "cvi_angsd.mafs.gz",      emit: mafs_gz
+    path "cvi_angsd.pos.gz",       emit: pos_gz
+    path "cvi_angsd.hwe.gz",       emit: hwe_gz
     path "hwe_excess_het.bed",     emit: hwe_bed
     path "high_depth_regions.bed", emit: high_depth_bed
+    path "cvi_angsd.geno.gz",       emit: geno_gz
+    path "cvi_angsd.counts.gz",     emit: counts_gz
 
     script:
     def num_bams = bams instanceof List ? bams.size() : 1
@@ -265,7 +271,7 @@ process ANGSD_HWE_DEPTH {
     echo "Estimated Mean Population Depth: \${mean_depth}x"
     echo "Setting ANGSD -setMaxDepth input filter for depthGlobal histogram to \${max_depth} to filter out coverage spikes"
 
-    # Run ANGSD to generate cvi_angsd.depthGlobal histogram
+    # Run ANGSD to generate cvi_angsd.depthGlobal histogram, .pos.gz, .mafs.gz, .geno.gz, .counts.gz, and .hwe.gz files
     angsd -bam bam.filelist -ref ${ref_bundle[0]} -out cvi_angsd \
         -minMapQ 25 \
         -minQ 30 \
@@ -276,7 +282,7 @@ process ANGSD_HWE_DEPTH {
         -minInd ${min_ind} \
         -setMaxDepth \$max_depth \
         -skipTriallelic 0 \
-        -doHWE 1 -doCounts 1 -doDepth 1 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 -P ${task.cpus}
+        -doHWE 1 -doCounts 1 -dumpCounts 3 -doDepth 1 -doGeno 8 -doPost 1 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 -P ${task.cpus}
 
     # Extract sites with excess heterozygosity (p-value < 1e-3) and F<0 into 1-based BED
     zcat cvi_angsd.hwe.gz | awk 'NR>1 && \$7 < 0 && \$9 < 1e-3 {print \$1 "\t" \$2 - 1 "\t" \$2}' > hwe_excess_het.bed
@@ -397,7 +403,7 @@ process NGSPARALOG_CALCLR {
 
 process COMBINE_PARALOGS {
     tag "Combine_Paralogs"
-    publishDir "${params.outdir}/paralogs", mode: 'copy'
+    publishDir "${params.outdir}/paralogs", mode: 'copy', saveAs: { fn -> fn == 'cvi_ngsparalog.lr.txt' ? null : fn }
     publishDir "${params.outdir}/large_data/paralogs", mode: 'copy', pattern: "cvi_ngsparalog.lr.txt"
 
     input:
@@ -530,6 +536,7 @@ process DUPHMM_TRAIN {
     """
 }
 
+// split the big lr_file from ngsParalog calcLR apart by scaffold/contig
 process SPLIT_SCAFFOLDS {
     tag "Split_Scaffolds"
 
@@ -538,15 +545,50 @@ process SPLIT_SCAFFOLDS {
     path cov_file
 
     output:
-    path "*.lr.txt", emit: lr_files
-    path "*.cov.txt", emit: cov_files, optional: true
+    path "split_lr/*.lr.txt", emit: lr_files
+    path "split_cov/*.cov.txt", emit: cov_files, optional: true
 
     script:
+    // To guard against limits on how many files can be open at once, 
+    // this function will close files after every write if the number of scaffolds exceeds a threshold (250).
+    // To speed up writing, however, it will keep files open if it can (useful for many-GB files)
     """
-    awk '{file = \$1 ".lr.txt"; print >> file; close(file)}' ${lr_file}
-    if [ "${params.duphmm_emit}" -eq 1 ]; then
-        awk '{file = \$1 ".cov.txt"; print >> file; close(file)}' ${cov_file}
+    mkdir -p split_lr split_cov
+
+    split_stream() {
+        local infile="\$1"
+        local ext="\$2"
+        local outdir="\$3"
+
+        awk -v ext="\$ext" -v outdir="\$outdir" '
+        BEGIN { max_open = 250 }
+        {
+            file = outdir "/" \$1 ext
+
+            if (!(file in seen)) {
+                seen[file] = 1
+                scaff_count++
+                if (scaff_count > max_open) {
+                    mode = "close_every"
+                }
+            }
+
+            if (mode == "close_every") {
+                print >> file
+                close(file)
+            } else {
+                print > file
+            }
+        }' "\$infile"
+    }
+
+    split_stream "${lr_file}" ".lr.txt" "split_lr"
+
+    if [ "${params.duphmm_emit}" -eq 1 ] && [ -s "${cov_file}" ]; then
+        split_stream "${cov_file}" ".cov.txt" "split_cov"
     fi
+
+    true
     """
 }
 
@@ -595,6 +637,612 @@ process COMBINE_DUPHMM {
     """
 }
 
+// Extract allele balance and het proportion from ANGSD outputs
+// Weights allele counts by individual posterior heterozygosity probabilities to soft-call heterozygous sites without requiring hard genotype cutoffs.
+process PARSE_ALLELE_BALANCE {
+    tag "Parse_Allele_Balance"
+    publishDir "${params.outdir}/large_data/stats", mode: 'copy'
+
+    input:
+    path geno_gz
+    path counts_gz
+
+    output:
+    path "site_allele_balance.tsv", emit: site_stats
+
+    script:
+    """
+    python3 - << 'EOF' > site_allele_balance.tsv
+    import gzip
+    from itertools import chain
+
+    print("chr\tpos\tallele_balance\tprop_het")
+
+    with gzip.open("${geno_gz}", "rt") as f_geno, gzip.open("${counts_gz}", "rt") as f_counts:
+        # 1. Check f_counts for header
+        first_c = f_counts.readline()
+        if not first_c:
+            exit(0)
+
+        if not first_c.strip().split()[0].lstrip("-").isdigit():
+            f_counts_iter = f_counts
+        else:
+            f_counts_iter = chain([first_c], f_counts)
+
+        # 2. Check f_geno for header
+        first_g = f_geno.readline()
+        if not first_g:
+            exit(0)
+
+        if not first_g.strip().split()[1].lstrip("-").isdigit():
+            f_geno_iter = f_geno
+        else:
+            f_geno_iter = chain([first_g], f_geno)
+
+        # 3. Process matched rows inside the open file context
+        for line_g, line_c in zip(f_geno_iter, f_counts_iter):
+            parts_g = line_g.strip().split()
+            parts_c = line_c.strip().split()
+
+            if not parts_g or not parts_c:
+                continue
+
+            chrom = parts_g[0]
+            pos   = parts_g[1]
+
+            try:
+                posteriors = [float(x) for x in parts_g[2:]]
+                counts     = [int(x) for x in parts_c]
+            except ValueError:
+                continue
+
+            num_samples = len(posteriors) // 3
+            if num_samples == 0:
+                continue
+
+            p_het_sum = 0.0
+            weighted_minor_depth = 0.0
+            weighted_total_depth = 0.0
+
+            for i in range(num_samples):
+                p_het = posteriors[i * 3 + 1]
+                p_het_sum += p_het
+
+                if len(counts) >= (i + 1) * 2:
+                    maj_cnt = counts[i * 2]
+                    min_cnt = counts[i * 2 + 1]
+                    tot_cnt = maj_cnt + min_cnt
+
+                    if tot_cnt > 0:
+                        weighted_minor_depth += p_het * min_cnt
+                        weighted_total_depth += p_het * tot_cnt
+
+            prop_het = p_het_sum / float(num_samples)
+
+            if weighted_total_depth > 0 and prop_het > 0:
+                allele_balance = weighted_minor_depth / weighted_total_depth
+                print(f"{chrom}\t{pos}\t{allele_balance:.4f}\t{prop_het:.4f}")
+    EOF
+    """
+}
+
+// Plot ngsParalog Likelihood Ratio (LR)
+process PLOT_PARALOG_LR {
+    tag "Plot_Paralog_LR"
+    publishDir "${params.outdir}/plots", mode: 'copy'
+
+    input:
+    path lr_file
+    path threshold_file
+    path duphmm_bed
+    path ref_bundle
+
+    output:
+    path "ngsparalog_lr_manhattan.png"
+
+    script:
+    def rcmd = task.ext.rscript ?: 'Rscript'
+    """
+    awk '{print \$1 "\t" \$2 "\t" \$5}' ${lr_file} | awk '\$2 ~ /^[0-9]+\$/' > lr_parsed.tsv
+
+    ${rcmd} -e '
+    options(bitmapType = "cairo")
+    library(ggplot2)
+
+    # 1. Standardize chromosome order & offsets from reference index (.fai)
+    fai_file  <- list.files(pattern="\\\\.fai\$")[1]
+    fai       <- read.table(fai_file, header=FALSE, stringsAsFactors=FALSE)
+    chr_order <- fai\$V1
+    chr_lens  <- setNames(as.numeric(fai\$V2), fai\$V1)
+    chr_offsets <- setNames(c(0, head(cumsum(chr_lens), -1)), fai\$V1)
+
+    # 2. Read threshold and parsed LR data
+    thresh_line <- readLines("${threshold_file}")[1]
+    threshold   <- as.numeric(sub(".*: ", "", thresh_line))
+
+    df <- read.table("lr_parsed.tsv", header=FALSE, col.names=c("chr", "pos", "lr"))
+    df <- df[df\$chr %in% chr_order, ]
+    df\$chr <- factor(df\$chr, levels=chr_order)
+
+    # 3. Downsample low-LR background while preserving ALL high-LR points
+    target_points <- 1000000
+    df_high <- df[df\$lr >= threshold, ]
+    df_low  <- df[df\$lr < threshold, ]
+
+    max_low <- target_points - nrow(df_high)
+    if (max_low > 0 && nrow(df_low) > max_low) {
+      df_low <- df_low[sample(nrow(df_low), max_low), ]
+    }
+
+    df <- rbind(df_high, df_low)
+    df\$cum_pos <- df\$pos + chr_offsets[as.character(df\$chr)]
+
+    # 4. Parse dupHMM regions if available
+    dh_file <- "${duphmm_bed}"
+    has_duphmm <- file.exists(dh_file) && file.info(dh_file)\$size > 0
+
+    p <- ggplot(df, aes(x=cum_pos, y=lr, color=chr))
+
+    if (has_duphmm) {
+      dh <- read.table(dh_file, header=FALSE, stringsAsFactors=FALSE)[, 1:3]
+      colnames(dh) <- c("chr", "start", "end")
+      dh <- dh[dh\$chr %in% chr_order, ]
+      if (nrow(dh) > 0) {
+        dh\$xmin <- dh\$start + chr_offsets[as.character(dh\$chr)]
+        dh\$xmax <- dh\$end   + chr_offsets[as.character(dh\$chr)]
+        p <- p + geom_rect(
+          data=dh,
+          aes(xmin=xmin, xmax=xmax, ymin=-Inf, ymax=Inf),
+          fill="#E41A1C", alpha=0.3, inherit.aes=FALSE
+        )
+      }
+    }
+
+    p <- p +
+      geom_point(alpha=0.5, size=0.4) +
+      geom_hline(yintercept=threshold, color="red", linetype="dashed", linewidth=0.6) +
+      scale_color_manual(values=rep(c("#2B5C8F", "#D95F02"), length.out=length(chr_order))) +
+      labs(
+        title="ngsParalog Likelihood Ratio (LR) Manhattan Plot",
+        subtitle=if(has_duphmm) "Red shaded regions = dupHMM excluded calls | Red dashed line = LR cutoff" else paste("Red dashed line = cutoff threshold (", round(threshold, 2), ")", sep=""),
+        x="Genome Position", 
+        y="LR Statistic"
+      ) +
+      theme_minimal() +
+      theme(legend.position="none", panel.grid.minor=element_blank())
+
+    ggsave("ngsparalog_lr_manhattan.png", plot=p, width=12, height=5, dpi=300, type="cairo")
+    '
+    rm -f lr_parsed.tsv
+    """
+}
+
+// Plot ANGSD Read Depth
+process PLOT_ANGSD_DEPTH {
+    tag "Plot_ANGSD_Depth"
+    publishDir "${params.outdir}/plots", mode: 'copy'
+
+    input:
+    path pos_gz
+    path ref_bundle
+
+    output:
+    path "angsd_depth_manhattan.png"
+
+    script:
+    def rcmd = task.ext.rscript ?: 'Rscript'
+    """
+    ${rcmd} -e '
+    options(bitmapType = "cairo")
+    library(ggplot2)
+
+    fai_file  <- list.files(pattern="\\\\.fai\$")[1]
+    fai       <- read.table(fai_file, header=FALSE, stringsAsFactors=FALSE)
+    chr_order <- fai\$V1
+    chr_lens  <- setNames(as.numeric(fai\$V2), fai\$V1)
+    chr_offsets <- setNames(c(0, head(cumsum(chr_lens), -1)), fai\$V1)
+
+    df <- read.table(gzfile("${pos_gz}"), header=TRUE)
+    colnames(df) <- c("chr", "pos", "depth")
+    df <- df[df\$chr %in% chr_order, ]
+    df\$chr <- factor(df\$chr, levels=chr_order)
+
+    if (nrow(df) > 1000000) df <- df[sample(nrow(df), 1000000), ]
+    df\$cum_pos <- df\$pos + chr_offsets[as.character(df\$chr)]
+
+    p <- ggplot(df, aes(x=cum_pos, y=depth, color=chr)) +
+      geom_point(alpha=0.5, size=0.4) +
+      scale_color_manual(values=rep(c("#1B9E77", "#7570B3"), length.out=length(chr_order))) +
+      labs(title="ANGSD Genome Read Depth Manhattan Plot", x="Genome Position", y="Total Read Depth") +
+      theme_minimal() +
+      theme(legend.position="none", panel.grid.minor=element_blank())
+
+    ggsave("angsd_depth_manhattan.png", plot=p, width=12, height=5, dpi=300, type="cairo")
+    '
+    """
+}
+
+// Plot ANGSD HWE p-values and Inbreeding Coefficient (F)
+process PLOT_ANGSD_HWE {
+    tag "Plot_ANGSD_HWE"
+    publishDir "${params.outdir}/plots", mode: 'copy'
+
+    input:
+    path hwe_gz
+    path ref_bundle
+
+    output:
+    path "angsd_hwe_manhattan.png"
+
+    script:
+    def rcmd = task.ext.rscript ?: 'Rscript'
+    """
+    fai_file=\$(ls *.fai)
+    zcat ${hwe_gz} | awk 'NR>1 {print \$1 "\t" \$2 "\t" \$7 "\t" \$9}' > hwe_parsed.tsv
+
+    ${rcmd} -e '
+    options(bitmapType = "cairo")
+    library(ggplot2)
+
+    fai_file  <- list.files(pattern="\\\\.fai\$")[1]
+    fai       <- read.table(fai_file, header=FALSE, stringsAsFactors=FALSE)
+    chr_order <- fai\$V1
+    chr_lens  <- setNames(as.numeric(fai\$V2), fai\$V1)
+    chr_offsets <- setNames(c(0, head(cumsum(chr_lens), -1)), fai\$V1)
+
+    df <- read.table("hwe_parsed.tsv", header=FALSE, col.names=c("chr", "pos", "F", "pval"))
+    df <- df[df\$chr %in% chr_order, ]
+    df\$chr <- factor(df\$chr, levels=chr_order)
+
+    if (nrow(df) > 1000000) df <- df[sample(nrow(df), 1000000), ]
+
+    df\$logp <- -log10(ifelse(df\$pval <= 0, 1e-16, df\$pval))
+    df\$cum_pos <- df\$pos + chr_offsets[as.character(df\$chr)]
+
+    df_logp <- df[, c("chr", "cum_pos", "logp")]
+    colnames(df_logp) <- c("chr", "cum_pos", "value")
+    df_logp\$metric <- "-log10(p-value)"
+
+    df_f <- df[, c("chr", "cum_pos", "F")]
+    colnames(df_f) <- c("chr", "cum_pos", "value")
+    df_f\$metric <- "Inbreeding Coeff (F)"
+
+    df_long <- rbind(df_logp, df_f)
+    df_long\$metric <- factor(df_long\$metric, levels=c("-log10(p-value)", "Inbreeding Coeff (F)"))
+
+    p <- ggplot(df_long, aes(x=cum_pos, y=value, color=chr)) +
+      geom_point(alpha=0.5, size=0.4) +
+      scale_color_manual(values=rep(c("#E66101", "#5E3C99"), length.out=length(chr_order))) +
+      facet_wrap(~ metric, ncol=1, scales="free_y", strip.position="left") +
+      labs(title="ANGSD HWE Analysis", x="Genome Position", y=NULL) +
+      theme_minimal() +
+      theme(
+        legend.position="none",
+        panel.grid.minor=element_blank(),
+        strip.placement="outside",
+        strip.text=element_text(size=10, face="bold")
+      )
+
+    ggsave("angsd_hwe_manhattan.png", plot=p, width=12, height=8, dpi=300, type="cairo")
+    '
+    rm -f hwe_parsed.tsv
+    """
+}
+
+// Compare excluded regions across filtering methods (Depth, HWE, Paralog/dupHMM)
+process PLOT_FILTER_OVERLAPS {
+    tag "Plot_Filter_Overlaps"
+    publishDir "${params.outdir}/plots", mode: 'copy'
+
+    input:
+    path depth_bed
+    path hwe_bed
+    path paralog_bed
+    val paralog_label
+    path ref_bundle
+
+    output:
+    path "paralog_filter_overlaps.png"
+    path "filter_region_length_histograms.png"
+    path "filter_overlaps_manhattan.png"
+
+    script:
+    def rcmd = task.ext.rscript ?: 'Rscript'
+    """
+    cat << 'EOF' > plot_overlaps.R
+    options(bitmapType = "cairo")
+    library(ggplot2)
+    library(grid)
+
+    read_bed <- function(f, label) {
+    if (!file.exists(f) || file.info(f)\$size == 0) {
+        return(data.frame(chr=character(), start=integer(), end=integer(), width=numeric(), filter=character(), stringsAsFactors=FALSE))
+    }
+    df <- read.table(f, header=FALSE, stringsAsFactors=FALSE)[, 1:3]
+    colnames(df) <- c("chr", "start", "end")
+    df\$width <- df\$end - df\$start
+    df\$filter <- label
+    return(df)
+    }
+
+    b_depth   <- read_bed("${depth_bed}", "High Depth")
+    b_hwe     <- read_bed("${hwe_bed}", "HWE Excess Het")
+    p_label   <- "${paralog_label}"
+    b_paralog <- read_bed("${paralog_bed}", p_label)
+
+    # =========================================================================
+    # PLOT 1: Summary Bar Plots (Existing Overlap Breakdown)
+    # =========================================================================
+    all_chrs <- unique(c(b_depth\$chr, b_hwe\$chr, b_paralog\$chr))
+    combo_counts <- numeric(8)
+    names(combo_counts) <- c("None", "Paralog", "HWE", "HWE+Paralog", "Depth", "Depth+Paralog", "Depth+HWE", "All_3")
+
+    in_regions <- function(pos, bed_df) {
+    if (nrow(bed_df) == 0) return(FALSE)
+    any(pos >= bed_df\$start & pos <= bed_df\$end)
+    }
+
+    for (chr_name in all_chrs) {
+    sub_d <- b_depth[b_depth\$chr == chr_name, ]
+    sub_h <- b_hwe[b_hwe\$chr == chr_name, ]
+    sub_p <- b_paralog[b_paralog\$chr == chr_name, ]
+
+    pts <- sort(unique(c(sub_d\$start, sub_d\$end, sub_h\$start, sub_h\$end, sub_p\$start, sub_p\$end)))
+    if (length(pts) < 2) next
+
+    for (i in 1:(length(pts) - 1)) {
+        s_i <- pts[i]
+        e_i <- pts[i+1]
+        len_i <- e_i - s_i
+        if (len_i <= 0) next
+        mid_i <- (s_i + e_i) / 2
+
+        is_d <- in_regions(mid_i, sub_d)
+        is_h <- in_regions(mid_i, sub_h)
+        is_p <- in_regions(mid_i, sub_p)
+
+        idx <- 1 + (if (is_d) 4 else 0) + (if (is_h) 2 else 0) + (if (is_p) 1 else 0)
+        combo_counts[idx] <- combo_counts[idx] + len_i
+    }
+    }
+
+    combo_mb <- combo_counts / 1e6
+    total_depth   <- sum(combo_mb[c("Depth", "Depth+Paralog", "Depth+HWE", "All_3")])
+    total_hwe     <- sum(combo_mb[c("HWE", "HWE+Paralog", "Depth+HWE", "All_3")])
+    total_paralog <- sum(combo_mb[c("Paralog", "HWE+Paralog", "Depth+Paralog", "All_3")])
+
+    df_indiv <- data.frame(
+    Filter = factor(c("High Depth", "HWE Excess Het", p_label), levels=c("High Depth", "HWE Excess Het", p_label)),
+    Mb = c(total_depth, total_hwe, total_paralog)
+    )
+
+    df_combos <- data.frame(
+    Category = factor(
+        c("Paralog Only", "HWE Only", "Depth Only", "HWE + Paralog", "Depth + Paralog", "Depth + HWE", "All 3 Filters"),
+        levels=c("Paralog Only", "HWE Only", "Depth Only", "HWE + Paralog", "Depth + Paralog", "Depth + HWE", "All 3 Filters")
+    ),
+    Mb = c(combo_mb["Paralog"], combo_mb["HWE"], combo_mb["Depth"], combo_mb["HWE+Paralog"], combo_mb["Depth+Paralog"], combo_mb["Depth+HWE"], combo_mb["All_3"])
+    )
+    levels(df_combos\$Category) <- gsub("Paralog", p_label, levels(df_combos\$Category))
+
+    p1 <- ggplot(df_indiv, aes(x=Filter, y=Mb, fill=Filter)) +
+    geom_col(width=0.6, show.legend=FALSE) +
+    geom_text(aes(label=sprintf("%.2f Mb", Mb)), vjust=-0.5, size=3.5, fontface="bold") +
+    scale_fill_manual(values=c("#377EB8", "#4DAF4A", "#E41A1C")) +
+    labs(title="Total Excluded Megabases (Mb) per Filter", x=NULL, y="Genomic Region Size (Mb)") +
+    theme_minimal() +
+    theme(panel.grid.minor=element_blank(), axis.text.x=element_text(face="bold", size=10))
+
+    p2 <- ggplot(df_combos, aes(x=Category, y=Mb, fill=Category)) +
+    geom_col(width=0.6, show.legend=FALSE) +
+    geom_text(aes(label=sprintf("%.2f Mb", Mb)), vjust=-0.5, size=3.2) +
+    scale_fill_brewer(palette="Set3") +
+    labs(title="Filter Intersection Breakdown", x=NULL, y="Genomic Region Size (Mb)") +
+    theme_minimal() +
+    theme(panel.grid.minor=element_blank(), axis.text.x=element_text(angle=30, hjust=1, face="bold", size=9))
+
+    png("paralog_filter_overlaps.png", width=12, height=5, units="in", res=300, type="cairo")
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(1, 2)))
+    print(p1, vp = viewport(layout.pos.row = 1, layout.pos.col = 1))
+    print(p2, vp = viewport(layout.pos.row = 1, layout.pos.col = 2))
+    dev.off()
+
+    # =========================================================================
+    # PLOT 2: Multi-panel Histograms of Excluded Region Lengths
+    # =========================================================================
+    df_lens <- rbind(b_depth, b_hwe, b_paralog)
+    if (nrow(df_lens) > 0) {
+    df_lens\$filter <- factor(df_lens\$filter, levels=c("High Depth", "HWE Excess Het", p_label))
+
+    p_hist <- ggplot(df_lens, aes(x=width, fill=filter)) +
+        geom_histogram(bins=50, color="white", linewidth=0.2, alpha=0.85) +
+        scale_x_log10(labels=function(x) sprintf("%g bp", x)) +
+        facet_wrap(~ filter, ncol=1, scales="free_y") +
+        scale_fill_manual(values=c("High Depth"="#377EB8", "HWE Excess Het"="#4DAF4A", "#E41A1C")) +
+        labs(
+        title="Distribution of Excluded Region Lengths per Filter",
+        subtitle="Region length = end - start coordinate (log10 scale)",
+        x="Region Length (bp)",
+        y="Region Count"
+        ) +
+        theme_minimal() +
+        theme(
+        legend.position="none",
+        strip.text=element_text(face="bold", size=10),
+        panel.grid.minor=element_blank(),
+        plot.title=element_text(face="bold", size=13)
+        )
+
+    ggsave("filter_region_length_histograms.png", plot=p_hist, width=9, height=7, dpi=300, type="cairo")
+    } else {
+    png("filter_region_length_histograms.png", width=9, height=7, res=300, type="cairo")
+    plot.new()
+    text(0.5, 0.5, "No excluded regions found across filters")
+    dev.off()
+    }
+
+    # =========================================================================
+    # PLOT 3: Track-based Manhattan Plot of Excluded Loci & Overlaps
+    # =========================================================================
+    fai_file  <- list.files(pattern="[.]fai\$")[1]
+    fai       <- read.table(fai_file, header=FALSE, stringsAsFactors=FALSE)
+    chr_order <- fai\$V1
+    chr_lens  <- setNames(as.numeric(fai\$V2), fai\$V1)
+    chr_offsets <- setNames(c(0, head(cumsum(chr_lens), -1)), fai\$V1)
+
+    add_offsets <- function(df) {
+    if (nrow(df) == 0) return(df)
+    df <- df[df\$chr %in% chr_order, ]
+    if (nrow(df) == 0) return(df)
+    df\$cum_start <- df\$start + chr_offsets[as.character(df\$chr)]
+    df\$cum_end   <- df\$end   + chr_offsets[as.character(df\$chr)]
+    return(df)
+    }
+
+    bd <- add_offsets(b_depth)
+    bh <- add_offsets(b_hwe)
+    bp <- add_offsets(b_paralog)
+
+    overlap_segments <- list()
+    for (chr_name in all_chrs) {
+    sub_d <- b_depth[b_depth\$chr == chr_name, ]
+    sub_h <- b_hwe[b_hwe\$chr == chr_name, ]
+    sub_p <- b_paralog[b_paralog\$chr == chr_name, ]
+
+    pts <- sort(unique(c(sub_d\$start, sub_d\$end, sub_h\$start, sub_h\$end, sub_p\$start, sub_p\$end)))
+    if (length(pts) < 2) next
+
+    for (i in 1:(length(pts) - 1)) {
+        s_i <- pts[i]
+        e_i <- pts[i+1]
+        mid_i <- (s_i + e_i) / 2
+
+        hits <- sum(c(in_regions(mid_i, sub_d), in_regions(mid_i, sub_h), in_regions(mid_i, sub_p)))
+        if (hits >= 2) {
+        overlap_segments[[length(overlap_segments) + 1]] <- data.frame(
+            chr=chr_name, start=s_i, end=e_i, width=e_i-s_i, filter="2+ Filter Overlap", stringsAsFactors=FALSE
+        )
+        }
+    }
+    }
+
+    b_over <- if (length(overlap_segments) > 0) do.call(rbind, overlap_segments) else data.frame(chr=character(), start=integer(), end=integer(), width=numeric(), filter=character())
+    bo <- add_offsets(b_over)
+
+    track_list <- list()
+    if (nrow(bp) > 0) { bp\$track <- p_label; bp\$y <- 1; track_list[[1]] <- bp }
+    if (nrow(bh) > 0) { bh\$track <- "HWE Excess Het"; bh\$y <- 2; track_list[[2]] <- bh }
+    if (nrow(bd) > 0) { bd\$track <- "High Depth"; bd\$y <- 3; track_list[[3]] <- bd }
+    if (nrow(bo) > 0) { bo\$track <- "2+ Filter Overlap"; bo\$y <- 4; track_list[[4]] <- bo }
+
+    df_man <- if (length(track_list) > 0) do.call(rbind, track_list) else NULL
+
+    if (!is.null(df_man) && nrow(df_man) > 0) {
+    df_man\$track <- factor(df_man\$track, levels=c(p_label, "HWE Excess Het", "High Depth", "2+ Filter Overlap"))
+
+    chr_bounds <- data.frame(
+        chr = chr_order,
+        start = chr_offsets,
+        end = chr_offsets + chr_lens
+    )
+
+    p_man <- ggplot() +
+        geom_rect(
+        data=chr_bounds[seq(1, nrow(chr_bounds), 2), ],
+        aes(xmin=start, xmax=end, ymin=0.4, ymax=4.6),
+        fill="grey93", alpha=0.5, inherit.aes=FALSE
+        ) +
+        geom_rect(
+        data=df_man,
+        aes(xmin=cum_start, xmax=cum_end, ymin=y-0.35, ymax=y+0.35, fill=track),
+        color=NA, alpha=0.9
+        ) +
+        scale_fill_manual(values=c("High Depth"="#377EB8", "HWE Excess Het"="#4DAF4A", "#E41A1C", "2+ Filter Overlap"="#984EA3")) +
+        scale_y_continuous(
+        breaks=1:4,
+        labels=c(p_label, "HWE Excess Het", "High Depth", "2+ Filter Overlap"),
+        limits=c(0.4, 4.6)
+        ) +
+        labs(
+        title="Manhattan Plot of Excluded Genomic Loci Across Filters",
+        subtitle="Top track highlights problematic regions flagged by two or more filters concurrently",
+        x="Genome Position",
+        y=NULL
+        ) +
+        theme_minimal() +
+        theme(
+        legend.position="none",
+        panel.grid.minor=element_blank(),
+        panel.grid.major.y=element_blank(),
+        axis.text.y=element_text(face="bold", size=10),
+        plot.title=element_text(face="bold", size=13)
+        )
+
+    ggsave("filter_overlaps_manhattan.png", plot=p_man, width=13, height=6, dpi=300, type="cairo")
+    } else {
+    png("filter_overlaps_manhattan.png", width=13, height=6, res=300, type="cairo")
+    plot.new()
+    text(0.5, 0.5, "No excluded loci found across filters")
+    dev.off()
+    }
+    EOF
+
+    ${rcmd} plot_overlaps.R
+    """
+}
+
+// Plot Allele Balance vs Proportion of Heterozygotes with hexbins
+process PLOT_ALLELE_BALANCE {
+    tag "Plot_Allele_Balance"
+    publishDir "${params.outdir}/plots", mode: 'copy'
+
+    input:
+    path site_stats // Tab-delimited file with header: chr, pos, allele_balance, prop_het
+
+    output:
+    path "allele_balance_vs_het.png"
+
+    script:
+    def rcmd = task.ext.rscript ?: 'Rscript'
+    """
+    ${rcmd} -e '
+    options(bitmapType = "cairo")
+    library(ggplot2)
+
+    df <- read.table("${site_stats}", header=TRUE, stringsAsFactors=FALSE)
+    colnames(df)[1:4] <- c("chr", "pos", "allele_balance", "prop_het")
+
+    # Filter out missing data and ensure bounds [0, 1]
+    df <- df[!is.na(df\$allele_balance) & !is.na(df\$prop_het), ]
+    df <- df[df\$allele_balance >= 0 & df\$allele_balance <= 1, ]
+
+    p <- ggplot(df, aes(x=allele_balance, y=prop_het)) +
+      geom_bin2d(bins=100) +
+      scale_fill_viridis_c(option="magma", trans="log10", name="Site Count") +
+      geom_vline(xintercept=0.5, linetype="dashed", color="white", alpha=0.8) +
+      scale_x_continuous(breaks=seq(0, 1, 0.1), limits=c(0, 1)) +
+      scale_y_continuous(breaks=seq(0, 1, 0.1), limits=c(0, 1)) +
+      labs(
+        title="Allele Balance vs. Proportion Heterozygotes",
+        subtitle="Dashed line = Expected diploid 0.5 allele balance",
+        x="Allele Balance (Alt / Total Reads at Het Sites)",
+        y="Proportion of Heterozygous Individuals"
+      ) +
+      theme_minimal() +
+      theme(
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(face="bold", size=13),
+        axis.title = element_text(face="bold")
+      )
+
+    png("allele_balance_vs_het.png", width=8, height=6, units="in", res=300, type="cairo")
+    print(p)
+    dev.off()
+    '
+    """
+}
+
 workflow {
     // Package the reference files into a channel
     ref_bundle_ch = Channel.fromPath( "${params.reference}*" )
@@ -639,8 +1287,11 @@ workflow {
     all_bams_ch = modern_indexed.map { sample, bam, bai -> bam }.collect()
     all_bais_ch = modern_indexed.map { sample, bam, bai -> bai }.collect()
 
-    // 6. Run ANGSD HWE & Depth filtering
+    // 6. Run ANGSD HWE & Depth filtering, output allele balance and heterozygosity stats
     angsd_out = ANGSD_HWE_DEPTH(all_bams_ch, all_bais_ch, ref_bundle_ch)
+
+    // 6.1. Parse probabilistic allele balance & heterozygosity from ANGSD outputs
+    ab_stats_ch = PARSE_ALLELE_BALANCE(angsd_out.geno_gz, angsd_out.counts_gz)
 
     // 7. Generate candidate BED file by scaffold/contig
 	contig_beds_ch = GENERATE_CONTIG_BEDS(ref_bundle_ch).contig_beds.flatten()
@@ -651,6 +1302,7 @@ workflow {
     // 9. Combine into final output files
     COMBINE_PARALOGS(lr_chunks.collect())
 
+    // Optional DUPHMM run
     if (params.run_duphmm) {
         // Calculate per-site average depth from mpileup if it will be used (emit=1)   
         if (params.duphmm_emit == 1) {
@@ -677,9 +1329,42 @@ workflow {
         }
 
         // Infer duplication states concurrently per scaffold
-        DUPHMM_INFER(ch_duphmm_inputs, DUPHMM_TRAIN.out.param_file)
+        DUPHMM_INFER(ch_duphmm_inputs, DUPHMM_TRAIN.out.param_file.first())
 
         // Collect all scaffold output files into the final BED
         COMBINE_DUPHMM(DUPHMM_INFER.out.rf.collect().ifEmpty([]))
     }
+
+    // --- Generate Diagnostic & Comparison Plots ---
+    ch_duphmm_plot = params.run_duphmm ? COMBINE_DUPHMM.out : Channel.of(file("NO_DUPHMM"))
+
+    PLOT_PARALOG_LR(
+        COMBINE_PARALOGS.out.lr_txt,
+        COMBINE_PARALOGS.out.threshold_txt,
+        ch_duphmm_plot,
+        ref_bundle_ch
+    )
+
+    PLOT_ANGSD_DEPTH(
+        angsd_out.pos_gz,
+        ref_bundle_ch
+    )
+
+    PLOT_ANGSD_HWE(
+        angsd_out.hwe_gz,
+        ref_bundle_ch
+    )
+
+    PLOT_ALLELE_BALANCE(ab_stats_ch.site_stats)
+
+    ch_paralog_bed    = params.run_duphmm ? COMBINE_DUPHMM.out : COMBINE_PARALOGS.out.paralog_bed
+    val_paralog_label = params.run_duphmm ? "dupHMM" : "ngsParalog LR"
+
+    PLOT_FILTER_OVERLAPS(
+        angsd_out.high_depth_bed,
+        angsd_out.hwe_bed,
+        ch_paralog_bed,
+        val_paralog_label,
+        ref_bundle_ch
+    )
 }
