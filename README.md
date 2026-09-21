@@ -903,9 +903,17 @@ rsync -a --exclude='work/' --exclude='results/' --exclude='results-iridian/' --e
 cd nf-pipelines/nf-paralog
 ```
 
-Wrote a new `main.nf` that maps the modern reads (without trimming to match the historical read length) with very few quality filters, then runs ANGSD (HWE and depth tests) and ngsParalog. Updated the `nextflow.config` file to match. Set parameters for runnning dupHMM with both LR and coverage.
+Wrote a new [`main.nf`](nf-pipelines/nf-paralog/main.nf) that maps the modern reads (without trimming to match the historical read length) with very few quality filters, then runs ANGSD (HWE and depth tests) and ngsParalog. Updated the [`nextflow.config`](nf-pipelines/nf-paralog/nextflow.config) file to match.
 
-The same parameters and input files as `nf-trim-generode` should be good.
+The same parameters and input files as `nf-trim-generode` should be good. Set parameter flags for runnning dupHMM with both LR and coverage. 
+
+Also set:
+```
+params.min_ind_ratio = 0.5 // Require coverage in at least 50% of samples
+params.high_depth_quantile = 0.995 // target high depth percentile cutoff
+params.lr_quantile = 0.999 // Target percentile cutoff for ngsParalog likelihood ratio (e.g., 0.999 = top 0.1% highest LR sites)
+```
+Note the HWE disequilibrium uses a p<1e-3 cutoff (hard-coded for now).
 
 Start it in the existing tmux shell:
 ```

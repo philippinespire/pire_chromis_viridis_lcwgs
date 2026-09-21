@@ -14,7 +14,7 @@ params.reference_prefix = params.reference.tokenize('/').last().replaceAll(/\.(f
 params.modern_era   = "modern" // label in the "era" column of the samplesheet that identifies modern individuals
 params.min_ind_ratio = 0.5 // Require coverage in at least 50% of samples
 params.high_depth_quantile = 0.995 // target high depth percentile cutoff
-params.lr_quantile = 0.999  // Target percentile cutoff (e.g., 0.999 = top 0.1% highest LR sites)
+params.lr_quantile = 0.999  // Target percentile cutoff for ngsParalog likelihood ratio (e.g., 0.999 = top 0.1% highest LR sites)
 params.rmdup_script = "${projectDir}/scripts/samremovedup.py"
 params.ngsparalog_bin = "/archive/carpenterlab/pire/softwares/ngsParalog/ngsParalog" // path to ngsParalog binary
 params.run_duphmm    = true          // Toggle dupHMM execution
