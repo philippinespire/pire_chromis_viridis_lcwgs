@@ -80,20 +80,6 @@ results-iridian/
 __pycache__/
 temp/
 
-# Block these specific large files
-out_PCAngsd_selection_minMaf0.0_e80.selection.npy
-out_PCAngsd_selection_minMaf0.0_e100.selection.npy
-
-# Allow these files to be synced
-!salarias_fasciatus/BAM_metrics/out_Sfa_ReadStats.tsv
-!Sfa-ABas-CBas_all-GCF_902148845.1_fSalaFa1.1_chr1-23-mtgen_clmp_fp2_repr_fltrd.beagle.gz
-!popmap*
-!mkBGL.snpStat.gz
-!Sfa-ABas-CBas_all_final.100k.snpStat
-!test04.100k.snpStat
-!*[Dd]ecode.tsv
-!*ReadStats.tsv
-
 #NextFlowFiles
 *.gz
 *.gfa
@@ -130,6 +116,9 @@ reference/
 .java/
 .snakemake/
 conda_cache/
+# include these csv input files
+!nf-pipelines/nf-trim-generode/inputfiles/*.csv
+!nf-pipelines/nf-paralog/inputfiles/*.csv
 
 # Special handling for nf-angsd-selection and nf-paralog results
 # Un-ignore this specific pipeline's results folder

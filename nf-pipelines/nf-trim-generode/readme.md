@@ -48,10 +48,13 @@ nf-trim-merged-unmerged/
 The pipeline requires the following inputfiles:
 
 * Reference (fasta or fna format)
-* Reference index files (.bwt, .ann, .sa, .pac, .ann, .amb )
-* BED file with masked repeat regions
+* Reference index and dictionary files (.fai and .dict)
 * File with the name and era of all fastq files to be processed (`inputfiles/samplesheet.csv`)
 * Directory containing all fastq files
+
+If repeatmasking is not run, this is also needed:
+
+* BED file with masked repeat regions
 
 All inputfiles can be copied or generated from the GenErode directory. Below is code that can help to generate the inputfiles.
 
@@ -88,7 +91,7 @@ ln -s /Generode/reference/<reference>.repma.bed ./data/reference/
 Make sure that all fastq file names are unique and follow this structure. Otherwise the pipeline will fail.
 
 ### Sample CSV Structure Example 
-This could be, for example, `inputfiles/samplesheet.csv`
+This could be, for example, `inputfiles/samplesheet.csv`. It is easy to create by hand from the `fastq_filenames.txt` file.
 ```
 sample,era
 TzoCMta031_1_22CVWFLT3,historical

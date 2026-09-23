@@ -111,11 +111,12 @@ params.modern_era   = "modern"  // label in the "era" column of the samplesheet 
 params.min_ind_ratio = 0.5      // Require coverage in at least 50% of samples
 params.high_depth_quantile = 0.995 // target high depth percentile cutoff for flagging problematic high depth regions
 params.lr_quantile  = 0.999     // Target percentile cutoff for ngsParalog log-likelihood values (e.g., 0.999 = top 0.1% highest LR sites)
+params.hwe_pval    = 1e-3  // Target p-value threshold for HWE excess heterozygosity filtering
 params.rmdup_script = "${projectDir}/scripts/samremovedup.py"
 params.ngsparalog_bin = "/archive/carpenterlab/pire/softwares/ngsParalog/ngsParalog"  // path to ngsParalog binary
 params.run_duphmm   = true      // Toggle dupHMM execution
 params.duphmm_script = "/archive/carpenterlab/pire/softwares/ngsParalog/dupHMM.R"     // Path to dupHMM.R
-params.duphmm_emit  = 0         // 0 = LR only, 1 = both LR and Coverage
+params.duphmm_emit  = 1         // 0 = LR only, 1 = both LR and Coverage
 ```
 
 Other parameters that you are less likely to adjust can be found in the header of `main.nf`.
@@ -171,20 +172,32 @@ results/
 │   ├── ngsparalog_duphmm_regions.bed
 │   ├── ngsparalog_sites.bed
 │   └── ngsparalog_threshold.txt
+├── plots/
+│   ├── allele_balance_vs_het.png
+│   ├── angsd_depth_manhattan.png
+│   ├── angsd_hwe_manhattan.png
+│   ├── filter_overlaps_manhattan.png
+│   ├── filter_region_length_histograms.png
+│   ├── ngsparalog_lr_manhattan.png
+│   └── paralog_filter_overlaps.png
 └── large_data/
     ├── angsd/
     │   ├── cvi_angsd.arg
     │   ├── cvi_angsd.counts.gz
     │   ├── cvi_angsd.depthGlobal
     │   ├── cvi_angsd.depthSample
+    │   ├── cvi_angsd.geno.gz
     │   ├── cvi_angsd.hwe.gz
-    │   └── cvi_angsd.mafs.gz
+    │   ├── cvi_angsd.mafs.gz
+    │   └── cvi_angsd.pos.gz
     ├── bam/
     │   ├── <sample>.merged.realn.bam
     │   └── <sample>.merged.realn.bam.bai
-    └── paralogs/
-        ├── cvi_avg_depth.tsv
-        └── cvi_ngsparalog.lr.txt
+    ├── paralogs/
+    │   ├── cvi_avg_depth.tsv
+    │   └── cvi_ngsparalog.lr.txt
+    └── stats/
+        └── site_allele_balance.tsv
 
 ```
 
@@ -197,12 +210,21 @@ results/
 * **`paralogs/ngsparalog_threshold.txt`**: Text file recording the calculated numeric LR threshold value derived from `params.lr_quantile` (default 99.9th percentile).
 * **`paralogs/ngsparalog_duphmm_regions.bed`**: BED file containing genomic intervals classified as duplicated by dupHMM.R HMM state inference (only created when `params.run_duphmm = true`).
 
+**`plots/` (Plots)**
+
+* **`ngsparalog_lr_manhattan.png`**: Likelihood ratio values across genome with optional dupHMM calls overlaid.   
+* **`angsd_depth_manhattan.png`**: Genome-wide total read depth distribution.   
+* **`angsd_hwe_manhattan.png`**: HWE p-values and inbreeding coefficient ($F$) tracks.   
+* **`allele_balance_vs_het.png`**: 2D bin plot comparing allele balance against individual heterozygosity.   
+* **`paralog_filter_overlaps.png`**, **`filter_overlaps_manhattan.png`**, **`filter_region_length_histograms.png`**: Intersections and length distributions comparing depth, HWE, and paralog filters.
+
 **`large_data/` (Raw Output Files)**
 
 * **`large_data/bam/`**: Final processed alignments for modern samples. These BAMs include merged single-end and unmerged paired-end reads mapped without MAPQ filtering ($q=0$), marked for duplicates, merged by sample ID, and realigned around indels.
 * **`large_data/angsd/`**: Unfiltered, raw calculation files output by ANGSD, including compressed Hardy-Weinberg test scores (`.hwe.gz`), major/minor allele frequencies (`.mafs.gz`), sample/global depth distributions (`.depthSample`, `.depthGlobal`), and base counts (`.counts.gz`).
 * **`large_data/paralogs/cvi_ngsparalog.lr.txt`**: The unfiltered likelihood-ratio table aggregated across all contigs/scaffolds from `ngsParalog calcLR`.
 * **`large_data/paralogs/cvi_avg_depth.tsv`**: Per-site average depth matching the `cvi_ngsparalog.lr.txt` site list (only generated when `params.duphmm_emit = 1`).
+* **`large_data/stats/site_allele_balance.tsv`**: Per-site probabilistic allele balance and proportion of heterozygous individuals derived from ANGSD posterior probabilities.
 
 ## Software Stack
 The pipeline uses:
@@ -216,6 +238,7 @@ The pipeline uses:
 * `ANGSD`: Hardy-Weinberg Equilibrium (`-doHWE`), major/minor allele frequency estimation (`-doMaf`), depth calculations, and allele counting.
 * `ngsParalog`: Likelihood-ratio calculations (`calcLR`) across mpileups to identify duplicated/paralogous regions.
 * `R` (`v4.x+`) & `dupHMM.R`: Hidden Markov Model segmentation for paralog/duplication state inference using R packages `expm`, `truncnorm`, and `docopt`.
+* `R` with `ggplot2`: visualization
 * Python 3: In-stream duplicate removal via `samremovedup.py`.
 * Java Runtime Environment (JRE): Dependency for running GATK.
 * POSIX Utilities (`awk`, `zcat`, `bash`): Genomic window splitting, BED conversion, filtering, and text handling.

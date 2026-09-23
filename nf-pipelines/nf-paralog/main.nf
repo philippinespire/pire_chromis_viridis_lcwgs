@@ -15,7 +15,8 @@ params.modern_era   = "modern" // label in the "era" column of the samplesheet t
 params.min_ind_ratio = 0.5 // Require coverage in at least 50% of samples
 params.high_depth_quantile = 0.995 // target high depth percentile cutoff
 params.lr_quantile = 0.999  // Target percentile cutoff for ngsParalog likelihood ratio (e.g., 0.999 = top 0.1% highest LR sites)
-params.rmdup_script = "${projectDir}/scripts/samremovedup.py"
+params.hwe_pval    = 1e-3  // Target p-value threshold for HWE excess heterozygosity filtering
+params.rmdup_script = "${projectDir}/scripts/samremovedup.py" // path to the script for removing duplicates
 params.ngsparalog_bin = "/archive/carpenterlab/pire/softwares/ngsParalog/ngsParalog" // path to ngsParalog binary
 params.run_duphmm    = true          // Toggle dupHMM execution
 params.duphmm_script = "/archive/carpenterlab/pire/softwares/ngsParalog/dupHMM.R"     // Path to dupHMM.R (or place inside pipeline bin/)
@@ -284,8 +285,8 @@ process ANGSD_HWE_DEPTH {
         -skipTriallelic 0 \
         -doHWE 1 -doCounts 1 -dumpCounts 3 -doDepth 1 -doGeno 8 -doPost 1 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 -P ${task.cpus}
 
-    # Extract sites with excess heterozygosity (p-value < 1e-3) and F<0 into 1-based BED
-    zcat cvi_angsd.hwe.gz | awk 'NR>1 && \$7 < 0 && \$9 < 1e-3 {print \$1 "\t" \$2 - 1 "\t" \$2}' > hwe_excess_het.bed
+    # Extract sites with excess heterozygosity (p-value < params.hwe_pval) and F<0 into 1-based BED
+    zcat cvi_angsd.hwe.gz | awk -v pval="${params.hwe_pval}" 'NR>1 && \$7 < 0 && \$9 < pval {print \$1 "\t" \$2 - 1 "\t" \$2}' > hwe_excess_het.bed
 
     # Calculate Total Depth Cutoff at Target Quantile (e.g., 99.5th percentile) from ANGSD Histogram
     # DEPTH_CUTOFF is a diagnostic threshold used post-analysis to extract and output those specific high-depth regions into a BED file
