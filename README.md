@@ -20,6 +20,7 @@ This repository outlines the roadmap we followed to move *Chromis viridis* throu
 ---
 ## Open Science
 Samples: GEOME expeditions [Cvi_1909_BatagIsland_NorthernSamar_lcwgs](https://geome-db.org/record/ark:/21547/GWe2) and [Cvi_2022_Biri_NorthernSamar_lcwgs](https://geome-db.org/record/ark:/21547/GWY2)
+
 Reads: NCBI BioProjects Chromis_viridis_1909_BatagIsland_NorthernSamar_lcwgs (PRJNA1313343) and Chromis_viridis_2022_Biri_NorthernSamar_lcwgs (PRJNA1313319). Neither are public as of fall 2026.
 
 ## 1. Completed fq.gz pre-processing
