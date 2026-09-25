@@ -18,6 +18,9 @@ Jem Baldisimo and Malin Pinsky
 This repository outlines the roadmap we followed to move *Chromis viridis* through the [Low Coverage Whole Genome Sequencing Pipeline](https://github.com/philippinespire/pire_lcwgs_data_processing). This provides steps taken & analysis we did to gain insight on the historical population demography of this very popular aquarium fish, also known as the green chromis.
 
 ---
+## Open Science
+Samples: GEOME expeditions [Cvi_1909_BatagIsland_NorthernSamar_lcwgs](https://geome-db.org/record/ark:/21547/GWe2) and [Cvi_2022_Biri_NorthernSamar_lcwgs](https://geome-db.org/record/ark:/21547/GWY2)
+Reads: NCBI BioProjects Chromis_viridis_1909_BatagIsland_NorthernSamar_lcwgs (PRJNA1313343) and Chromis_viridis_2022_Biri_NorthernSamar_lcwgs (PRJNA1313319). Neither are public as of fall 2026.
 
 ## 1. Completed fq.gz pre-processing
 Working in `/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/`
