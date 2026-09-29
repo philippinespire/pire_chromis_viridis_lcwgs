@@ -946,6 +946,19 @@ BED files, fastp reports, site allele balance, bam files and other results in th
 
 ![Manhattan plot of the overlap among regions flagged by each method](nf-pipelines/nf-paralog/results/plots/filter_overlaps_manhattan.png)
 
+### 14.1 Do paralogous and repeat regions overlap?
+Made a script to plot the overlap of Repeat Masker's identified regions and the newly identified regions. From the base directory:
+```
+sbatch scripts/plot_repeat_paralog_overlaps.sbatch
+```
+
+
+### 14.2 Clean up
+Remove the 214G temporary directory:
+```
+rm -r nf-pipelines/nf-paralog/work/
+```
+
 
 ## 15 Re-run ANGSD without soft-clipped reads
 As a sensitivity test, let's re-run `nf-angsd-selection-1x` after stripping out all soft-clipped reads. Create a `temp/` directory and put the bams from `nf-trim-generode`'s `results-iridian` there after stripping out unmapped and reads with any soft-clipping:
