@@ -955,6 +955,14 @@ Made a script to plot the overlap of Repeat Masker's identified regions and the 
 ```
 sbatch scripts/plot_repeat_paralog_overlaps.sbatch
 ```
+![Plot of overlapping regions between repeat and paralog detection methods](output/paralogs/repeats_paralog_overlaps.png).
+
+Shows that
+
+1) RepeatMasker found by far the largest length of problematic regions
+2) Most (75%) of the regions found by DUPHMM were also found by RepeatMasker
+
+For Cvi, RepeatMasker looks like the more important mask.
 
 
 ### 14.2 Clean up
