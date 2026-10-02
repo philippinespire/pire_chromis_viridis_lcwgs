@@ -234,6 +234,7 @@ process ANGSD_HWE_DEPTH {
     output:
     path "angsd.*",            emit: angsd_files
     path "angsd.mafs.gz",      emit: mafs_gz
+    path "angsd.pos.gz",       emit: pos_gz
     path "angsd.hwe.gz",       emit: hwe_gz
     path "hwe_excess_het.bed",     emit: hwe_bed
     path "high_depth_regions.bed", emit: high_depth_bed

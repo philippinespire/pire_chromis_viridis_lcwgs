@@ -243,7 +243,7 @@ ls /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/GenE
 ## 7. NextFlow Trimming
 Malin Pinsky 2026 May. Working in `/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/`
 
-This step applied Marianne's Nextflow trimming script to _all_ individuals and mapped them with bwa mem. This is not a standard application, since typically only the modern individuals are trimmed and they are mapped with bwa aln. By doing this, I didn't rescale the historical reads based on damage patterns, which is done in the generode pipeline. This is probably ok, since the reads have very little damage. Also see the new and improved pipeline at [Step 11](#11-retrim-and-map-with-nf-trim-generode).
+This step applied Marianne's Nextflow trimming script to _all_ individuals and mapped them with bwa mem. This is not a standard application, since typically only the modern individuals are trimmed and they are mapped with bwa aln. By doing this, I didn't rescale the historical reads based on damage patterns, which is done in the generode pipeline. This is probably ok, since the reads have very little damage. Also see the new and improved pipeline at [Step 13](#13-map-against-a-new-reference).
 
 Cloned the nf-piplines repo and removed its status as a git repo (removed .git/ and .gitignore).
 ```
@@ -254,6 +254,8 @@ rm nf-pipelines/.gitignore
 From within `nf-trim-merged-unmerged/`, Made directories per instructions in [nf-trim-merged-unmerged](https://github.com/mariannedehasque/nf-pipelines/tree/main/nf-trim-merged-unmerged).
 
 Made symlinks for NextFlow to the raw fastq files and renamed the symlinks with ```bash fix_symlinks.sh --apply``` (drop the ```--apply``` for a dry run). Script is now in `scripts/`. This scripts checks for corrupt files in ```/archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_raw/``` (see ```2026-05-12_corrupt_fastq_report.txt```, now in `output/`), symlinks to them if not corrupt, checks for the equivalent in ```fq_fp1_clmp_fp2_fqscrn_rprd``` if they are corrupted, and links there instead if possible. It also checks that the R1 and R2 symlinks both point to the same directory (either raw or repaired). 
+
+_Note: as of 1 October 2026, Jason Selwyn fixed the corrupted fastq files. See the new analysis starting on [Step 13](#13-map-against-a-new-reference)._
 
 Created the list of filenames from within `nf-trim-merged-unmerged/`:
 ```
@@ -515,7 +517,95 @@ sbatch scripts/blastn_coi_local_top5.sbatch
 Note: this overwrote the COI barcode results file. See `output/mia/all_samples_coi_blast_results.txt`.  
 APal_016 matches to _C. atripectoralis_. This was one of the admixture outliers. The APal_004 and APal_016 unfortunately did not return any mtDNA sequence. MIA repeatedly segfaulted on the APal_040 outlier. Despite limited information, removing all four seems appropriate. They have low depth, group together, and one is _C. atripectoralis_.
 
-## 11. Retrim and map only Cvi individuals with nf-trim-generode
+### 10.1 Test CviAPal032
+As of October 1, 2026, we have uncorrupted fastq files for CviAPal032 that weren't available when MIA was originally run. Do this one manually:
+```
+sbatch scripts/run_MIA.sbatch nf-pipelines/nf-trim-generode/data/symlinks_raw/CviAPal032_Ex1_4G_R1.fastq.gz
+```
+Wrote `output/mia/CviAPal032_Ex1_4G.maln.F.mia_consensus.3x_0.67_filtered.fasta` and `CviAPal032_Ex1_4G.maln.F.mia_consensus.10x_0.9_filtered.fasta`.
+
+Both are empty.
+
+
+## 11 Test for paralogs
+Some SFS plots made for a different project (`pire_synthesis`) have an excess of loci with alleles at 50:50. Let's test for paralogs by
+
+1. Testing for excess heterozygosity and depth >1.75x with angsd
+2. Running `ngsParalog`
+
+Start by copying over the base of the nf-trim-generode pipeline:
+```
+rsync -a --exclude='work/' --exclude='results/' --exclude='results-iridian/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-paralog/
+
+cd nf-pipelines/nf-paralog
+```
+
+Wrote a new [`main.nf`](nf-pipelines/nf-paralog/main.nf) that maps the modern reads (without trimming to match the historical read length) with very few quality filters, then runs ANGSD (HWE and depth tests) and ngsParalog. Updated the [`nextflow.config`](nf-pipelines/nf-paralog/nextflow.config) file to match.
+
+The same parameters and input files as `nf-trim-generode` should be good. Set parameter flags for runnning dupHMM with both LR and coverage. 
+
+Also set:
+```
+params.min_ind_ratio = 0.5 // Require coverage in at least 50% of samples
+params.high_depth_quantile = 0.995 // target high depth percentile cutoff
+params.lr_quantile = 0.999 // Target percentile cutoff for ngsParalog likelihood ratio (e.g., 0.999 = top 0.1% highest LR sites)
+```
+Note the HWE disequilibrium uses a p<1e-3 cutoff (hard-coded for now).
+
+Start it in the existing tmux shell:
+```
+tmux a -t nextflow
+cd ../nf-paralog/
+nextflow run main.nf -profile wahab -resume
+```
+
+Output:
+```
+[ANGSD_HWE_DEPTH] Total BAMs: 9 | Calculated minInd: 4
+Calculated Average Read Length: 147.359 bp
+Estimated Mean Population Depth: 49.5492x
+Setting ANGSD -setMaxDepth input filter for depthGlobal histogram to 500 to filter out coverage spikes
+High depth cutoff (0.995 quantile) for flagging problematic high-depth regions: 98 total depth
+```
+
+BED files, fastp reports, site allele balance, bam files and other results in the `results/` directory (including `large_data/` not tracked by git). Key plots are:
+![Allele balance](nf-pipelines/nf-paralog/results/plots/allele_balance_vs_het.png)
+
+![Manhattan plot of mapped depth](nf-pipelines/nf-paralog/results/plots/angsd_depth_manhattan.png)
+
+![Manhattan plot of HWE disequilibrium](nf-pipelines/nf-paralog/results/plots/angsd_hwe_manhattan.png)
+
+![Manhattan plot of ngsParalog likelihood ratios for paralogous regions](nf-pipelines/nf-paralog/results/plots/ngsparalog_lr_manhattan.png)
+
+![Histogram of the length of regions flagged by each method](nf-pipelines/nf-paralog/results/plots/filter_region_length_histograms.png)
+
+![Barplot of overlap among the regions flagged by each methods](nf-pipelines/nf-paralog/results/plots/paralog_filter_overlaps.png)
+
+![Manhattan plot of the overlap among regions flagged by each method](nf-pipelines/nf-paralog/results/plots/filter_overlaps_manhattan.png)
+
+### 11.1 Do paralogous and repeat regions overlap?
+Made a script to plot the overlap of Repeat Masker's identified regions and the newly identified regions. From the base directory:
+```
+sbatch scripts/plot_repeat_paralog_overlaps.sbatch
+```
+![Plot of overlapping regions between repeat and paralog detection methods](output/paralogs/repeats_paralog_overlaps.png).
+
+Shows that
+
+1) RepeatMasker found by far the largest length of problematic regions
+2) Most (75%) of the regions found by DUPHMM were also found by RepeatMasker
+
+For Cvi, RepeatMasker looks like the more important mask.
+
+
+### 11.2 Clean up
+Remove the 214G temporary directory:
+```
+rm -r nf-pipelines/nf-paralog/work/
+```
+
+
+## 12. Retrim and map only Cvi individuals with nf-trim-generode
 Trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed `split_reads.sh`, and does mapdamage rescaling of bam files. Get the files from an updated branch in my home directory (in the future, it will be available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo)
 ```
 cd /archive/carpenterlab/pire/mpinsky/
@@ -579,14 +669,14 @@ Finished in 7 hrs. Found 103 bp average historical length and mapped with `bwa m
 
 Inspecting the [AMBER plots](nf-pipelines/nf-trim-generode/results/amber), the read length gap from 50-60bp has been fixed by the new `split_reads.sh` script. The historical reads have a wider read length distribution than the modern since there is a substantial fraction of short historical reads, plus some merged historical reads. The [mapdamage plots](nf-pipelines/nf-trim-generode/results/mapdamage/) still show many soft-clipped historical reads, despite stricter mapping, but very little evidence of historical damage patterns. Could summarize the `*_misincorporation.txt` files into a multi-individual plot.
 
-### 11.2 Depth vs. reads
+### 12.2 Depth vs. reads
 Plot read depth vs. number of reads
 ```
 sbatch scripts/plot_depth_vs_reads.sbatch nf-pipelines/nf-trim-generode/data/symlinks nf-pipelines/nf-trim-generode/results/depth output/depth_vs_reads_nf-trim-generode.txt output/depth_vs_reads_nf-trim-generode.pdf
 ```
 [Plot](output/depth_vs_reads_nf-trim-generode.pdf) shows that, as expected, depth increases with the number of reads. Depth increases much more strongly for modern than for historical individuals.
 
-### 11.3 Softclipping
+### 12.3 Softclipping
 Run mapdamage diagnostics on the modern Cvi files with a custom script to check if they also have soft-clipping:
 ```
 sbatch scripts/run_mapdamage_diagnostics.sbatch
@@ -599,7 +689,9 @@ sbatch scripts/soft_clip_analysis.sbatch nf-pipelines/nf-trim-generode/results/d
 ```
 The [histogram by contig](output/softclip_analysis/histogram_soft_clipped_per_contig.png) shows a handful of contigs with >30% clipping. A [handful of individuals](output/softclip_analysis/histogram_soft_clipped_per_individual.png) also have a lot of soft-clipping.
 
-### 11.4 Map against a new reference
+## 13 Map against a new reference
+_Note: Redid mapping here in October 2026 after Jason Selwyn found uncorrupted raw fastq files._
+
 Will this reduce soft-clipping?
 Download the Iridian genome, trim to contigs >20kb, create a dictionary, and index it for use:
 ```
@@ -626,15 +718,66 @@ awk '!/^>/ {sum += length($0)} END {print sum}' data/GCA_051013605.1_ASM5101360v
 ```
 Ours is only 89MB, the Iridian one is 760MB. Latter is much more contiguous.
 
-Run nf-trim-generode on the new genome with output in `results-iridian` (see parameters in `main-iridian.nf`). Otherwise the same parameters:
+Update the symlinks in a new `data/symlinks_raw` directory now that Jason has fixed the corrupted files. Also have to name the symlink files in the format <sampleID>_<index>_<flowcellID>_R1.fastq.gz:
+```
+bash
+mkdir -p data/symlinks_raw
+for f in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_run/fq_raw/*.fq.gz; do
+    # Match filename against regex pattern for Cvi-APal or Cvi-CPal files
+    # Group 1: Era code (APal or CPal)
+    # Group 2: Sample index number (e.g., 001)
+    # Group 3: Extraction batch ID (e.g., Ex1)
+    # Group 4: Library/lane tag (e.g., 1A)
+    # Group 5: Read orientation (1 or 2)
+    if [[ "$f" =~ Cvi-([AC]Pal)_([0-9]+)-([^-]+)-([^-]+)-lcwgs-1-2\.([12])\.fq\.gz ]]; then
+        
+        # Store captured regex groups into readable variables
+        species="${BASH_REMATCH[1]}"
+        sample_num="${BASH_REMATCH[2]}"
+        extraction="${BASH_REMATCH[3]}"
+        lib_tag="${BASH_REMATCH[4]}"
+        read_pair="${BASH_REMATCH[5]}"
+
+        # Assemble clean, standardized output filename
+        new_name="Cvi${species}${sample_num}_${extraction}_${lib_tag}_R${read_pair}.fastq.gz"
+
+        # Direct readlink resolves the target path
+        target_path="$(readlink -f "$f")"
+
+        # Create absolute path symlink inside symlinks_raw/ directory
+        ln -sf "${target_path}" "data/symlinks_raw/${new_name}"
+
+        echo "Created symlink: ${new_name} -> $f"
+    fi
+done
+```
+
+Make a new sample sheet because the library tags seem to be different now. :
+```
+(echo "sample,era"; ls ./data/symlinks_raw/*fastq.gz | xargs -n1 basename | cut -d "_" -f1,2,3 | uniq | awk '{
+    type = substr($0, 4, 1)
+    if (type == "A") 
+        print $0 ",historical"
+    else if (type == "C") 
+        print $0 ",modern"
+    else 
+        print $0 ",modern"
+}') > ./inputfiles/samplesheet_iridian.csv
+```
+
+Manually adjust the file to remove the non-Cvi individuals (use `data/samplesheet.csv` as the guide, except also include CviAPal032, which had previously been dropped because the forward read file was truncated).
+
+Make new pipeline files (`main-iridian.nf` and `nextflow-iridian.config`) and adjust to integrate the exclusion bed file from `nf-paralog`. Also update with other pipeline changes as of October 2026.
+
+Run nf-trim-generode on the new genome with output in `results-iridian` (see parameters in `main-iridian.nf`). 
 ```
 tmux a -t nextflow
 cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode
-nextflow run main-iridian.nf -profile standard
+nextflow run main-iridian.nf -c nextflow-iridian.config -profile wahab
 ```
-See `results-iridian` for the output. Mapdamage has dropped by about half (compared to the in-house genome) based on spot-checking mapdamage plots. However, amber plots suggest about 12% of the Iridian genome has no coverage, even for individuals with high read depth.
+See `results-iridian` for the output. Mapdamage soft-clipping has dropped by about half (compared to the in-house genome) based on spot-checking mapdamage plots. However, amber plots suggest about 12% of the Iridian genome has no coverage, even for individuals with high read depth.
 
-#### 11.4.1 Softclipping for Iridian genome
+### 13.1 Softclipping for Iridian genome
 Modified the fasta, input, and output file paths, then ran mapdamage diagnostics on the modern Cvi files to check if they also have less soft-clipping:
 ```
 sbatch scripts/run_mapdamage_diagnostics.sbatch
@@ -647,24 +790,24 @@ sbatch scripts/soft_clip_analysis.sbatch nf-pipelines/nf-trim-generode/results-i
 ```
 The [histogram by contig](output/softclip_analysis-iridian/histogram_soft_clipped_per_contig.png) shows all contigs with <15% clipping. Only [one individual](output/softclip_analysis-iridian/histogram_soft_clipped_per_individual.png) has 30% soft-clipping (CviAPal011).
 
-#### 11.4.2 Softclipping vs. depth for Iridian genome
+### 13.2 Softclipping vs. depth for Iridian genome
 Made a script to plot fraction softclipped vs. depth per individual:
 ```
 sbatch scripts/plot_softclip_vs_depth.sbatch
 ```
 The [plot](output/softclip_analysis-iridian/softclip_vs_depth_plot.png) shows that all individuals have at least 5% softclipping, and the individuals with depth <1x have 10-30% softclipping. 
 
-### 11.5 Clean up
+### 13.3 Clean up
 Remove the 1.3T temporary work directory:
 ```
 rm -r nf-pipelines/nf-trim-generode/work/
 ```
 
 
-## 12 ANGSD structure and diversity
+## 14 ANGSD structure and diversity
 Malin, 2026 August. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection`.
 
-Run nf-angsd-selection on the nf-trim-generode reads mapped to the Iridian genome from [Step 11.4](#114-map-against-a-new-reference). This is also trimmed to only the _C. viridis_ individuals. This pipeline does ld-pruning, selection scanning, runs diversity on all putatively neutral sites (including monomorphic), and does PCA, admixture, and fst on ld-pruned sites.
+Run nf-angsd-selection on the nf-trim-generode reads mapped to the Iridian genome from [Step 13](#13-map-against-a-new-reference). This is also trimmed to only the _C. viridis_ individuals. This pipeline does ld-pruning, selection scanning, runs diversity on all putatively neutral sites (including monomorphic), and does PCA, admixture, and fst on ld-pruned sites.
 
 Start by copying over the pipeline from the repo:
 ```
@@ -893,84 +1036,6 @@ Remove the 900G temporary directory:
 ```
 rm -r nf-pipelines/nf-angsd-selection-10perc/work/
 ```
-
-## 14 Test for paralogs
-Some SFS plots made for a different project (`pire_synthesis`) have an excess of loci with alleles at 50:50. Let's test for paralogs by
-
-1. Testing for excess heterozygosity and depth >1.75x with angsd
-2. Running `ngsParalog`
-
-Start by copying over the base of the nf-trim-generode pipeline:
-```
-rsync -a --exclude='work/' --exclude='results/' --exclude='results-iridian/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-paralog/
-
-cd nf-pipelines/nf-paralog
-```
-
-Wrote a new [`main.nf`](nf-pipelines/nf-paralog/main.nf) that maps the modern reads (without trimming to match the historical read length) with very few quality filters, then runs ANGSD (HWE and depth tests) and ngsParalog. Updated the [`nextflow.config`](nf-pipelines/nf-paralog/nextflow.config) file to match.
-
-The same parameters and input files as `nf-trim-generode` should be good. Set parameter flags for runnning dupHMM with both LR and coverage. 
-
-Also set:
-```
-params.min_ind_ratio = 0.5 // Require coverage in at least 50% of samples
-params.high_depth_quantile = 0.995 // target high depth percentile cutoff
-params.lr_quantile = 0.999 // Target percentile cutoff for ngsParalog likelihood ratio (e.g., 0.999 = top 0.1% highest LR sites)
-```
-Note the HWE disequilibrium uses a p<1e-3 cutoff (hard-coded for now).
-
-Start it in the existing tmux shell:
-```
-tmux a -t nextflow
-cd ../nf-paralog/
-nextflow run main.nf -profile wahab -resume
-```
-
-Output:
-```
-[ANGSD_HWE_DEPTH] Total BAMs: 9 | Calculated minInd: 4
-Calculated Average Read Length: 147.359 bp
-Estimated Mean Population Depth: 49.5492x
-Setting ANGSD -setMaxDepth input filter for depthGlobal histogram to 500 to filter out coverage spikes
-High depth cutoff (0.995 quantile) for flagging problematic high-depth regions: 98 total depth
-```
-
-BED files, fastp reports, site allele balance, bam files and other results in the `results/` directory (including `large_data/` not tracked by git). Key plots are:
-![Allele balance](nf-pipelines/nf-paralog/results/plots/allele_balance_vs_het.png)
-
-![Manhattan plot of mapped depth](nf-pipelines/nf-paralog/results/plots/angsd_depth_manhattan.png)
-
-![Manhattan plot of HWE disequilibrium](nf-pipelines/nf-paralog/results/plots/angsd_hwe_manhattan.png)
-
-![Manhattan plot of ngsParalog likelihood ratios for paralogous regions](nf-pipelines/nf-paralog/results/plots/ngsparalog_lr_manhattan.png)
-
-![Histogram of the length of regions flagged by each method](nf-pipelines/nf-paralog/results/plots/filter_region_length_histograms.png)
-
-![Barplot of overlap among the regions flagged by each methods](nf-pipelines/nf-paralog/results/plots/paralog_filter_overlaps.png)
-
-![Manhattan plot of the overlap among regions flagged by each method](nf-pipelines/nf-paralog/results/plots/filter_overlaps_manhattan.png)
-
-### 14.1 Do paralogous and repeat regions overlap?
-Made a script to plot the overlap of Repeat Masker's identified regions and the newly identified regions. From the base directory:
-```
-sbatch scripts/plot_repeat_paralog_overlaps.sbatch
-```
-![Plot of overlapping regions between repeat and paralog detection methods](output/paralogs/repeats_paralog_overlaps.png).
-
-Shows that
-
-1) RepeatMasker found by far the largest length of problematic regions
-2) Most (75%) of the regions found by DUPHMM were also found by RepeatMasker
-
-For Cvi, RepeatMasker looks like the more important mask.
-
-
-### 14.2 Clean up
-Remove the 214G temporary directory:
-```
-rm -r nf-pipelines/nf-paralog/work/
-```
-
 
 ## 15 Re-run ANGSD without soft-clipped reads
 As a sensitivity test, let's re-run `nf-angsd-selection-1x` after stripping out all soft-clipped reads. Create a `temp/` directory and put the bams from `nf-trim-generode`'s `results-iridian` there after stripping out unmapped and reads with any soft-clipping:

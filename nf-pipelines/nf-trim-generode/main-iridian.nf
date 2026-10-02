@@ -7,12 +7,13 @@ include { BWA_MERGED as BWA_MERGED_PASS1; BWA_MERGED as BWA_MERGED_PASS2 } from 
 include { BWA_UNMERGED as BWA_UNMERGED_PASS1; BWA_UNMERGED as BWA_UNMERGED_PASS2 } from './mapping_modules.nf'
 
 // --- Default Parameters ---
-params.samplesheet = "${projectDir}/inputfiles/samplesheet.csv" // Preferred way to provide sample metadata, including sample IDs and eras (modern or historical).
+params.samplesheet = "${projectDir}/inputfiles/samplesheet_iridian.csv" // Preferred way to provide sample metadata, including sample IDs and eras (modern or historical).
 params.samples_file = "${projectDir}/inputfiles/fastq_filenames.txt" // Legacy way to provide sample metadata. One-column text file with sample IDs. All modern by default.
-params.indir        = "${projectDir}/data/symlinks" // Directory where raw FASTQ files are expected.
+params.indir        = "${projectDir}/data/symlinks_raw" // Directory where raw FASTQ files are expected.
 params.outdir       = "${projectDir}/results-iridian" // Directory where all output files will be written.
 params.reference    = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna" // Path to reference genome FASTA file.
-params.bed_file     = "${projectDir}/data/reference/reference.ssl.Cvi20k_rename.repma.bed" // input bed file. Only used if params.run_repeatmasking is set to false.
+params.repeat_bed_file     = "${projectDir}/data/reference/reference.ssl.Cvi20k_rename.repma.bed" // input bed file. Only used if params.run_repeatmasking is set to false.
+params.exclude_bed  = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-paralog/results/paralogs/ngsparalog_duphmm_regions.filtered.bed" // Optional BED file for paralogs or other regions to exclude, eg, from nf-paralog output
 params.reference_prefix         = params.reference.tokenize('/').last().replaceAll(/\.(fa|fasta|fna)$/, '') // Extracts base name of reference.
 params.historical_era           = "historical"
 params.historical_mapper        = "mem" // Default starting point for historical read mapping ("aln" or "mem")
@@ -29,13 +30,15 @@ params.bam_q        = 25 // Mapping quality threshold.
 params.trimlength   = 85 // Default fallback trim length if no historical reads map successfully
 
 def resolve_reads = { String sample_id ->
-    def r1 = file("${params.indir}/${sample_id}_R1.fastq.gz")
-    def r2 = file("${params.indir}/${sample_id}_R2.fastq.gz")
+    // Search for R1 files with common extensions (.fastq.gz, .fq.gz, _001.fastq.gz, etc.)
+    def r1_files = file("${params.indir}/${sample_id}{_R1,_1}{,.fastq.gz,.fq.gz}").sort()
+    def r2_files = file("${params.indir}/${sample_id}{_R2,_2}{,.fastq.gz,.fq.gz}").sort()
 
-    if( !r1.exists() ) error "R1 file not found for ${sample_id}: ${r1}"
-    if( !r2.exists() ) error "R2 file not found for ${sample_id}: ${r2}"
+    // Validate that files were found
+    if (!r1_files) error "R1 file not found for ${sample_id} in ${params.indir}"
+    if (!r2_files) error "R2 file not found for ${sample_id} in ${params.indir}"
 
-    return [r1, r2]
+    return [r1_files[0], r2_files[0]]
 }
 
 def samplesheet_file = file(params.samplesheet)
@@ -104,7 +107,6 @@ process REPEAT_MODELER {
 process EXTRACT_CPG {
     tag "Extracting CpG sites from ${ref_fasta.baseName}"
     label 'process_low'
-    module 'container_env:python3'
     publishDir "${params.outdir}/data/reference", mode: 'copy'
 
     input:
@@ -115,7 +117,7 @@ process EXTRACT_CPG {
 
     script:
     """
-    crun python3 -c '
+    python3 -c '
     import sys
 
     ref_fasta = "${ref_fasta}"
@@ -195,6 +197,33 @@ process REPEAT_MASKER {
 
     # Generate reference filter tracking indexes for downstream parsing (ANGSD/BCFtools)
     cut -f1 ${ref_fasta.baseName}.combined_mask.bed | uniq | awk '{print \$0 ":"}' > ${ref_fasta.baseName}.cleaned.regions
+    """
+}
+
+process COMBINE_BEDS {
+    tag "Combining mask & exclude BEDs"
+    label 'process_low'
+    publishDir "${params.outdir}/data/reference", mode: 'copy'
+
+    input:
+    path base_bed
+    path exclude_bed
+
+    output:
+    path "${params.reference_prefix}.combined_exclusions.bed", emit: merged_bed
+
+    script:
+    """
+    cat ${base_bed} ${exclude_bed} | sort -k1,1 -k2,2n > temp_sorted.bed
+
+    # Fast native custom merge line replacing bedtools merge
+    awk 'OFS="\\t" { \
+        if (NR==1) {chr=\$1; start=\$2; end=\$3; next} \
+        if (\$1==chr && \$2<=end) { if (\$3>end) end=\$3 } \
+        else { print chr, start, end; chr=\$1; start=\$2; end=\$3 } \
+    } END { if (NR>0) print chr, start, end }' temp_sorted.bed > ${params.reference_prefix}.combined_exclusions.bed
+
+    rm temp_sorted.bed
     """
 }
 
@@ -369,7 +398,7 @@ process CALC_HISTORICAL_TRIMLEN_BAM {
     script:
     """
     # Loop through all BAMs and stream the mapped reads into a single awk process
-    # only used primary mapped reads (-F flag) and high mapping quality (-q 25)
+    # only used primary mapped reads (-F flag) and high mapping quality (chosen by params.bam_q)
     for bam in ${bams}; do
         samtools view -F 2308 -q ${params.bam_q} "\$bam"
     done | awk '
@@ -720,24 +749,37 @@ workflow {
     pass1_mapper_ch = Channel.value(params.historical_mapper)
 
     // 1. Conduct optional repeat modeling, repeat-masking and CpG site filtering on the reference genome
-    bed_ch = Channel.empty()
+    raw_mask_bed_ch = Channel.empty()
+
     if (params.run_repeatmasking) {
         // repeat modeling, masking, and CpG site extraction
         modeler_output = REPEAT_MODELER(fasta_ref_ch) // resource-intensive step, may require high RAM and CPU
         cpg_output     = EXTRACT_CPG(fasta_ref_ch)        
         masking_output = REPEAT_MASKER(fasta_ref_ch, modeler_output.model_library, cpg_output.cpg_bed)
-        bed_ch = masking_output.mask_bed 
-        regions_ch  = masking_output.regions
+        raw_mask_bed_ch = masking_output.mask_bed 
     } else {
         // Ensure the manual BED file exists before proceeding
-        bed_file_obj = file(params.bed_file)
+        bed_file_obj = file(params.repeat_bed_file)
         if ( !bed_file_obj.exists() ) {
-            error "params.run_repeatmasking is false, but the required manual BED file was not found at: ${params.bed_file}"
+            error "params.run_repeatmasking is false, but the required manual BED file was not found at: ${params.repeat_bed_file}"
         }
 
         // If repeatmasking is skipped, use the provided bed file for downstream analyses
-        bed_ch = Channel.fromPath(params.bed_file, checkIfExists: true).first()
+        raw_mask_bed_ch = Channel.fromPath(params.repeat_bed_file, checkIfExists: true).first()
     }
+
+    // Combine with optional paralog / custom exclusion BED file if specified
+    if (params.exclude_bed) {
+        exclude_file_obj = file(params.exclude_bed)
+        if ( !exclude_file_obj.exists() ) {
+            error "params.exclude_bed was specified, but file was not found at: ${params.exclude_bed}"
+        }
+        exclude_bed_ch = Channel.fromPath(params.exclude_bed, checkIfExists: true).first()
+        bed_ch = COMBINE_BEDS(raw_mask_bed_ch, exclude_bed_ch).merged_bed
+    } else {
+        bed_ch = raw_mask_bed_ch
+    }
+    
     // then prepare the reference for downstream ANGSD analyses
     PREP_REFERENCE_REPEAT(fasta_ref_ch, ref_fai_ch, bed_ch)
 
