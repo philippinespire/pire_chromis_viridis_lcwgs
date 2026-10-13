@@ -18,12 +18,13 @@ params.lr_quantile = 0.999  // Target percentile cutoff for ngsParalog likelihoo
 params.hwe_pval    = 1e-3  // Target p-value threshold for HWE excess heterozygosity filtering
 params.rmdup_script = "${projectDir}/scripts/samremovedup.py" // path to the script for removing duplicates
 params.ngsparalog_bin = "/archive/carpenterlab/pire/softwares/ngsParalog/ngsParalog" // path to ngsParalog binary
+params.gatk_jar = "/usr/GenomeAnalysisTK.jar" // path to GATK
 params.run_duphmm    = true          // Toggle dupHMM execution
 params.duphmm_script = "/archive/carpenterlab/pire/softwares/ngsParalog/dupHMM.R"     // Path to dupHMM.R (or place inside pipeline bin/)
 params.duphmm_emit   = 1              // 0 = LR only, 1 = both LR and Coverage
 params.duphmm_penalty    = "BIC"  // Options: "BIC", "AIC", or "none". BIC and AIC make it less likely that dupHMM will identify paralogous regions. Useful if it is too sensitive.
-params.duphmm_merge_dist = 100  // Maximum distance (bp) between regions to merge in output from dupHMM
-params.duphmm_min_len    = 1000  // Minimum length (bp) threshold for retained regions in output from dupHMM
+params.duphmm_merge_dist = -1  // Maximum distance (bp) between regions to merge in output from dupHMM. -1 will merge only overlapping regions
+params.duphmm_min_len    = 1  // Minimum length (bp) threshold for retained regions in output from dupHMM
 
 def resolve_reads = { String sample_id ->
     def r1 = file("${params.indir}/${sample_id}_R1.fastq.gz")
@@ -121,7 +122,12 @@ process MERGE_BAMS {
 
     script:
     """
-    samtools merge -@ ${task.cpus} ${sample_name}.merged.bam ${bams}
+    # handle if only one bam, otherwise merge
+    if [ \$(echo "${bams}" | wc -w) -eq 1 ]; then
+        cp ${bams} ${sample_name}.merged.bam
+    else
+        samtools merge -@ ${task.cpus} ${sample_name}.merged.bam ${bams}
+    fi
     samtools index ${sample_name}.merged.bam
     """
 }
@@ -140,11 +146,11 @@ process INDEL_REALN {
     // ref_bundle[0] is the fasta file
     """
     # Target Creator
-    java -jar /usr/GenomeAnalysisTK.jar \
+    java -jar ${params.gatk_jar} \
         -T RealignerTargetCreator -R ${ref_bundle[0]} -I ${bam} -o ${sample_name}.realn_targets.list -nt ${task.cpus}
 
     # Indel Realigner
-    java -jar /usr/GenomeAnalysisTK.jar \
+    java -jar ${params.gatk_jar} \
         -T IndelRealigner -R ${ref_bundle[0]} -I ${bam} -targetIntervals ${sample_name}.realn_targets.list -o ${sample_name}.merged.realn.bam
     """
 }
@@ -181,12 +187,16 @@ process BWA_MERGED {
 	def name = fields[0]
     def lib  = fields.size() > 1 ? fields[1] : 'lib1'
     def rg   = fields.size() > 2 ? fields[2] : sample_id
+
+    // Reserve 75% of task memory for samtools sort, split evenly across CPUs
+    // Convert to megabytes for samtools sort -m <MB>M
+    def sort_mem_mb = Math.max(768, ((task.memory.toMega() * 0.75) / task.cpus) as int)
     
     """
     bwa mem -R "@RG\\tID:${rg}\\tSM:${name}\\tPL:ILLUMINA\\tLB:${name}_${lib}\\tPU:${rg}" \
         -t ${task.cpus} ${reference_bundle[0]} ${merged_fq} \
         | samtools view -q 0 -F 1028 -@ ${task.cpus} -bSh - \
-        | samtools sort -m 4G -o ${sample_id}_trimmed_merged.sorted.bam -T ${sample_id}.sorting -@ ${task.cpus} -
+        | samtools sort -m ${sort_mem_mb}M -o ${sample_id}_trimmed_merged.sorted.bam -T ${sample_id}.sorting -@ ${task.cpus} -
     """
 
 }
@@ -208,11 +218,14 @@ process BWA_UNMERGED {
     def lib  = fields.size() > 1 ? fields[1] : 'lib1'
     def rg   = fields.size() > 2 ? fields[2] : sample_id
 
+    // Reserve 75% of task memory for samtools sort, split evenly across CPUs
+    // Convert to megabytes for samtools sort -m <MB>M
+    def sort_mem_mb = Math.max(768, ((task.memory.toMega() * 0.75) / task.cpus) as int)
 	"""
     bwa mem -R "@RG\\tID:${rg}\\tSM:${name}\\tPL:ILLUMINA\\tLB:${name}_${lib}\\tPU:${rg}" \
         -t ${task.cpus} ${reference_bundle[0]} ${r1} ${r2} \
         | samtools view -q 0 -F 1028 -@ ${task.cpus} -bSh - \
-        | samtools sort -m 4G -o ${sample_id}.sorted.bam -T ${sample_id}.sorting -@ ${task.cpus} -
+        | samtools sort -m ${sort_mem_mb}M -o ${sample_id}.sorted.bam -T ${sample_id}.sorting -@ ${task.cpus} -
     """
 }
 
@@ -286,7 +299,7 @@ process ANGSD_HWE_DEPTH {
         -minInd ${min_ind} \
         -setMaxDepth \$max_depth \
         -skipTriallelic 0 \
-        -doHWE 1 -doCounts 1 -dumpCounts 3 -doDepth 1 -doGeno 8 -doPost 1 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 -P ${task.cpus}
+        -doHWE 1 -doCounts 1 -dumpCounts 4 -doDepth 1 -doGeno 8 -doPost 1 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 -P ${task.cpus}
 
     # Extract sites with excess heterozygosity (p-value < params.hwe_pval) and F<0 into 1-based BED
     zcat angsd.hwe.gz | awk -v pval="${params.hwe_pval}" 'NR>1 && \$7 < 0 && \$9 < pval {print \$1 "\t" \$2 - 1 "\t" \$2}' > hwe_excess_het.bed
@@ -309,20 +322,24 @@ process ANGSD_HWE_DEPTH {
 
     echo "High depth cutoff (${params.high_depth_quantile} quantile) for flagging problematic high-depth regions: \$DEPTH_CUTOFF total depth"
 
-    # Stream genome depths and write contiguous regions exceeding the quantile cutoff
-    samtools depth -q 25 -Q 30 -f bam.filelist | awk -v cutoff="\$DEPTH_CUTOFF" '
+    # Stream ANGSD's own filtered coordinates and counts to generate high-depth BED
+    paste <(zcat angsd.pos.gz | awk 'NR>1 {print \$1 "\\t" \$2}') \\
+          <(zcat angsd.counts.gz) | \\
+    awk -v cutoff="\$DEPTH_CUTOFF" -v num_bams="${num_bams}" '
     {
+        chrom = \$1
+        pos = \$2
         sum = 0
+        # Sum counts across all columns starting at column 3
         for (i = 3; i <= NF; i++) sum += \$i
-        if (sum >= cutoff) {
-            chrom = \$1
-            start = \$2 - 1
-            end   = \$2
 
+        if (sum >= cutoff) {
+            start = pos - 1
+            end = pos
             if (chrom == prev_chrom && start == prev_end) {
                 prev_end = end
             } else {
-                if (prev_chrom != "") print prev_chrom "\t" prev_start "\t" prev_end
+                if (prev_chrom != "") print prev_chrom "\\t" prev_start "\\t" prev_end
                 prev_chrom = chrom
                 prev_start = start
                 prev_end   = end
@@ -330,7 +347,7 @@ process ANGSD_HWE_DEPTH {
         }
     }
     END {
-        if (prev_chrom != "") print prev_chrom "\t" prev_start "\t" prev_end
+        if (prev_chrom != "") print prev_chrom "\\t" prev_start "\\t" prev_end
     }' > high_depth_regions.bed
     """
 }
@@ -438,7 +455,7 @@ process COMBINE_PARALOGS {
     LINE_COUNT=\$(wc -l < ngsparalog.lr.txt)
 
     if [ "\$LINE_COUNT" -gt 100000 ]; then
-        THRESHOLD=\$(awk 'NR % 100 == 0 {print \$3}' ngsparalog.lr.txt | sort -g | awk -v q="${params.lr_quantile}" '
+        THRESHOLD=\$(awk 'NR % 100 == 0 {print \$5}' ngsparalog.lr.txt | sort -g | awk -v q="${params.lr_quantile}" '
             { a[NR] = \$1 }
             END {
                 if (NR == 0) { print 0; exit }
@@ -447,7 +464,7 @@ process COMBINE_PARALOGS {
                 printf "%.4f", a[idx]
             }')
     else
-        THRESHOLD=\$(awk '{print \$3}' ngsparalog.lr.txt | sort -g | awk -v q="${params.lr_quantile}" '
+        THRESHOLD=\$(awk '{print \$5}' ngsparalog.lr.txt | sort -g | awk -v q="${params.lr_quantile}" '
             { a[NR] = \$1 }
             END {
                 if (NR == 0) { print 0; exit }
@@ -461,7 +478,7 @@ process COMBINE_PARALOGS {
 
     # 3. Filter using calculated dynamic threshold and merge contiguous coordinates
     awk -v threshold="\$THRESHOLD" '
-    \$3 > threshold {
+    \$5 > threshold {
         chrom = \$1
         start = \$2 - 1
         end   = \$2
@@ -499,6 +516,7 @@ process CALCULATE_AVG_DEPTH {
     path "avg_depth.tsv", emit: avg_depth
 
     script:
+    def fasta = ref_bundle.find { it.name =~ /\.(fa|fasta|fna)$/ }
     def num_bams = bams instanceof List ? bams.size() : 1
     """
     ls *.bam > bam.filelist
@@ -506,14 +524,44 @@ process CALCULATE_AVG_DEPTH {
     # 1. Create a temporary BED file of targeted LR sites
     awk '{print \$1 "\t" \$2 - 1 "\t" \$2}' ${lr_file} > lr_sites.bed
 
-    # 2. Run mpileup restricted strictly to those sites
-    samtools mpileup -d 1000 -b bam.filelist -f ${ref_bundle[0]} -l lr_sites.bed -q 0 -Q 0 | \
-        awk -v n_samples=${num_bams} '{print \$1 "\t" \$2 "\t" \$4 / n_samples}' > depth_raw.tsv
+    # 2. Calculate average depth restricted strictly to those sites
+    samtools depth -f bam.filelist -b lr_sites.bed -q 0 -Q 0 | \
+    awk -v n_samples=${num_bams} 'BEGIN {OFS="\\t"} {
+        sum = 0
+        for (i = 3; i <= NF; i++) sum += \$i
+        print \$1, \$2, sum / n_samples
+    }' > depth_raw.tsv
 
-    # 3. Map depths back to match lr_file line-for-line (default 0 depth for uncovered sites)
-    awk 'NR==FNR { depth[\$1 "\t" \$2] = \$3; next } { d = ((\$1 "\t" \$2) in depth) ? depth[\$1 "\t" \$2] : 0; print \$1 "\t" \$2 "\t" d }' depth_raw.tsv ${lr_file} > avg_depth.tsv
 
-    rm -f lr_sites.bed depth_raw.tsv
+    # 3. Stream depth_raw.tsv and lr_file synchronously (O(1) Memory)
+    awk '
+    BEGIN {
+        FS = "[ \\t]+";
+        OFS = "\\t";
+        depth_file = "depth_raw.tsv";
+        if ((getline < depth_file) > 0) {
+            d_chr = \$1; d_pos = \$2; d_val = \$3;
+            has_depth = 1;
+        } else {
+            has_depth = 0;
+        }
+    }
+    {
+        target_chr = \$1; target_pos = \$2;
+        if (has_depth && d_chr == target_chr && d_pos == target_pos) {
+            print target_chr, target_pos, d_val;
+            if ((getline < depth_file) > 0) {
+                d_chr = \$1; d_pos = \$2; d_val = \$3;
+            } else {
+                has_depth = 0;
+            }
+        } else {
+            print target_chr, target_pos, "0";
+        }
+    }
+    ' ${lr_file} > avg_depth.tsv
+
+    rm -f lr_sites.bed depth_raw.tsv bam.filelist
     """
 }
 
@@ -696,6 +744,7 @@ process PARSE_ALLELE_BALANCE {
     publishDir "${params.outdir}/large_data/stats", mode: 'copy'
 
     input:
+    path mafs_gz
     path geno_gz
     path counts_gz
 
@@ -706,74 +755,81 @@ process PARSE_ALLELE_BALANCE {
     """
     python3 - << 'EOF' > site_allele_balance.tsv
     import gzip
-    from itertools import chain
 
-    print("chr\tpos\tallele_balance\tprop_het")
+    BASE_MAP = {'A': 0, 'C': 1, 'G': 2, 'T': 3}
+    MIN_DP = 2  # Minimum depth per sample to consider informative
 
-    with gzip.open("${geno_gz}", "rt") as f_geno, gzip.open("${counts_gz}", "rt") as f_counts:
-        # 1. Check f_counts for header
-        first_c = f_counts.readline()
-        if not first_c:
-            exit(0)
+    print("chr\\tpos\\tallele_balance\\tprop_het\\tcall_rate")
 
-        if not first_c.strip().split()[0].lstrip("-").isdigit():
-            f_counts_iter = f_counts
-        else:
-            f_counts_iter = chain([first_c], f_counts)
+    with gzip.open("${mafs_gz}", "rt") as f_mafs, \\
+         gzip.open("${geno_gz}", "rt") as f_geno, \\
+         gzip.open("${counts_gz}", "rt") as f_counts:
 
-        # 2. Check f_geno for header
-        first_g = f_geno.readline()
-        if not first_g:
-            exit(0)
+        # Skip mafs header line
+        f_mafs.readline()
 
-        if not first_g.strip().split()[1].lstrip("-").isdigit():
-            f_geno_iter = f_geno
-        else:
-            f_geno_iter = chain([first_g], f_geno)
+        for line_maf, line_geno, line_counts in zip(f_mafs, f_geno, f_counts):
+            parts_maf = line_maf.strip().split()
+            parts_geno = line_geno.strip().split()
+            parts_counts = line_counts.strip().split()
 
-        # 3. Process matched rows inside the open file context
-        for line_g, line_c in zip(f_geno_iter, f_counts_iter):
-            parts_g = line_g.strip().split()
-            parts_c = line_c.strip().split()
-
-            if not parts_g or not parts_c:
+            if not parts_maf or not parts_geno or not parts_counts:
                 continue
 
-            chrom = parts_g[0]
-            pos   = parts_g[1]
+            # Check that mafs and geno sites match
+            if parts_maf[0] != parts_geno[0] or parts_maf[1] != parts_geno[1]:
+                raise ValueError(f"Site mismatch: MAF ({parts_maf[0]}:{parts_maf[1]}) vs GENO ({parts_geno[0]}:{parts_geno[1]})")
 
-            try:
-                posteriors = [float(x) for x in parts_g[2:]]
-                counts     = [int(x) for x in parts_c]
-            except ValueError:
+            chrom = parts_maf[0]
+            pos = parts_maf[1]
+            major = parts_maf[2].upper()
+            minor = parts_maf[3].upper()
+
+            # skip non-canonical bases (N, +, -, etc.)
+            if major not in BASE_MAP or minor not in BASE_MAP: 
                 continue
 
-            num_samples = len(posteriors) // 3
-            if num_samples == 0:
-                continue
+            maj_idx = BASE_MAP[major]
+            min_idx = BASE_MAP[minor]
 
-            p_het_sum = 0.0
-            weighted_minor_depth = 0.0
-            weighted_total_depth = 0.0
+            # Parse counts (-dumpCounts 4 gives 4 base counts per individual)
+            counts = [int(x) for x in parts_counts]
+            posteriors = [float(x) for x in parts_geno[2:]]
+            num_samples = len(counts) // 4
+
+            weighted_maj = 0.0
+            weighted_min = 0.0
+            sum_p_het = 0.0
+            informative_samples = 0
 
             for i in range(num_samples):
-                p_het = posteriors[i * 3 + 1]
-                p_het_sum += p_het
+                sample_counts = counts[i * 4 : (i + 1) * 4]
+                s_maj = sample_counts[maj_idx]
+                s_min = sample_counts[min_idx]
+                s_dp = s_maj + s_min
 
-                if len(counts) >= (i + 1) * 2:
-                    maj_cnt = counts[i * 2]
-                    min_cnt = counts[i * 2 + 1]
-                    tot_cnt = maj_cnt + min_cnt
+                # Require minimum depth per individual
+                if s_dp >= MIN_DP:
+                    informative_samples += 1
+                    p_het = posteriors[i * 3 + 1]
+                    sum_p_het += p_het
+                    
+                    # Weight read depths by the sample's heterozygous posterior probability
+                    weighted_maj += p_het * s_maj
+                    weighted_min += p_het * s_min
 
-                    if tot_cnt > 0:
-                        weighted_minor_depth += p_het * min_cnt
-                        weighted_total_depth += p_het * tot_cnt
+            # Skip site if no individuals met depth threshold
+            if informative_samples == 0:
+                continue
 
-            prop_het = p_het_sum / float(num_samples)
+            weighted_total = weighted_maj + weighted_min
 
-            if weighted_total_depth > 0 and prop_het > 0:
-                allele_balance = weighted_minor_depth / weighted_total_depth
-                print(f"{chrom}\t{pos}\t{allele_balance:.4f}\t{prop_het:.4f}")
+            # Calculate metrics
+            allele_balance = (weighted_min / weighted_total) if weighted_total > 0 else 0.0
+            prop_het = sum_p_het / informative_samples
+            call_rate = informative_samples / num_samples
+
+            print(f"{chrom}\\t{pos}\\t{allele_balance:.4f}\\t{prop_het:.4f}\\t{call_rate:.4f}")
     EOF
     """
 }
@@ -1278,7 +1334,7 @@ process PLOT_ALLELE_BALANCE {
       labs(
         title="Allele Balance vs. Proportion Heterozygotes",
         subtitle="Dashed line = Expected diploid 0.5 allele balance",
-        x="Allele Balance (Alt / Total Reads at Het Sites)",
+        x="Allele Balance (Minor / Total Reads at Het Sites)",
         y="Proportion of Heterozygous Individuals"
       ) +
       theme_minimal() +
@@ -1350,7 +1406,7 @@ workflow {
     angsd_out = ANGSD_HWE_DEPTH(all_bams_ch, all_bais_ch, ref_bundle_ch)
 
     // 6.1. Parse probabilistic allele balance & heterozygosity from ANGSD outputs
-    ab_stats_ch = PARSE_ALLELE_BALANCE(angsd_out.geno_gz, angsd_out.counts_gz)
+    ab_stats_ch = PARSE_ALLELE_BALANCE(angsd_out.mafs_gz, angsd_out.geno_gz, angsd_out.counts_gz)
 
     // 7. Generate candidate BED file by scaffold/contig
 	contig_beds_ch = GENERATE_CONTIG_BEDS(ref_bundle_ch).contig_beds.flatten()

@@ -530,7 +530,7 @@ Both are empty.
 ## 11 Test for paralogs
 Some SFS plots made for a different project (`pire_synthesis`) have an excess of loci with alleles at 50:50. Let's test for paralogs by
 
-1. Testing for excess heterozygosity and depth >1.75x with angsd
+1. Testing for excess heterozygosity and depth with angsd
 2. Running `ngsParalog`
 
 Start by copying over the base of the nf-trim-generode pipeline:
@@ -549,8 +549,10 @@ Also set:
 params.min_ind_ratio = 0.5 // Require coverage in at least 50% of samples
 params.high_depth_quantile = 0.995 // target high depth percentile cutoff
 params.lr_quantile = 0.999 // Target percentile cutoff for ngsParalog likelihood ratio (e.g., 0.999 = top 0.1% highest LR sites)
+params.hwe_pval    = 1e-3  // Target p-value threshold for HWE excess heterozygosity filtering. This is quite high for only 9 modern individuals.
+params.duphmm_merge_dist = -1  // Maximum distance (bp) between regions to merge in output from dupHMM. -1 will merge only overlapping regions
+params.duphmm_min_len    = 1  // Minimum length (bp) threshold for retained regions in output from dupHMM. Retain all.
 ```
-Note the HWE disequilibrium uses a p<1e-3 cutoff (hard-coded for now).
 
 Start it in the existing tmux shell:
 ```
