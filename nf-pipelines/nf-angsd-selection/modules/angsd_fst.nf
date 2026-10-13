@@ -7,7 +7,6 @@ process ANGSD_FST {
     input:
     tuple val(region), path(hist_saf), path(hist_idx), path(hist_pos), path(mod_saf), path(mod_idx), path(mod_pos)
     tuple path(sites_pos), path(sites_bin), path(sites_idx)
-    path plot_script
 
     output:
     path "${region}_hist_vs_mod.2dsfs",          emit: sfs_2d
@@ -41,8 +40,25 @@ process ANGSD_FST {
         -step ${params.fst_step} | tail -n +2 >> ${region}_windowed_fst.txt
 
     # 5. Generate Manhattan plot
-    Rscript ${plot_script} \
+    Rscript ${projectDir}/scripts/plot_windowed_fst.R \
         ${region}_windowed_fst.txt \
         ${region}_fst_manhattan.png
+    """
+}
+
+process PLOT_SFS_SUMMARY {
+    tag "Plot SFS Summary"
+    publishDir "${params.outdir}/fst", mode: 'copy'
+
+    input:
+    path sfs_files
+
+    output:
+    path "sfs_summary_neutral_snps.png", emit: plot
+
+    script:
+    """
+    Rscript ${projectDir}/scripts/plot_sfs.R \
+        sfs_summary_neutral_snps.png ${sfs_files}
     """
 }

@@ -1,6 +1,6 @@
 ## Overview of nf-angsd-selection
 
-This pipeline runs (optional) chi-squared selection scans from data across two time-points, does (optional) ld-pruning, calculates diversity estimates within the ANGSD framework on all putatively neutral sites (including monomorphic sites), and then makes PCA and admixture plots and calculates Fst with ANGSD on putatively neutral ld-pruned sites. It only considers sites that meet minimum individual and maximum depth limits in each of the population-eras (set as a fraction and a multiplier, respectively).
+This pipeline runs (optional) chi-squared selection scans from data across two time-points, does (optional) ld-pruning, calculates diversity estimates within the ANGSD framework on all putatively neutral sites (including monomorphic sites), and then makes PCA and admixture plots and calculates Fst with ANGSD on putatively neutral ld-pruned sites. It only considers sites that meet minimum individual and maximum depth limits in each of the population-eras (set as a fraction and a multiplier, respectively, of the full number of individuals and the total average depth across all individuals).
 
 It is written in Nextflow DSL2 and designed to be run on Old Dominion WAHAB cluster (use `-profile wahab`). The pipeline starts from BAM files, such as those output by nf-trim-generode. It was developed from nf-angsd-diversity by Malin Pinsky (August 2026) with plenty of help from Gemini.
 
@@ -21,13 +21,11 @@ git clone https://github.com/mariannedehasque/nf-pipelines.git
 The pipeline requires the following inputfiles:
 
 * Reference (fasta or fna format)
-* BED file with masked repeat regions (eg, output by Generode or by nf-trim-generode)
+* ANGSD-format BED file with masked repeat regions (eg, output by nf-trim-generode or by Generode)
 * BAM files
 
 In addition, we need to create the following files too (see instructions below):
 * Samplesheet
-* ANGSD sites file
-* Bam inputfile
 * Contig file
 
 ### Samplesheet
@@ -43,17 +41,19 @@ The samplesheet is a comma-separated file (csv) and consists of the following co
 | TzoCMal003 | /path/to/bam/TzoCMal003.merged.realn.bam          | TzoCMal | modern | Malampaya |
 
 Important:
+* `pop`: not used.
 * `era` takes one of two arguments: modern or historic
 * `region` is used to define which historic and modern sites should be directly compared. Use the same value here if you want to directly compare sites across eras. Diversity is calculated for each region-era combination.
-* `pop`: not used.
 
 If you want to use mapdamage-rescaled BAM files for historical samples (eg, from Generode or nf-trim-generode), point to those files in this input file.
 
 
-### ANGSD sites file
-The ANGSD sites file contains information on the sites that will be analyzed. We will use this file to remove repeat regions from the analysis. This files corresponds to the `-sites` flag in [ANGSD](https://www.popgen.dk/angsd/index.php/Sites).
+### BED file
+The ANGSD-style BED file contains information on the sites that will be analyzed. We will use this file to remove repeat regions from the analysis. This files corresponds to the `-sites` flag in [ANGSD](https://www.popgen.dk/angsd/index.php/Sites).
 
-To create the sites file from the GenErode output (after loading all modules):
+This file is created automatically as part of the nf-trim-generode pipeline and output in `results/data/reference/*.repma.angsd.txt`.
+
+Alternatively, to create the sites file from the GenErode output (after loading all modules):
 
 ```bash
 awk '{print $1"\t"$2+1"\t"$3}' ./path/to/reference/reference.repma.bed > ./path/to/reference/reference.repma.angsd.txt
@@ -61,17 +61,13 @@ awk '{print $1"\t"$2+1"\t"$3}' ./path/to/reference/reference.repma.bed > ./path/
 angsd sites index ./path/to/reference/reference.repma.angsd.txt
 ```
 
-Alternatively, this file is created automatically as part of the nf-trim-generode pipeline and output in `results/data/reference/*.repma.angsd.txt`.
-
-### Bam inputfile
-The filelist is a file containing the full path for each bam file with one filename per row.
-
-This corresponds to the input given with the `-bam` flag in [ANGSD](https://www.popgen.dk/angsd/index.php/Input).
-
-If you want to use mapdamage-rescaled BAM files for historical samples (eg, from Generode or nf-trim-generode), point to those files in this input file.
-
 ### Contig file
 Specify the contigs/regions for which to run the pipeline. One contig/region per line. This corresponds to the `-r` flag in [ANGSD](https://www.popgen.dk/angsd/index.php/Input). The pipeline will submit a job per contig/region.
+
+This code will pull a contig list out of the reference genome:
+```
+awk '/^>/ {sub(/^>/, ""); print $1}' /path/to/reference.fna > inputfiles/contig_list.txt
+```
 
 ## Configuration
 
@@ -114,13 +110,11 @@ params.n_boot      = 1000   // Number of bootstrap replicates to run for Ne calc
 params.min_ind     = 4      // Minimum number of individuals to include in Ne calculations (default 4)
 params.fst_window = 50000  // Window size in bp for sliding window FST calculations (default 50000)
 params.fst_step   = 10000  // Step size in bp for sliding window FST calculations (default 10000)
-
-
 ```
 
 ## To Run
 
-I like to run nextflow pipelines in tmux so that I can keep it running in the background even when logging of.
+It is nice to run nextflow pipelines in tmux so that you can keep it running in the background even when logging of.
 
 To create a new tmux screen:
 
@@ -131,7 +125,7 @@ tmux new -s nextflow
 !Good to know! Leaving a tmux sessions is notoriously difficult. To leave and reopen, type the following commands:
 
 ```bash
-# To leave, literraly press these keys
+# To leave, literally press these keys
 Ctrl + B, followed by D
 
 # To re-enter a session
@@ -143,16 +137,16 @@ Then start the nextflow pipeline as follows (while in tmux):
 
 ```bash
 # Load the nextflow module
-module load container_env
-module load nextflow
+module load container_env nextflow
 
 # Activate bash
 bash
 
 # Start the run
 nextflow run main.nf -profile wahab -resume
-
 ```
+
+The `nextflow.config` file holds the profiles you can choose, so that you can use different profiles to match different compute environments. At the moment, it only has profiles for `wahab` and a low-resource one called `testwahab`.
 
 If everything went well, the pipeline will run and submit jobs to the queue. 
 On the first run, a new conda environment will be created. This can take some time.
@@ -162,13 +156,14 @@ On the first run, a new conda environment will be created. This can take some ti
 
 All pipeline outputs are written to the directory specified by `--outdir` (default: `./results/`). Large files are isolated in the `large_data/` directory so they can be easily managed or excluded via `.gitignore`.
 
+```
 results/
 ├── inputfiles/                # Input BAM file lists
 ├── sites/                     # Summary metrics across generated site set libraries
 ├── selection/                 # ACER iterative selection scan outputs
 ├── PCAngsd/                   # Population structure (PCA & Admixture)
 ├── diversity/                 # Summary nucleotide diversity statistics and comparison plots
-├── fst/                       # Global FST values and Manhattan plots
+├── fst/                       # Global FST values, SFS plot, and Manhattan plots
 └── large_data/                # Large binary, intermediate, and site library files (Ignored by git)
     ├── sites/                 # Base coordinate indices, region mappings, and processed site libraries
     ├── beagle/                # Individual genotype likelihood matrices
@@ -176,7 +171,7 @@ results/
     ├── saf/                   # Population sample allele frequency distributions
     ├── thetas/                # Per-site nucleotide diversity estimates
     └── fst/                   # Binary FST indices, 2D SFS matrices, and windowed FST tables
-
+```
 
 ### Output Directories Tracked by Git
 
@@ -214,6 +209,7 @@ Summary nucleotide diversity files calculated across all callable neutral loci (
 $F_{ST}$ metrics between historical and modern populations derived from LD-pruned neutral loci.
 * **`${region}_hist_vs_mod.global_fst.txt`**: Global unweighted and weighted $F_{ST}$ values, in that order.
 * **`${region}_fst_manhattan.png`**: Manhattan plot displaying genome-wide $F_{ST}$ sliding window calculations across chromosomes.
+* **`sfs_summary_neutral_snps.png`**: site frequency spectrum (SFS) plot of historical vs. modern allele frequencies. Useful for identifying bioinformatic problems (paralogs can appear as an excess of alleles at 50% frequency; jagged SFS are also suspect). Also useful for identifying a loss of low-frequency alleles through time, which can indicate a bottleneck.
 
 ---
 

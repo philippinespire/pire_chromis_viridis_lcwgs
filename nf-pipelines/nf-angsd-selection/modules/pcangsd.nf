@@ -50,9 +50,9 @@ process PLOT_ADMIXTURE {
     script:
     """
     # Runs the provided R script using the matrix and metadata
-    Rscript ${projectDir}/scripts/plot_admixture.R \\
-        ${q_file} \\
-        ${metadata} \\
+    Rscript ${projectDir}/scripts/plot_admixture.R \
+        ${q_file} \
+        ${metadata} \
         ${params.species}.admixture.pdf
     """
 }

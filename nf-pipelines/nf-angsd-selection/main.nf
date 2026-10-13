@@ -16,7 +16,7 @@ params.run_selection = true  // Set to false to skip ACER by default (default tr
 params.generations = 114     // Number of generations to use for Ne calculations. Default is 114 for Albatross to contemporary populations with a 1 year generation time. Adjust for other species as needed.
 params.fdr_cutoff  = 0.05    // FDR cutoff for iterative selection scan (default 0.05)
 params.max_rounds  = 20      // Maximum number of rounds to run for iterative selection scan (default 20)
-params.n_boot      = 1000    // Number of bootstrap replicates to run for Ne calculations (default 1000)
+params.n_boot      = 1000    // Number of bootstrap replicates to run for Ne confidence interval calculations (default 1000)
 params.min_ind     = 4       // Minimum number of individuals to include in Ne calculations (default 4)
 params.fst_window = 50000    // Window size in bp for sliding window FST calculations (default 50000)
 params.fst_step   = 10000    // Step size in bp for sliding window FST calculations (default 10000)
@@ -31,7 +31,7 @@ include { ANGSD_DIVERSITY; PLOT_PI_DIVERSITY                                    
 include { LD_PRUNE_CONTIG; MERGE_PRUNED_SITES; SUBSET_BEAGLE                        } from './modules/ld_prune.nf'
 include { PREPARE_SITE_SETS                                                         } from './modules/filter_sites.nf'
 include { RUN_ACER                                                                  } from './modules/acer.nf'
-include { ANGSD_FST                                                                 } from './modules/angsd_fst.nf'
+include { ANGSD_FST, PLOT_SFS_SUMMARY                                               } from './modules/angsd_fst.nf'
 
 // Workflow 
 workflow {
@@ -103,7 +103,7 @@ workflow {
     )
     
     // 7. Run ANGSD_GL_ALL to identify SNPs (uses SNP_pval 1e-6)
-    // only consider the sites that pass the QC filters in both historical and modern populations (i.e. the intersected site set)
+    // only consider the sites that pass the depth and minind QC filters in both historical and modern populations (i.e. the intersected site set)
     genotypes = ANGSD_GL_ALL(contigs, bamlist.first(), ch_intersect_bundle.first(), ch_ref)
 
     mafs = genotypes.mafs.map { contig, file -> file }.collect()
@@ -192,5 +192,9 @@ workflow {
         .combine(PREPARE_SITE_SETS.out.snps_pruned_neutral_idx)
 
     // Execute FST calculation
-    ANGSD_FST(ch_fst_pairs, ch_pruned_neutral_bundle.first(), file("${projectDir}/scripts/plot_windowed_fst.R"))
+    ANGSD_FST(ch_fst_pairs, ch_pruned_neutral_bundle.first())
+
+    // Generate SFS comparison plot across all regions
+    PLOT_SFS_SUMMARY(ANGSD_FST.out.sfs_2d.collect())
+    )
 }
