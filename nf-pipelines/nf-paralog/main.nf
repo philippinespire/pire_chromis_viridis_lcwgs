@@ -26,7 +26,8 @@ params.duphmm_penalty    = "BIC"  // Options: "BIC", "AIC", or "none". BIC and A
 params.duphmm_merge_dist = -1  // Maximum distance (bp) between regions to merge in output from dupHMM. -1 will merge only overlapping regions
 params.duphmm_min_len    = 1  // Minimum length (bp) threshold for retained regions in output from dupHMM
 
-def resolve_reads = { String sample_id ->
+// --- Helper Functions ---
+def resolve_reads(String sample_id) {
     def r1 = file("${params.indir}/${sample_id}_R1.fastq.gz")
     def r2 = file("${params.indir}/${sample_id}_R2.fastq.gz")
 
@@ -37,22 +38,7 @@ def resolve_reads = { String sample_id ->
 }
 
 
-// --- Input Channels ---
-// Sample metadata is taken from a CSV when available.
-samplesheet_file = file(params.samplesheet)
-
-sample_metadata_ch = Channel
-    .fromPath(samplesheet_file, checkIfExists: true)
-    .splitCsv(header: true)
-    .map { row -> tuple(row.sample.trim(), row.era?.trim()?.toLowerCase() ?: 'modern') }
-    .filter { sample_id, era -> sample_id }
-
-modern_samples_ch = sample_metadata_ch
-    .filter { sample_id, era -> era == params.modern_era }
-    .map { sample_id, era -> tuple(sample_id, resolve_reads(sample_id)) }
-
 // --- Processes ---
-
 process FASTP_MERGED {
     // takes paired-end raw sequencing reads, cleans them up (quality filtering, adapter trimming, poly-G tail removal), 
     // and attempts to merge overlapping forward and reverse reads into single, longer reads.
@@ -256,7 +242,7 @@ process ANGSD_HWE_DEPTH {
 
     script:
     def num_bams = bams instanceof List ? bams.size() : 1
-    def min_ind  = Math.max(1, Math.floor(num_bams * params.min_ind_ratio) as int)
+    def min_ind  = Math.max(1, Math.ceil(num_bams * params.min_ind_ratio) as int)
 
     // 1. Logs min_ind to .nextflow.log
     log.info "[ANGSD_HWE_DEPTH] Total BAMs: ${num_bams} | Calculated minInd: ${min_ind}"
@@ -755,9 +741,25 @@ process PARSE_ALLELE_BALANCE {
     """
     python3 - << 'EOF' > site_allele_balance.tsv
     import gzip
+    from itertools import chain
 
     BASE_MAP = {'A': 0, 'C': 1, 'G': 2, 'T': 3}
     MIN_DP = 2  # Minimum depth per sample to consider informative
+
+    def get_data_iter(f, check_col=0):
+        first_line = f.readline()
+        if not first_line:
+            return []
+        parts = first_line.strip().split()
+        if not parts:
+            return []
+        try:
+            float(parts[check_col])
+            # First line is numeric data, keep it in the stream
+            return chain([first_line], f)
+        except ValueError:
+            # First line is text header, discard it
+            return f
 
     print("chr\\tpos\\tallele_balance\\tprop_het\\tcall_rate")
 
@@ -765,10 +767,11 @@ process PARSE_ALLELE_BALANCE {
          gzip.open("${geno_gz}", "rt") as f_geno, \\
          gzip.open("${counts_gz}", "rt") as f_counts:
 
-        # Skip mafs header line
-        f_mafs.readline()
+        iter_mafs = get_data_iter(f_mafs, check_col=1)
+        iter_geno = get_data_iter(f_geno, check_col=1)
+        iter_counts = get_data_iter(f_counts, check_col=0)
 
-        for line_maf, line_geno, line_counts in zip(f_mafs, f_geno, f_counts):
+        for line_maf, line_geno, line_counts in zip(iter_mafs, iter_geno, iter_counts):
             parts_maf = line_maf.strip().split()
             parts_geno = line_geno.strip().split()
             parts_counts = line_counts.strip().split()
@@ -1352,6 +1355,21 @@ process PLOT_ALLELE_BALANCE {
 }
 
 workflow {
+    
+    // --- Input Channels ---
+    // Sample metadata is taken from a CSV when available.
+    samplesheet_file = file(params.samplesheet)
+
+    sample_metadata_ch = Channel
+        .fromPath(samplesheet_file, checkIfExists: true)
+        .splitCsv(header: true)
+        .map { row -> tuple(row.sample.trim(), row.era?.trim()?.toLowerCase() ?: 'modern') }
+        .filter { sample_id, era -> sample_id }
+
+    modern_samples_ch = sample_metadata_ch
+        .filter { sample_id, era -> era == params.modern_era }
+        .map { sample_id, era -> tuple(sample_id, resolve_reads(sample_id)) }
+
     // Dynamic calculation of sample count (Value Channel)
     sample_count_ch = modern_samples_ch.count()
     
