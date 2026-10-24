@@ -120,6 +120,7 @@ params.duphmm_emit  = 1         // 0 = LR only, 1 = both LR and Coverage. Latter
 params.duphmm_penalty    = "BIC"  // Options: "BIC", "AIC", or "none". BIC and AIC make it less likely that dupHMM will identify paralogous regions. Useful if dupHMM is identifying too many small regions.
 params.duphmm_merge_dist = 100  // Script will merge adjacent paralogous regions. Maximum distance (bp) between regions to merge.
 params.duphmm_min_len    = 1000  // Script will drop small putatively paralogous regions. Minimum length (bp) threshold for retained regions
+params.mask_window   = 1000  // Distance (bp) to extend masking in both directions around identified paralogous regions/SNPs
 ```
 
 Other parameters that you are less likely to adjust can be found in the header of `main.nf`.

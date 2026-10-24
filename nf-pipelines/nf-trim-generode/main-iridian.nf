@@ -29,7 +29,8 @@ params.bwa_threads  = 4
 params.bam_q        = 25 // Mapping quality threshold. 
 params.trimlength   = 85 // Default fallback trim length if no historical reads map successfully
 
-def resolve_reads = { String sample_id ->
+// Helper function
+def resolve_reads(String sample_id) {
     // Search for R1 files with common extensions (.fastq.gz, .fq.gz, _001.fastq.gz, etc.)
     def r1_files = file("${params.indir}/${sample_id}{_R1,_1}{,.fastq.gz,.fq.gz}").sort()
     def r2_files = file("${params.indir}/${sample_id}{_R2,_2}{,.fastq.gz,.fq.gz}").sort()
@@ -41,39 +42,8 @@ def resolve_reads = { String sample_id ->
     return [r1_files[0], r2_files[0]]
 }
 
-def samplesheet_file = file(params.samplesheet)
-def legacy_samples_file = file(params.samples_file)
-
-// --- Input Channels ---
-// Sample metadata is taken from a CSV when available.
-// Fallback: legacy one-column sample list, which defaults all samples to modern.
-sample_metadata_ch = samplesheet_file.exists() ?
-    Channel
-        .fromPath(samplesheet_file, checkIfExists: true)
-        .splitCsv(header: true)
-        .map { row -> tuple(row.sample.trim(), row.era?.trim()?.toLowerCase() ?: 'modern') }
-        .filter { sample_id, era -> sample_id }
-    :
-    Channel
-        .fromPath(legacy_samples_file, checkIfExists: true)
-        .splitText()
-        .map { it.trim() }
-        .filter { it.length() > 0 }
-        .map { sample_id -> tuple(sample_id, 'modern') }
-
-modern_samples_ch = sample_metadata_ch
-    .filter { sample_id, era -> era != params.historical_era }
-    .map { sample_id, era -> tuple(sample_id, resolve_reads(sample_id)) }
-
-historical_samples_ch = sample_metadata_ch
-    .filter { sample_id, era -> era == params.historical_era }
-    .map { sample_id, era ->
-        def reads = resolve_reads(sample_id)
-        tuple(sample_id, reads[0], reads[1])
-    }
 
 // --- Processes ---
-
 process REPEAT_MODELER {
     tag "De novo repeat discovery on ${ref_fasta.baseName}"
     label 'process_high' // Modeler usually requires significantly more RAM/CPU
@@ -626,7 +596,7 @@ process CALCULATE_SAMPLE_STATS {
     publishDir "${params.outdir}/stats/individual", mode: 'copy'
 
     input:
-    tuple val(sample_id), val(era), path(bam), path(bai), path(fastp_json)
+    tuple val(sample_id), val(era), path(bam), path(bai), path("fastp_json_*.json")
     path bed_file
 
     output:
@@ -634,8 +604,15 @@ process CALCULATE_SAMPLE_STATS {
 
     script:
     """
-    # 1. Total Seqs extracted directly from fastp json report
-    total_seqs=\$(python3 -c "import json; data=json.load(open('${fastp_json}')); print(data['summary']['before_filtering']['total_reads'])" 2>/dev/null || echo "0")
+    # 1. Total Seqs extracted directly from fastp json report(s)
+    total_seqs=\$(python3 -c "
+    import json, glob
+    total = 0
+    for f in glob.glob('fastp_json_*.json'):
+        with open(f) as j:
+            total += json.load(j)['summary']['before_filtering']['total_reads']
+    print(total)
+    " 2>/dev/null || echo "0")
 
     # 2. Total Mapped, Unique, MQ25 Reads
     total_mapped=\$(samtools view -c -F 4 ${bam})
@@ -650,8 +627,9 @@ process CALCULATE_SAMPLE_STATS {
     # 4. Total Coverage across target BED
     total_cov=\$(samtools depth -a -q 30 -Q 25 -b ${bed_file} ${bam} | awk '{sum+=\$3} END {if (NR>0) print sum/NR; else print "0"}')
 
-    # 5. Read length metrics (min, max, median, mean) replacing calculate.awk
+    # 5. Read length metrics (min, max, median, mean)
     read_stats=\$(samtools view -q 25 ${bam} | awk '{print length(\$10)}' | awk '
+        BEGIN { OFS="\\t" }
         { sum+=\$1; nums[NR]=\$1 }
         END {
             if (NR == 0) { print "0 0 0 0"; exit }
@@ -670,8 +648,8 @@ process CONTIG_DEPTH_QC {
     publishDir "${params.outdir}/stats", mode: 'copy'
 
     input:
-    path bams
-    path bais
+    path "modern/*"
+    path "historical/*"
     path bed_file
 
     output:
@@ -679,16 +657,21 @@ process CONTIG_DEPTH_QC {
 
     script:
     """
-    samtools depth -a -q 30 -Q 25 -b ${bed_file} ${bams} | awk '
-        {
-            sum[\$1] += \$3
-            count[\$1]++
-        }
-        END {
-            for (c in sum) {
-                print c "\t" (count[c] > 0 ? sum[c]/count[c] : 0)
-            }
-        }' > contig_depth_summary.tsv
+    echo -e "contig\\tera\\tdepth" > contig_depth_summary.tsv
+
+    if ls modern/*.bam 1> /dev/null 2>&1; then
+        samtools depth -a -q 30 -Q 25 -b ${bed_file} modern/*.bam | awk '
+            { sum[\$1] += \$3; count[\$1]++ }
+            END { for (c in sum) print c "\tmodern\t" (count[c] > 0 ? sum[c]/count[c] : 0) }
+        ' >> contig_depth_summary.tsv
+    fi
+
+    if ls historical/*.bam 1> /dev/null 2>&1; then
+        samtools depth -a -q 30 -Q 25 -b ${bed_file} historical/*.bam | awk '
+            { sum[\$1] += \$3; count[\$1]++ }
+            END { for (c in sum) print c "\thistorical\t" (count[c] > 0 ? sum[c]/count[c] : 0) }
+        ' >> contig_depth_summary.tsv
+    fi
     """
 }
 
@@ -705,7 +688,8 @@ process GENERATE_QC_REPORTS_AND_PLOTS {
 
     output:
     path "individual_sequencing_summary_table.csv"
-    path "*.pdf"
+    path "contig_depth_summary.tsv"
+    path "*.png"
 
     script:
     def rcmd = task.ext.rscript ?: 'Rscript' // allow nextflow.config to override Rscript path if needed (eg, with crun Rscript)
@@ -847,6 +831,37 @@ workflow HISTORICAL_PIPELINE {
 }
 
 workflow {
+    def samplesheet_file = file(params.samplesheet)
+    def legacy_samples_file = file(params.samples_file)
+
+    // --- Input Channels ---
+    // Sample metadata is taken from a CSV when available.
+    // Fallback: legacy one-column sample list, which defaults all samples to modern.
+    sample_metadata_ch = samplesheet_file.exists() ?
+        Channel
+            .fromPath(samplesheet_file, checkIfExists: true)
+            .splitCsv(header: true)
+            .map { row -> tuple(row.sample.trim(), row.era?.trim()?.toLowerCase() ?: 'modern') }
+            .filter { sample_id, era -> sample_id }
+        :
+        Channel
+            .fromPath(legacy_samples_file, checkIfExists: true)
+            .splitText()
+            .map { it.trim() }
+            .filter { it.length() > 0 }
+            .map { sample_id -> tuple(sample_id, 'modern') }
+
+    modern_samples_ch = sample_metadata_ch
+        .filter { sample_id, era -> era != params.historical_era }
+        .map { sample_id, era -> tuple(sample_id, resolve_reads(sample_id)) }
+
+    historical_samples_ch = sample_metadata_ch
+        .filter { sample_id, era -> era == params.historical_era }
+        .map { sample_id, era ->
+            def reads = resolve_reads(sample_id)
+            tuple(sample_id, reads[0], reads[1])
+        }
+
     // Package the reference files into a channel
     ref_bundle_ch = Channel.fromPath( "${params.reference}*" )
         .mix( Channel.fromPath( params.reference.replaceAll(/\.(fa|fasta|fna)$/, '.dict'), checkIfExists: false ) )
@@ -978,7 +993,12 @@ workflow {
     // Link fastp JSON stats files back to samples
     fastp_jsons_ch = historical_fastp.json
         .mix(modern_pipeline.fastp_json)
-        .map { json -> tuple(json.baseName.replaceAll(/_fastp_report/, ''), json) }
+        .map { json -> 
+            def raw_id = json.baseName.replaceAll(/_fastp_report/, '')
+            def sample_id = raw_id.split('_')[0]
+            tuple(sample_id, json)
+        }
+        .groupTuple()
 
     sample_qc_input_ch = all_bams_ch
         .map { id, era, bam, bai -> tuple(id, era, bam, bai) }
@@ -987,10 +1007,10 @@ workflow {
     // Calculate individual stats
     indiv_stats_ch = CALCULATE_SAMPLE_STATS(sample_qc_input_ch, bed_ch)
 
-    // Calculate contig depth stats
-    all_bam_files = all_bams_ch.map { id, era, bam, bai -> bam }.collect()
-    all_bai_files = all_bams_ch.map { id, era, bam, bai -> bai }.collect()
-    contig_stats_ch = CONTIG_DEPTH_QC(all_bam_files, all_bai_files, bed_ch)
+    // Calculate contig depth stats separated by era
+    modern_bam_files = modern_pipeline.indexed.flatMap { id, bam, bai -> [bam, bai] }.collect()
+    historical_bam_files = historical_pipeline.indexed.flatMap { id, bam, bai -> [bam, bai] }.collect()
+    contig_stats_ch = CONTIG_DEPTH_QC(modern_bam_files, historical_bam_files, bed_ch)
 
     // Gather all AMBER and MapDamage output stats files
     amber_stats_ch = modern_pipeline.amber

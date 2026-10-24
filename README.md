@@ -552,6 +552,7 @@ params.lr_quantile = 0.999 // Target percentile cutoff for ngsParalog likelihood
 params.hwe_pval    = 1e-3  // Target p-value threshold for HWE excess heterozygosity filtering. This is quite high for only 9 modern individuals.
 params.duphmm_merge_dist = -1  // Maximum distance (bp) between regions to merge in output from dupHMM. -1 will merge only overlapping regions
 params.duphmm_min_len    = 1  // Minimum length (bp) threshold for retained regions in output from dupHMM. Retain all.
+params.mask_window   = 1000  // Distance (bp) to extend masking in both directions around identified paralogous regions/SNPs
 ```
 
 Start it in the existing tmux shell:
@@ -567,7 +568,7 @@ Output:
 Calculated Average Read Length: 147.359 bp
 Estimated Mean Population Depth: 49.5492x
 Setting ANGSD -setMaxDepth input filter for depthGlobal histogram to 500 to filter out coverage spikes
-High depth cutoff (0.995 quantile) for flagging problematic high-depth regions: 98 total depth
+High depth cutoff (0.995 quantile) for flagging problematic high-depth regions: 100 total depth
 ```
 
 BED files, fastp reports, site allele balance, bam files and other results in the `results/` directory (including `large_data/` not tracked by git). Key plots are:
@@ -594,7 +595,7 @@ sbatch scripts/plot_repeat_paralog_overlaps.sbatch
 
 Shows that
 
-1) RepeatMasker found by far the largest length of problematic regions
+1) RepeatMasker found by far the largest length of problematic regions (158 Mb)
 2) Most (75%) of the regions found by DUPHMM were also found by RepeatMasker
 
 For Cvi, RepeatMasker looks like the more important mask.
@@ -608,7 +609,7 @@ rm -r nf-pipelines/nf-paralog/work/
 
 
 ## 12. Retrim and map only Cvi individuals with nf-trim-generode
-Trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed `split_reads.sh`, and does mapdamage rescaling of bam files. Get the files from an updated branch in my home directory (in the future, it will be available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo)
+Trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed `split_reads.sh`, does mapdamage rescaling of bam files, and merges repeat mask with a paralog mask. Get the files from an updated branch in my home directory, then made edits (now also available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo).
 ```
 cd /archive/carpenterlab/pire/mpinsky/
 rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow*' --exclude='.nextflow/' --exclude='examples/' nf-pipelines/nf-trim-generode pire_chromis_viridis_lcwgs/nf-pipelines/
@@ -754,7 +755,7 @@ for f in /archive/carpenterlab/pire/pire_chromis_viridis_lcwgs/2nd_sequencing_ru
 done
 ```
 
-Make a new sample sheet because the library tags seem to be different now. :
+Make a new sample sheet because the library tags are different:
 ```
 (echo "sample,era"; ls ./data/symlinks_raw/*fastq.gz | xargs -n1 basename | cut -d "_" -f1,2,3 | uniq | awk '{
     type = substr($0, 4, 1)
@@ -773,8 +774,10 @@ Make new pipeline files (`main-iridian.nf` and `nextflow-iridian.config`) and ad
 
 Run nf-trim-generode on the new genome with output in `results-iridian` (see parameters in `main-iridian.nf`). 
 ```
-tmux a -t nextflow
+tmux new -s nftrimcvi
 cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode
+bash
+module load container_env nextflow
 nextflow run main-iridian.nf -c nextflow-iridian.config -profile wahab
 ```
 See `results-iridian` for the output. Mapdamage soft-clipping has dropped by about half (compared to the in-house genome) based on spot-checking mapdamage plots. However, amber plots suggest about 12% of the Iridian genome has no coverage, even for individuals with high read depth.
