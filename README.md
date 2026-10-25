@@ -526,90 +526,8 @@ Wrote `output/mia/CviAPal032_Ex1_4G.maln.F.mia_consensus.3x_0.67_filtered.fasta`
 
 Both are empty.
 
-
-## 11 Test for paralogs
-Some SFS plots made for a different project (`pire_synthesis`) have an excess of loci with alleles at 50:50. Let's test for paralogs by
-
-1. Testing for excess heterozygosity and depth with angsd
-2. Running `ngsParalog`
-
-Start by copying over the base of the nf-trim-generode pipeline:
-```
-rsync -a --exclude='work/' --exclude='results/' --exclude='results-iridian/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-paralog/
-
-cd nf-pipelines/nf-paralog
-```
-
-Wrote a new [`main.nf`](nf-pipelines/nf-paralog/main.nf) that maps the modern reads (without trimming to match the historical read length) with very few quality filters, then runs ANGSD (HWE and depth tests) and ngsParalog. Updated the [`nextflow.config`](nf-pipelines/nf-paralog/nextflow.config) file to match.
-
-The same parameters and input files as `nf-trim-generode` should be good. Set parameter flags for runnning dupHMM with both LR and coverage. 
-
-Also set:
-```
-params.min_ind_ratio = 0.5 // Require coverage in at least 50% of samples
-params.high_depth_quantile = 0.995 // target high depth percentile cutoff
-params.lr_quantile = 0.999 // Target percentile cutoff for ngsParalog likelihood ratio (e.g., 0.999 = top 0.1% highest LR sites)
-params.hwe_pval    = 1e-3  // Target p-value threshold for HWE excess heterozygosity filtering. This is quite high for only 9 modern individuals.
-params.duphmm_merge_dist = -1  // Maximum distance (bp) between regions to merge in output from dupHMM. -1 will merge only overlapping regions
-params.duphmm_min_len    = 1  // Minimum length (bp) threshold for retained regions in output from dupHMM. Retain all.
-params.mask_window   = 1000  // Distance (bp) to extend masking in both directions around identified paralogous regions/SNPs
-```
-
-Start it in the existing tmux shell:
-```
-tmux a -t nextflow
-cd ../nf-paralog/
-nextflow run main.nf -profile wahab -resume
-```
-
-Output:
-```
-[ANGSD_HWE_DEPTH] Total BAMs: 9 | Calculated minInd: 4
-Calculated Average Read Length: 147.359 bp
-Estimated Mean Population Depth: 49.5492x
-Setting ANGSD -setMaxDepth input filter for depthGlobal histogram to 500 to filter out coverage spikes
-High depth cutoff (0.995 quantile) for flagging problematic high-depth regions: 100 total depth
-```
-
-BED files, fastp reports, site allele balance, bam files and other results in the `results/` directory (including `large_data/` not tracked by git). Key plots are:
-![Allele balance](nf-pipelines/nf-paralog/results/plots/allele_balance_vs_het.png)
-
-![Manhattan plot of mapped depth](nf-pipelines/nf-paralog/results/plots/angsd_depth_manhattan.png)
-
-![Manhattan plot of HWE disequilibrium](nf-pipelines/nf-paralog/results/plots/angsd_hwe_manhattan.png)
-
-![Manhattan plot of ngsParalog likelihood ratios for paralogous regions](nf-pipelines/nf-paralog/results/plots/ngsparalog_lr_manhattan.png)
-
-![Histogram of the length of regions flagged by each method](nf-pipelines/nf-paralog/results/plots/filter_region_length_histograms.png)
-
-![Barplot of overlap among the regions flagged by each methods](nf-pipelines/nf-paralog/results/plots/paralog_filter_overlaps.png)
-
-![Manhattan plot of the overlap among regions flagged by each method](nf-pipelines/nf-paralog/results/plots/filter_overlaps_manhattan.png)
-
-### 11.1 Do paralogous and repeat regions overlap?
-Made a script to plot the overlap of Repeat Masker's identified regions and the newly identified regions. From the base directory:
-```
-sbatch scripts/plot_repeat_paralog_overlaps.sbatch
-```
-![Plot of overlapping regions between repeat and paralog detection methods](output/paralogs/repeats_paralog_overlaps.png).
-
-Shows that
-
-1) RepeatMasker found by far the largest length of problematic regions (158 Mb)
-2) Most (75%) of the regions found by DUPHMM were also found by RepeatMasker
-
-For Cvi, RepeatMasker looks like the more important mask.
-
-
-### 11.2 Clean up
-Remove the 214G temporary directory:
-```
-rm -r nf-pipelines/nf-paralog/work/
-```
-
-
-## 12. Retrim and map only Cvi individuals with nf-trim-generode
-Trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed `split_reads.sh`, does mapdamage rescaling of bam files, and merges repeat mask with a paralog mask. Get the files from an updated branch in my home directory, then made edits (now also available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo).
+## 11. Retrim and map only Cvi individuals with nf-trim-generode
+Trimming and mapping pipeline that includes repeat masking, doesn't trim historical reads, includes bug-fixed `split_reads.sh`, and does mapdamage rescaling of bam files. Get the files from an updated branch in my home directory, then made edits (now also available from the [nf-pipelines](https://github.com/philippinespire/nf-pipelines/) repo).
 ```
 cd /archive/carpenterlab/pire/mpinsky/
 rsync -a --exclude='work/' --exclude='results/' --exclude='.nextflow*' --exclude='.nextflow/' --exclude='examples/' nf-pipelines/nf-trim-generode pire_chromis_viridis_lcwgs/nf-pipelines/
@@ -672,14 +590,14 @@ Finished in 7 hrs. Found 103 bp average historical length and mapped with `bwa m
 
 Inspecting the [AMBER plots](nf-pipelines/nf-trim-generode/results/amber), the read length gap from 50-60bp has been fixed by the new `split_reads.sh` script. The historical reads have a wider read length distribution than the modern since there is a substantial fraction of short historical reads, plus some merged historical reads. The [mapdamage plots](nf-pipelines/nf-trim-generode/results/mapdamage/) still show many soft-clipped historical reads, despite stricter mapping, but very little evidence of historical damage patterns. Could summarize the `*_misincorporation.txt` files into a multi-individual plot.
 
-### 12.2 Depth vs. reads
+### 11.2 Depth vs. reads
 Plot read depth vs. number of reads
 ```
 sbatch scripts/plot_depth_vs_reads.sbatch nf-pipelines/nf-trim-generode/data/symlinks nf-pipelines/nf-trim-generode/results/depth output/depth_vs_reads_nf-trim-generode.txt output/depth_vs_reads_nf-trim-generode.pdf
 ```
 [Plot](output/depth_vs_reads_nf-trim-generode.pdf) shows that, as expected, depth increases with the number of reads. Depth increases much more strongly for modern than for historical individuals.
 
-### 12.3 Softclipping
+### 11.3 Softclipping
 Run mapdamage diagnostics on the modern Cvi files with a custom script to check if they also have soft-clipping:
 ```
 sbatch scripts/run_mapdamage_diagnostics.sbatch
@@ -691,6 +609,86 @@ Also make histograms of fraction soft-clipped by individual and by contig with a
 sbatch scripts/soft_clip_analysis.sbatch nf-pipelines/nf-trim-generode/results/data/bam/*.bam
 ```
 The [histogram by contig](output/softclip_analysis/histogram_soft_clipped_per_contig.png) shows a handful of contigs with >30% clipping. A [handful of individuals](output/softclip_analysis/histogram_soft_clipped_per_individual.png) also have a lot of soft-clipping.
+
+## 12 Test for paralogs
+Some SFS plots made for a different project (`pire_synthesis`) have an excess of loci with alleles at 50:50. Let's test for paralogs by
+
+1. Testing for excess heterozygosity and depth with angsd
+2. Running `ngsParalog`
+
+Start by copying over the base of the nf-trim-generode pipeline:
+```
+rsync -a --exclude='work/' --exclude='results/' --exclude='results-iridian/' --exclude='.nextflow/' --exclude='.nextflow.log*' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/ /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-paralog/
+
+cd nf-pipelines/nf-paralog
+```
+
+Wrote a new [`main.nf`](nf-pipelines/nf-paralog/main.nf) that maps the modern reads (without trimming to match the historical read length) with very few quality filters, then runs ANGSD (HWE and depth tests) and ngsParalog. Updated the [`nextflow.config`](nf-pipelines/nf-paralog/nextflow.config) file to match.
+
+The same parameters and input files as `nf-trim-generode` should be good. Set parameter flags for runnning dupHMM with both LR and coverage. 
+
+Also set:
+```
+params.min_ind_ratio = 0.5 // Require coverage in at least 50% of samples
+params.high_depth_quantile = 0.995 // target high depth percentile cutoff
+params.lr_quantile = 0.999 // Target percentile cutoff for ngsParalog likelihood ratio (e.g., 0.999 = top 0.1% highest LR sites)
+params.hwe_pval    = 1e-3  // Target p-value threshold for HWE excess heterozygosity filtering. This is quite high for only 9 modern individuals.
+params.duphmm_merge_dist = -1  // Maximum distance (bp) between regions to merge in output from dupHMM. -1 will merge only overlapping regions
+params.duphmm_min_len    = 1  // Minimum length (bp) threshold for retained regions in output from dupHMM. Retain all.
+params.mask_window   = 1000  // Distance (bp) to extend masking in both directions around identified paralogous regions/SNPs
+```
+
+Start it in the existing tmux shell:
+```
+tmux a -t nextflow
+cd ../nf-paralog/
+nextflow run main.nf -profile wahab -resume
+```
+
+Output:
+```
+[ANGSD_HWE_DEPTH] Total BAMs: 9 | Calculated minInd: 4
+Calculated Average Read Length: 147.359 bp
+Estimated Mean Population Depth: 49.5492x
+Setting ANGSD -setMaxDepth input filter for depthGlobal histogram to 500 to filter out coverage spikes
+High depth cutoff (0.995 quantile) for flagging problematic high-depth regions: 100 total depth
+```
+
+BED files, fastp reports, site allele balance, bam files and other results in the `results/` directory (including `large_data/` not tracked by git). Key plots are:
+![Allele balance](nf-pipelines/nf-paralog/results/plots/allele_balance_vs_het.png)
+
+![Manhattan plot of mapped depth](nf-pipelines/nf-paralog/results/plots/angsd_depth_manhattan.png)
+
+![Manhattan plot of HWE disequilibrium](nf-pipelines/nf-paralog/results/plots/angsd_hwe_manhattan.png)
+
+![Manhattan plot of ngsParalog likelihood ratios for paralogous regions](nf-pipelines/nf-paralog/results/plots/ngsparalog_lr_manhattan.png)
+
+![Histogram of the length of regions flagged by each method](nf-pipelines/nf-paralog/results/plots/filter_region_length_histograms.png)
+
+![Barplot of overlap among the regions flagged by each methods](nf-pipelines/nf-paralog/results/plots/paralog_filter_overlaps.png)
+
+![Manhattan plot of the overlap among regions flagged by each method](nf-pipelines/nf-paralog/results/plots/filter_overlaps_manhattan.png)
+
+Without the 1kb padding in each direction, DUPHMM identified 14 Mb of paralogous regions (250,000 were 1 bp wide), see `nf-pipelines/nf-paralog/results/paralogs/ngsparalog_duphmm_regions.bed`. With padding, it masks 203 Mb, see `nf-pipelines/nf-paralog/results/paralogs/ngsparalog_duphmm_regions.filtered.padded.bed`. 
+
+### 12.1 Do paralogous and repeat regions overlap?
+Made a script to plot the overlap of Repeat Masker's identified regions and the newly identified regions (including padding). From the base directory:
+```
+sbatch scripts/plot_repeat_paralog_overlaps.sbatch
+```
+![Plot of overlapping regions between repeat and paralog detection methods](output/paralogs/repeats_paralog_overlaps.png).
+
+Shows that
+
+1) RepeatMasker masks 167 Mb
+2) DUPHMM, with 1 kb padding, masks 203 Mb
+2) 35% of the regions found by DUPHMM were also found by RepeatMasker (72 Mb)
+
+### 12.2 Clean up
+Remove the 458G temporary directory:
+```
+rm -r nf-pipelines/nf-paralog/work/
+```
 
 ## 13 Map against a new reference
 _Note: Redid mapping here in October 2026 after Jason Selwyn found uncorrupted raw fastq files._

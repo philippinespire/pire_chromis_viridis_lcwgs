@@ -62,7 +62,7 @@ HIGH_DEPTH_BED="nf-pipelines/nf-paralog/results/angsd/high_depth_regions.bed"
 EXCESS_HET_BED="nf-pipelines/nf-paralog/results/angsd/hwe_excess_het.bed"
 
 # Path to NGSParalog DupHMM regions BED file
-NGSPARALOG_BED="nf-pipelines/nf-paralog/results/paralogs/ngsparalog_duphmm_regions.bed"
+NGSPARALOG_BED="nf-pipelines/nf-paralog/results/paralogs/ngsparalog_duphmm_regions.filtered.padded.bed"
 
 OUTPUT_PLOT="output/paralogs/repeats_paralog_overlaps.png"
 TEMP_DIR=$(mktemp -d -p .)
