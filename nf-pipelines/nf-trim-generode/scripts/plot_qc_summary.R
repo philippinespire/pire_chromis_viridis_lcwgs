@@ -20,7 +20,7 @@ dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 # Define color palette for era grouping across all plots
 era_colors <- c("historical" = "#D55E00", "modern" = "#0072B2")
 
-# --- 1. Master Sequencing Stats & Individual Depth Histogram ---
+# --- 1. Load Master Sequencing Stats & Individual Depth Histogram ---
 if (file.exists(stats_file) && file.info(stats_file)$size > 0) {
   stats <- read_tsv(stats_file, show_col_types = FALSE)
   
@@ -32,6 +32,7 @@ if (file.exists(stats_file) && file.info(stats_file)$size > 0) {
     filter(!is.na(total_cov) & total_cov > 0) %>%
     ggplot(aes(x = total_cov, fill = era)) +
     geom_histogram(bins = 30, alpha = 0.7, position = "identity", color = "black") +
+    scale_x_log10(labels = scales::label_comma(drop0trailing = TRUE)) +
     scale_fill_manual(values = era_colors) +
     theme_bw() +
     labs(title = "Average Depth Distribution by Individual", x = "Mean Depth (X) [Log10 Scale]", y = "Count")
@@ -176,17 +177,23 @@ if (length(mapd_files) > 0) {
     }
     
     # Identify substitution columns (e.g., C>T, G>A)
-    sub_cols <- intersect(c("C>T", "G>A", "C_T", "G_A", "C.T", "G.A"), colnames(mapd_df))
-    
+    sub_cols <- intersect(c("C>T", "G>A", "C_T", "G_A", "C.T", "G.A", "S"), colnames(mapd_df))    
+
     if (length(sub_cols) > 0) {
     mapd_long <- mapd_df %>%
         pivot_longer(cols = all_of(sub_cols), names_to = "mutation", values_to = "count") %>%
         mutate(
-          total_bases = ifelse(End == "5p", C + count, G + count),
+          total_bases = case_when(
+            mutation == "S" ~ Total,
+            End == "5p"     ~ C + count,
+            End == "3p"     ~ G + count,
+            TRUE            ~ Total
+          ),
           frequency   = ifelse(total_bases > 0, count / total_bases, 0),
           panel       = case_when(
             mutation %in% c("C>T", "C_T", "C.T") ~ "C to T (5' Deamination)",
             mutation %in% c("G>A", "G_A", "G.A") ~ "G to A (3' Deamination)",
+            mutation == "S"                      ~ "Soft-clipping",
             TRUE ~ "Other Substitutions"
           )
         )
