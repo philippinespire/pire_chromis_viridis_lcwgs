@@ -7,7 +7,7 @@ params.outdir      = "${projectDir}/results" // output directory for all results
 params.reference   = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna" // path to reference genome FASTA file
 params.bed_file    = "/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results-iridian/data/reference/GCA_051013605.1_ASM5101360v1_genomic_20kb.repma.angsd.txt" // a 3-column ANGSD-format bed file. ideally repeat-masked.
 params.species     = "Cvi"   // 3-letter species code for output file naming. used in ANGSD output files and ACER results.
-params.min_ind_frac   = 0.70 // Minimum percentage of individuals required per site (default 0.70)
+params.min_ind_frac   = 0.50 // Minimum percentage of individuals required per site (default 0.70)
 params.max_depth_mult = 10   // Max depth threshold as a multiplier of the average total expected coverage (default 10)
 params.ld_prune    = true    // Set to true to enable LD pruning (default true)
 params.max_kb_dist = 50      // Maximum pairwise distance in kb to test for LD if pruning
@@ -31,7 +31,7 @@ include { ANGSD_DIVERSITY; PLOT_PI_DIVERSITY                                    
 include { LD_PRUNE_CONTIG; MERGE_PRUNED_SITES; SUBSET_BEAGLE                        } from './modules/ld_prune.nf'
 include { PREPARE_SITE_SETS                                                         } from './modules/filter_sites.nf'
 include { RUN_ACER                                                                  } from './modules/acer.nf'
-include { ANGSD_FST, PLOT_SFS_SUMMARY                                               } from './modules/angsd_fst.nf'
+include { ANGSD_FST; PLOT_SFS_SUMMARY                                               } from './modules/angsd_fst.nf'
 
 // Workflow 
 workflow {
@@ -196,5 +196,5 @@ workflow {
 
     // Generate SFS comparison plot across all regions
     PLOT_SFS_SUMMARY(ANGSD_FST.out.sfs_2d.collect())
-    )
+    
 }
