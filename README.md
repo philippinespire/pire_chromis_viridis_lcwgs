@@ -780,6 +780,13 @@ nextflow run main-iridian.nf -c nextflow-iridian.config -profile wahab
 ```
 See `results-iridian` for the output. Mapdamage soft-clipping has dropped by about half (compared to the in-house genome) based on spot-checking mapdamage plots. However, amber plots suggest about 12% of the Iridian genome has no coverage, even for individuals with high read depth.
 
+![amber read length](nf-pipelines/nf-trim-generode/results-iridian/summary_reports/amber_read_length_distribution.png)
+![contig depths](nf-pipelines/nf-trim-generode/results-iridian/summary_reports/depth_by_contig_histogram.png)
+![individual depths](nf-pipelines/nf-trim-generode/results-iridian/summary_reports/depth_by_individual_histogram.png)
+![individual summary stats](nf-pipelines/nf-trim-generode/results-iridian/summary_reports/individual_summary_metrics_boxplots.png)
+![amber mismatches](nf-pipelines/nf-trim-generode/results-iridian/summary_reports/amber_mismatch_frequencies.png)
+![mapdamage mismatches](nf-pipelines/nf-trim-generode/results-iridian/summary_reports/mapdamage_overlay.png)
+
 ### 13.1 Softclipping for Iridian genome
 Modified the fasta, input, and output file paths, then ran mapdamage diagnostics on the modern Cvi files to check if they also have less soft-clipping:
 ```
@@ -791,14 +798,21 @@ Modified the output file paths, and then made histograms of fraction soft-clippe
 ```
 sbatch scripts/soft_clip_analysis.sbatch nf-pipelines/nf-trim-generode/results-iridian/data/bam/*.bam
 ```
-The [histogram by contig](output/softclip_analysis-iridian/histogram_soft_clipped_per_contig.png) shows all contigs with <15% clipping. Only [one individual](output/softclip_analysis-iridian/histogram_soft_clipped_per_individual.png) has 30% soft-clipping (CviAPal011).
+The histogram by contig shows all contigs with <15% clipping:
+![histogram by contig](output/softclip_analysis-iridian/histogram_soft_clipped_per_contig.png)
+
+Only one individual has 30% soft-clipping:
+![histogram by individual](output/softclip_analysis-iridian/histogram_soft_clipped_per_individual.png)
+
+The [soft-clipping table by individual](output/softclip_analysis-iridian/per_individual_stats.txt) shows that this is CviAPal011.
 
 ### 13.2 Softclipping vs. depth for Iridian genome
 Made a script to plot fraction softclipped vs. depth per individual:
 ```
 sbatch scripts/plot_softclip_vs_depth.sbatch
 ```
-The [plot](output/softclip_analysis-iridian/softclip_vs_depth_plot.png) shows that all individuals have at least 5% softclipping, and the individuals with depth <1x have 10-30% softclipping. 
+The plot shows that all individuals have at least 5% softclipping, and the individuals with depth <1x have 10-30% softclipping:
+![soft-clipping vs. depth](output/softclip_analysis-iridian/softclip_vs_depth_plot.png)
 
 ### 13.3 Clean up
 Remove the 1.3T temporary work directory:
@@ -807,7 +821,7 @@ rm -r nf-pipelines/nf-trim-generode/work/
 ```
 
 
-## 14 ANGSD structure and diversity
+## 14 ANGSD structure and diversity with new genome
 Malin, 2026 August. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection`.
 
 Run nf-angsd-selection on the nf-trim-generode reads mapped to the Iridian genome from [Step 13](#13-map-against-a-new-reference). This is also trimmed to only the _C. viridis_ individuals. This pipeline does ld-pruning, selection scanning, runs diversity on all putatively neutral sites (including monomorphic), and does PCA, admixture, and fst on ld-pruned sites.
@@ -824,25 +838,25 @@ Make a contig list for the Iridian genome, keeping only the first column when co
 awk '/^>/ {sub(/^>/, ""); print $1}' /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna > inputfiles/contig_list.txt
 ```
 
-Trim `inputfiles/samplesheet.csv` to the _Chromis viridis_ individuals (removing _Chromis atripectoralis_). Kept CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (removed other modern). Removed APal_004, APal016, APal_028, APal_040 (kept other historical). Left n=35 historical and n=9 modern individuals. Manually updated `samplesheet.csv` to the correct bam paths (easy enough to do) and updated to L98 (the new trimming length).
+Trim `inputfiles/samplesheet.csv` to the _Chromis viridis_ individuals (removing _Chromis atripectoralis_). Kept CPal_002, CPal_005, CPal_030, CPal_031, CPal_032, CPal_052, CPal_064, CPal_079, and CPal_093 (removed other modern). Removed APal_004, APal016, APal_028, APal_040 (kept other historical). Left n=36 historical and n=9 modern individuals. Manually updated `samplesheet.csv` to the correct bam paths (easy enough to do) and updated to L102 (the new trimming length).
 
 Update the parameters in `main.nf` for this run:
 - params.contigs     = "${projectDir}/inputfiles/contig_list.txt"
 - use the Iridian genome (/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/data/GCA_051013605.1_ASM5101360v1_genomic_20kb.fna)
-- use the repeat-masked bed file (/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results-iridian/data/reference/GCA_051013605.1_ASM5101360v1_genomic_20kb.repma.angsd.txt)
+- use the repeat- and paralog-masked bed file (/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results-iridian/data/reference/GCA_051013605.1_ASM5101360v1_genomic_20kb.repma.angsd.txt)
 - set species to Cvi
 - set maxdepth multiplier to 10x
-- set minind fraction to 70% of the individuals
+- set minind fraction to 50% of the individuals
 - use 50kb for ld-pruning, and turn this on
 - use 50kb with 10kb steps for windowed fst
 
 Start nextflow
 ```
-tmux a -t nextflow
+tmux new -s cviangsel
 bash
-module load container_env nextflow
-cd nf-pipelines/nf-angsd-selection
-nextflow run main.nf -profile wahab
+module load container_env nextflow/23.10.1
+cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection
+nextflow run main.nf -profile wahab -resume
 ```
 Ran in 5.5 hrs. The loci identified are in [site_counts.tsv](nf-pipelines/nf-angsd-selection/results/sites/site_counts.tsv).
 
