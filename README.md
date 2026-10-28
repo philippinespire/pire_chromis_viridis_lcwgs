@@ -969,6 +969,7 @@ rm -r nf-pipelines/nf-angsd-selection/work/
 
 ## 13 ANGSD with <10% softclipping
 Malin, 2026 August. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection-10perc`.
+_Note: As of October 2026, not re-run with the re-mapped reads in #12._
 
 Run nf-angsd-selection on the _C. viridis_ individuals with <10% soft-clipping. Start by copying over the base of the pipeline:
 ```
@@ -1068,7 +1069,7 @@ rm -r nf-pipelines/nf-angsd-selection-10perc/work/
 ```
 
 ## 15 Re-run ANGSD without soft-clipped reads
-As a sensitivity test, let's re-run `nf-angsd-selection-1x` after stripping out all soft-clipped reads. Create a `temp/` directory and put the bams from `nf-trim-generode`'s `results-iridian` there after stripping out unmapped and reads with any soft-clipping:
+As a sensitivity test, let's re-run `nf-angsd-selection` after stripping out all soft-clipped reads. Create a `temp/` directory and put the bams from `nf-trim-generode`'s `results-iridian` there after stripping out unmapped and reads with any soft-clipping:
 ```
 salloc
 bash
@@ -1088,16 +1089,20 @@ done
 
 Make a new samplesheet:
 ```
-cp nf-pipelines/nf-angsd-selection-1x/inputfiles/samplesheet.csv nf-pipelines/nf-angsd-selection-1x/inputfiles/samplesheet_noclip.csv
+cp nf-pipelines/nf-angsd-selection/inputfiles/samplesheet.csv nf-pipelines/nf-angsd-selection/inputfiles/samplesheet_noclip.csv
 ```
-Then hand-edit to point to `temp/bam_noclip`.
+Then hand-edit to point to `temp/bam_noclip/`.
 
 Make a new nextflow file and hand-edit to point it to the new `samplesheet_noclip.csv` with a new `results-noclip/` directory:
 ```
-cp nf-pipelines/nf-angsd-selection-1x/main.nf nf-pipelines/nf-angsd-selection-1x/main-noclip.nf
+cp nf-pipelines/nf-angsd-selection/main.nf nf-pipelines/nf-angsd-selection/main-noclip.nf
 ```
 
-Still need to run this.
+Start nextflow:
+```
+tmux a -t cviangsel
+nextflow run main-noclip.nf -profile wahab
+```
 
 ## Unused
 ### Continuity
