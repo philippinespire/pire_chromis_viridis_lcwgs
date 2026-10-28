@@ -5,22 +5,23 @@ process ANGSD_DIVERSITY {
     
     input:
     tuple val(region), val(era), path(saf), path(saf_idx), path(saf_pos)
-    path neutral_sites  // [pos, bin, idx] bundle from PREPARE_DIVERSITY_SITES
+    val label
+    tuple path(sites_pos), path(sites_bin), path(sites_idx)
 
     output:
-    tuple val(region), val(era), path("${region}_${era}.sfs"), emit: sfs
-    tuple val(region), val(era), path("${region}_${era}.pestPG"), emit: pestPG
-    path "${region}_${era}.thetas.idx", emit: thetas_idx
-    path "${region}_${era}.thetas.gz", emit: thetas
+    tuple val(region), val(era), val(label), path("${region}_${era}_${label}.sfs"), emit: sfs
+    tuple val(region), val(era), val(label), path("${region}_${era}_${label}.pestPG"), emit: pestPG
+    path "${region}_${era}_${label}.thetas.idx", emit: thetas_idx
+    path "${region}_${era}_${label}.thetas.gz", emit: thetas
 
     script:
     """
     # 1. Generate Unpruned SFS using neutral callable sites (includes monomorphic loci)
-    realSFS ${saf_idx} -sites ${neutral_sites[0]} -P ${task.cpus ?: 32} -fold 1 > ${region}_${era}.sfs
+    realSFS ${saf_idx} -sites ${sites_pos} -P ${task.cpus ?: 32} -fold 1 > ${region}_${era}_${label}.sfs
 
     # 2. Calculate Pi and Theta using the Neutral SFS
-    realSFS saf2theta ${saf_idx} -sites ${neutral_sites[0]} -sfs ${region}_${era}.sfs -fold 1 -P ${task.cpus ?: 32} -outname ${region}_${era}
-    thetaStat do_stat ${region}_${era}.thetas.idx -outnames ${region}_${era}
+    realSFS saf2theta ${saf_idx} -sites ${sites_pos} -sfs ${region}_${era}_${label}.sfs -fold 1 -P ${task.cpus ?: 32} -outname ${region}_${era}_${label}
+    thetaStat do_stat ${region}_${era}_${label}.thetas.idx -outnames ${region}_${era}_${label}
     """
 }
 
@@ -29,12 +30,12 @@ process PLOT_PI_DIVERSITY {
     publishDir "${params.outdir}/diversity", mode: 'copy'
 
     input:
-    tuple val(region), path(hist_pestPG), path(mod_pestPG)
+    tuple val(region), val(label), path(hist_pestPG), path(mod_pestPG)
     path script
 
     output:
-    path "pi_historic_vs_modern_${region}.png" , emit: plot
-    path "pi_summary_${region}.tsv"            , emit: summary
+    path "pi_historic_vs_modern_${region}_${label}.png" , emit: plot
+    path "pi_summary_${region}_${label}.tsv"            , emit: summary
 
     script:
     """
@@ -42,8 +43,8 @@ process PLOT_PI_DIVERSITY {
         --historic_file="${hist_pestPG}" \
         --modern_file="${mod_pestPG}" \
         --region="${region}" \
-        --out_png="pi_historic_vs_modern_${region}.png" \
-        --out_tsv="pi_summary_${region}.tsv" \
+        --out_png="pi_historic_vs_modern_${region}_${label}.png" \
+        --out_tsv="pi_summary_${region}_${label}.tsv" \
         --n_boot=10000
     """
 }

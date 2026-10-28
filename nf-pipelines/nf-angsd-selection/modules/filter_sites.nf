@@ -14,15 +14,17 @@ process PREPARE_SITE_SETS {
     path "all_snps.pos"                 , emit: all_snps
     path "selected_loci.pos"            , emit: selected
     path "callable_neutral.pos"         , emit: callable_neutral_pos
-    path "callable_neutral.pos.bin"     , emit: callable_neutral_bin
-    path "callable_neutral.pos.idx"     , emit: callable_neutral_idx
     path "snps_neutral.pos"             , emit: snps_neutral
     path "snps_pruned.pos"              , emit: snps_pruned
     path "snps_pruned_neutral.pos"      , emit: snps_pruned_neutral_pos
-    path "snps_pruned_neutral.pos.bin"  , emit: snps_pruned_neutral_bin
-    path "snps_pruned_neutral.pos.idx"  , emit: snps_pruned_neutral_idx
     path "site_counts.tsv"              , emit: summary
 
+    // Pre-bundled 3-element tuples [pos, bin, idx] for realSFS
+    tuple path("callable_neutral.pos"), path("callable_neutral.pos.bin"), path("callable_neutral.pos.idx"), emit: callable_neutral_bundle
+    tuple path("all_snps.pos"), path("all_snps.pos.bin"), path("all_snps.pos.idx"), emit: all_snps_bundle
+    tuple path("snps_pruned.pos"), path("snps_pruned.pos.bin"), path("snps_pruned.pos.idx"), emit: snps_pruned_bundle
+    tuple path("snps_pruned_neutral.pos"), path("snps_pruned_neutral.pos.bin"), path("snps_pruned_neutral.pos.idx"), emit: snps_pruned_neutral_bundle
+    
     script:
     """
     cp ${pop_intersect} all_callable.pos
@@ -35,7 +37,17 @@ process PREPARE_SITE_SETS {
     fi
 
     if [ -f "${chisq_results}" ] && [ -s "${chisq_results}" ]; then
-        awk -v fdr="${params.fdr_cutoff}" 'NR>1 && \$NF <= fdr {print \$1"\t"\$2}' ${chisq_results} > selected_loci.pos
+        awk -v fdr="${params.fdr_cutoff}" '
+            NR==1 {
+                for (i=1; i<=NF; i++) {
+                    if (\$i ~ /chisq_fdr\$/) fdr_col=i
+                }
+                next
+            }
+            fdr_col && \$fdr_col != "NA" && (\$fdr_col+0) <= fdr {
+                print \$1"\t"\$2
+            }
+        ' ${chisq_results} > selected_loci.pos
     else
         touch selected_loci.pos
     fi
@@ -53,6 +65,8 @@ process PREPARE_SITE_SETS {
     # Index position lists for realSFS site filtering
     angsd sites index callable_neutral.pos
     angsd sites index snps_pruned_neutral.pos
+    angsd sites index all_snps.pos
+    angsd sites index snps_pruned.pos
 
     # Generate site summary using redirected wc -l (avoids filename string parsing)
     echo -e "site_set\tcount" > site_counts.tsv

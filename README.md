@@ -822,7 +822,7 @@ rm -r nf-pipelines/nf-trim-generode/work/
 
 
 ## 14 ANGSD structure and diversity with new genome
-Malin, 2026 August. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection`.
+Malin, 2026 October. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection`.
 
 Run nf-angsd-selection on the nf-trim-generode reads mapped to the Iridian genome from [Step 13](#13-map-against-a-new-reference). This is also trimmed to only the _C. viridis_ individuals. This pipeline does ld-pruning, selection scanning, runs diversity on all putatively neutral sites (including monomorphic), and does PCA, admixture, and fst on ld-pruned sites.
 
@@ -846,7 +846,7 @@ Update the parameters in `main.nf` for this run:
 - use the repeat- and paralog-masked bed file (/archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-trim-generode/results-iridian/data/reference/GCA_051013605.1_ASM5101360v1_genomic_20kb.repma.angsd.txt)
 - set species to Cvi
 - set maxdepth multiplier to 10x
-- set minind fraction to 50% of the individuals
+- set minind fraction to 50% of the individuals since some are very low depth
 - use 50kb for ld-pruning, and turn this on
 - use 50kb with 10kb steps for windowed fst
 
@@ -858,7 +858,17 @@ module load container_env nextflow/23.10.1
 cd /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection
 nextflow run main.nf -profile wahab -resume
 ```
-Ran in 5.5 hrs. The loci identified are in [site_counts.tsv](nf-pipelines/nf-angsd-selection/results/sites/site_counts.tsv).
+Ran in 24 hrs. The loci identified are in [site_counts.tsv](nf-pipelines/nf-angsd-selection/results/sites/site_counts.tsv):
+```
+site_set	count
+all_callable	62375836
+all_snps	3838813
+selected_loci	0
+callable_neutral	62375836
+snps_neutral	3838813
+snps_pruned	468032
+snps_pruned_neutral	468032
+```
 
 Which minind and maxdepth cutoffs were used? Look at the relevant angsd calls:
 ```
@@ -866,19 +876,20 @@ grep -E "minInd|setMaxDepth" work/*/*/.command.sh | less
 ```
 | era | minInd | setMaxDepth |
 |-----|--------|----------|
-| Historic | 25 | 338 |
-| Modern | 6 | 307 |
+| Historic | 18 | 404 |
+| Modern | 4 | 314 |
 
-Found no SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-angsd-selection/results/selection/iteration_summary.tsv)). [Manhattan Plot](nf-pipelines/nf-angsd-selection/results/selection/chisq_manhattan_Bali_final.png) doesn't show any strong outlier loci.
+Found no SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-angsd-selection/results/selection/iteration_summary.tsv)). Manhattan Plot doesn't show any strong outlier loci:
+![chisq manhattan](nf-pipelines/nf-angsd-selection/results/selection/chisq_manhattan_Bali_final.png)
 
-The [PCA](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf) plots don't show strong outlier individuals.
+The [PCA](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf) plots don't show strong outlier individuals. Selected K=2 (one significant PC).
 
-The [weighted global FST is 0.0264](nf-pipelines/nf-angsd-selection/results/fst/Bali_hist_vs_mod.global_fst.txt). Low as expected. The [sliding window FST figure](nf-pipelines/nf-angsd-selection/results/fst/Bali_fst_manhattan.png) has some windows with high Fst, but they are scattered and not obviously pointing towards a region with strong divergence.
+The [weighted global FST is 0.0282](nf-pipelines/nf-angsd-selection/results/fst/Bali_neutral_hist_vs_mod.global_fst.txt). Low as expected. Same as 0.282 for [all snps after LD-pruning](nf-pipelines/nf-angsd-selection/results/fst/Bali_snps_pruned_hist_vs_mod.global_fst.txt). The [sliding window FST figure](nf-pipelines/nf-angsd-selection/results/fst/Bali_neutral_fst_manhattan.png) has some windows with high Fst. Could be evidence for selection in a handful of regions.
 
-The [plot of pi](nf-pipelines/nf-angsd-selection/results/diversity/pi_historic_vs_modern_Bali.png) shows stable diversity through time.
+The [plot of pi](nf-pipelines/nf-angsd-selection/results/diversity/pi_historic_vs_modern_Bali_neutral.png) shows declining diversity through time. The plots of pi for all snps or for pruned snps are not meaningful because they ignore monomorphic regions.
 
 ### 12.1 Compare to a previous run
-An earlier pipeline (`nf-angsd-diversity-generode`) that didn't trim by maximum depth or minimum number of individuals, and that didn't enforce using the same loci between historical and modern populations produced a different diversity change result (decline through time). Check how much the loci in that run differed between historical and modern eras:
+An earlier pipeline (`nf-angsd-diversity-generode`) didn't trim by maximum depth or minimum number of individuals, and didn't enforce using the same loci between historical and modern populations. Check how much the loci in that run differed between historical and modern eras:
 ```
 sbatch scripts/run_loci_comparison.sbatch
 ```
@@ -887,7 +898,7 @@ Historic-only loci: 1,563,052
 Modern-only loci:   2,698,682
 Shared loci:        451,583,420
 
-Less than 1% of loci differed between historical and modern. However, compare to the only 2,041,668 loci identified as callable by the `nf-angsd-selection pipeline`. The `nf-angsd-diversity-generode` run seems to have included a lot of loci that failed to pass quality filters in one era or the other (likely not enough individuals represented in the historic era, since these were low depth).
+Less than 1% of loci differed between historical and modern. However, compare to the only 62M loci identified as callable by the `nf-angsd-selection pipeline`. The `nf-angsd-diversity-generode` run seems to have included a lot of loci that failed to pass quality filters in one era or the other (likely not enough individuals represented in the historic era, since these were low depth).
 
 ### 12.2 Low depth and admixture
 Plotted admixture proportion vs. depth (latter from BAM_QC process):
@@ -895,7 +906,8 @@ Plotted admixture proportion vs. depth (latter from BAM_QC process):
 module load container_env R
 crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-selection/results/inputfiles/bamlist.txt nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admix.2.Q nf-pipelines/nf-trim-generode/results/depth/ 1 output/admix_vs_depth-selection.png
 ```
-Yes, the [output plot](output/admix_vs_depth-selection.png) shows that low depth is associated with membership in Group 2 (the "yellow" group) from the [admixture plot](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf).
+Yes, the plot shows that low depth is associated with membership in Group 1 (the "green" group) from the [admixture plot](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf):
+![admixture vs. depth plot](output/admix_vs_depth-selection.png)
 
 ### 12.3 Dystruct
 Manually made a generation time file for dystruct at `data/generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 (gen 0) and 2022 (gen 113).
@@ -949,8 +961,9 @@ The [K=2 proportions plot](output/dystruct/dystruct.selection.K2.pdf) looks a lo
 ### Clean up
 Modify .gitignore to track results/, but keep ignoring results/large_data.
 
-Remove the 4.7G temporary directory:
+Remove the 97G temporary directory:
 ```
+du -h nf-pipelines/nf-angsd-selection/ --max-depth=1
 rm -r nf-pipelines/nf-angsd-selection/work/
 ```
 

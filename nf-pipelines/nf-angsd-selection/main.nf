@@ -150,22 +150,32 @@ workflow {
     PLOT_ADMIXTURE(pcangsd_results.q_matrix, file(params.samplesheet))
 
     // 12. Diversity Calculations (Runs on all callable neutral loci)
-    ch_diversity_bundle = PREPARE_SITE_SETS.out.callable_neutral_pos
-        .combine(PREPARE_SITE_SETS.out.callable_neutral_bin)
-        .combine(PREPARE_SITE_SETS.out.callable_neutral_idx)
-    ANGSD_DIVERSITY(ANGSD_GL_POP.out.saf_files, ch_diversity_bundle.first())
+    ch_div_neutral     = PREPARE_SITE_SETS.out.callable_neutral_bundle.map { bundle -> tuple('neutral', bundle) }
+    ch_div_all_snps    = PREPARE_SITE_SETS.out.all_snps_bundle.map { bundle -> tuple('all_snps', bundle) }
+    ch_div_snps_pruned = PREPARE_SITE_SETS.out.snps_pruned_bundle.map { bundle -> tuple('snps_pruned', bundle) }
 
-    // Split diversity outputs into historic and modern channels
+    ch_div_site_sets = ch_div_neutral.concat(ch_div_all_snps, ch_div_snps_pruned)
+
+    // Combine population SAF files with diversity site bundles
+    ch_div_inputs = ANGSD_GL_POP.out.saf_files.combine(ch_div_site_sets)
+
+    ANGSD_DIVERSITY(
+        ch_div_inputs.map { region, era, saf, idx, pos, label, bundle -> tuple(region, era, saf, idx, pos) },
+        ch_div_inputs.map { region, era, saf, idx, pos, label, bundle -> label },
+        ch_div_inputs.map { region, era, saf, idx, pos, label, bundle -> bundle }
+    )
+
+    // Split diversity outputs into historic and modern channels, joining on [region, label]
     ch_pest_hist = ANGSD_DIVERSITY.out.pestPG
-        .filter { region, era, pestPG -> era.toLowerCase() in ['historic', 'historical', 'hist', 'era1'] }
-        .map { region, era, pestPG -> tuple(region, pestPG) }
+        .filter { region, era, label, pestPG -> era.toLowerCase() in ['historic', 'historical', 'hist', 'era1'] }
+        .map { region, era, label, pestPG -> tuple(region, label, pestPG) }
 
     ch_pest_mod = ANGSD_DIVERSITY.out.pestPG
-        .filter { region, era, pestPG -> era.toLowerCase() in ['modern', 'mod', 'era2'] }
-        .map { region, era, pestPG -> tuple(region, pestPG) }
+        .filter { region, era, label, pestPG -> era.toLowerCase() in ['modern', 'mod', 'era2'] }
+        .map { region, era, label, pestPG -> tuple(region, label, pestPG) }
 
     // Join channels on region key -> outputs [ region, hist_pestPG, mod_pestPG ]
-    ch_paired_thetas = ch_pest_hist.join(ch_pest_mod)
+    ch_paired_thetas = ch_pest_hist.join(ch_pest_mod, by: [0, 1])
 
     // Run diversity plotting per region
     PLOT_PI_DIVERSITY(
@@ -173,8 +183,7 @@ workflow {
         file("${projectDir}/scripts/plot_tp.R")
     )
 
-    // 13. Calc historic-modern FST
-    // Split SAF channel into historical and modern channels
+    // 13. Calc historic-modern FST (Runs on neutral, all_snps, and snps_pruned)
     ch_saf_hist = ANGSD_GL_POP.out.saf_files
         .filter { region, era, saf, idx, pos -> era.toLowerCase() in ['historic', 'historical', 'hist', 'era1'] }
         .map { region, era, saf, idx, pos -> tuple(region, saf, idx, pos) }
@@ -183,16 +192,22 @@ workflow {
         .filter { region, era, saf, idx, pos -> era.toLowerCase() in ['modern', 'mod', 'era2'] }
         .map { region, era, saf, idx, pos -> tuple(region, saf, idx, pos) }
 
-    // Join on region key (region)
     ch_fst_pairs = ch_saf_hist.join(ch_saf_mod)
 
-    // Bundle pruned neutral site files
-    ch_pruned_neutral_bundle = PREPARE_SITE_SETS.out.snps_pruned_neutral_pos
-        .combine(PREPARE_SITE_SETS.out.snps_pruned_neutral_bin)
-        .combine(PREPARE_SITE_SETS.out.snps_pruned_neutral_idx)
+    ch_fst_neutral     = PREPARE_SITE_SETS.out.snps_pruned_neutral_bundle.map { bundle -> tuple('neutral', bundle) }
+    ch_fst_all_snps    = PREPARE_SITE_SETS.out.all_snps_bundle.map { bundle -> tuple('all_snps', bundle) }
+    ch_fst_snps_pruned = PREPARE_SITE_SETS.out.snps_pruned_bundle.map { bundle -> tuple('snps_pruned', bundle) }
+
+    ch_fst_site_sets = ch_fst_neutral.concat(ch_fst_all_snps, ch_fst_snps_pruned)
+
+    ch_fst_inputs = ch_fst_pairs.combine(ch_fst_site_sets)
 
     // Execute FST calculation
-    ANGSD_FST(ch_fst_pairs, ch_pruned_neutral_bundle.first())
+    ANGSD_FST(
+        ch_fst_inputs.map { region, h_saf, h_idx, h_pos, m_saf, m_idx, m_pos, label, bundle -> tuple(region, h_saf, h_idx, h_pos, m_saf, m_idx, m_pos) },
+        ch_fst_inputs.map { region, h_saf, h_idx, h_pos, m_saf, m_idx, m_pos, label, bundle -> label },
+        ch_fst_inputs.map { region, h_saf, h_idx, h_pos, m_saf, m_idx, m_pos, label, bundle -> bundle }
+    )
 
     // Generate SFS comparison plot across all regions
     PLOT_SFS_SUMMARY(ANGSD_FST.out.sfs_2d.collect())

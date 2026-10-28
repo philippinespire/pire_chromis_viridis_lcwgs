@@ -6,43 +6,43 @@ process ANGSD_FST {
 
     input:
     tuple val(region), path(hist_saf), path(hist_idx), path(hist_pos), path(mod_saf), path(mod_idx), path(mod_pos)
+    val label
     tuple path(sites_pos), path(sites_bin), path(sites_idx)
 
     output:
-    path "${region}_hist_vs_mod.2dsfs",          emit: sfs_2d
-    path "${region}_hist_vs_mod.global_fst.txt", emit: global_fst
-    path "${region}_hist_vs_mod.fst.gz",         emit: fst_gz
-    path "${region}_hist_vs_mod.fst.idx",        emit: fst_idx
-    path "${region}_windowed_fst.txt",        emit: windows
-    path "${region}_fst_manhattan.png",       emit: plot
-
+    path "${region}_${label}_hist_vs_mod.2dsfs",          emit: sfs_2d
+    path "${region}_${label}_hist_vs_mod.global_fst.txt", emit: global_fst
+    path "${region}_${label}_hist_vs_mod.fst.gz",         emit: fst_gz
+    path "${region}_${label}_hist_vs_mod.fst.idx",        emit: fst_idx
+    path "${region}_${label}_windowed_fst.txt",           emit: windows
+    path "${region}_${label}_fst_manhattan.png",          emit: plot
     script:
     """
     # 1. Estimate 2D-SFS using only LD-pruned neutral sites
     realSFS ${hist_idx} ${mod_idx} \
         -sites ${sites_pos} \
-        -P ${task.cpus} > ${region}_hist_vs_mod.2dsfs
+        -P ${task.cpus} > ${region}_${label}_hist_vs_mod.2dsfs
 
     # 2. Index FST per-site
     realSFS fst index ${hist_idx} ${mod_idx} \
-        -sfs ${region}_hist_vs_mod.2dsfs \
+        -sfs ${region}_${label}_hist_vs_mod.2dsfs \
         -sites ${sites_pos} \
-        -fstout ${region}_hist_vs_mod \
+        -fstout ${region}_${label}_hist_vs_mod \
         -P ${task.cpus}
 
     # 3. Calculate global weighted and unweighted FST statistics
-    realSFS fst stats ${region}_hist_vs_mod.fst.idx > ${region}_hist_vs_mod.global_fst.txt
+    realSFS fst stats ${region}_${label}_hist_vs_mod.fst.idx > ${region}_${label}_hist_vs_mod.global_fst.txt
 
     # 4. Calculate sliding window FST and attach expected header
-    echo -e "region\tchr\tmidPos\tNsites\tFst" > ${region}_windowed_fst.txt
-    realSFS fst stats2 ${region}_hist_vs_mod.fst.idx \
+    echo -e "region\tchr\tmidPos\tNsites\tFst" > ${region}_${label}_windowed_fst.txt
+    realSFS fst stats2 ${region}_${label}_hist_vs_mod.fst.idx \
         -win ${params.fst_window} \
-        -step ${params.fst_step} | tail -n +2 >> ${region}_windowed_fst.txt
+        -step ${params.fst_step} | tail -n +2 >> ${region}_${label}_windowed_fst.txt
 
     # 5. Generate Manhattan plot
     Rscript ${projectDir}/scripts/plot_windowed_fst.R \
-        ${region}_windowed_fst.txt \
-        ${region}_fst_manhattan.png
+        ${region}_${label}_windowed_fst.txt \
+        ${region}_${label}_fst_manhattan.png
     """
 }
 
@@ -54,11 +54,11 @@ process PLOT_SFS_SUMMARY {
     path sfs_files
 
     output:
-    path "sfs_summary_neutral_snps.png", emit: plot
+    path "sfs_summary_all_datasets.png", emit: plot
 
     script:
     """
     Rscript ${projectDir}/scripts/plot_sfs.R \
-        sfs_summary_neutral_snps.png ${sfs_files}
+        sfs_summary_all_datasets.png ${sfs_files}
     """
 }
