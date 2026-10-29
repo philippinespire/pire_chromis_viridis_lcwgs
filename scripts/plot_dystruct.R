@@ -2,9 +2,9 @@
 
 # ==============================================================================
 # SCRIPT NAME:  plot_dystruct.R
-# PURPOSE:      Visualizes DYSTRUCT ancestry proportions into a PDF barplot.
+# PURPOSE:      Visualizes DYSTRUCT ancestry proportions into a PNG barplot.
 #
-# USAGE:        Rscript plot_dystruct.R <input.theta> <sample_ids.txt|samplesheet.csv> <output.pdf>
+# USAGE:        Rscript plot_dystruct.R <input.theta> <sample_ids.txt|samplesheet.csv> <output.png>
 #
 # INPUTS:       1. <input.theta>      - Whitespace-separated DYSTRUCT ancestry
 #                                      matrix with one row per sample and one
@@ -15,22 +15,23 @@
 #                                      CSV with a header row containing a
 #                                      sample column (preferred name: sample) and
 #                                      optional era column for grouping.
-#               3. <output.pdf>       - Target filename for the output PDF.
+#               3. <output.png>       - Target filename for the output PNG.
 #
 # REQUIREMENTS: Base R installation.
 # DATE:         June 2026
 # AUTHOR:       Malin Pinsky with assistance from GitHub Copilot with the GPT-5.3-Codex model.
 # ==============================================================================
 
+options(bitmapType = "cairo")
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) < 3) {
-  stop("\nUsage: Rscript plot_dystruct.R <input.theta> <sample_ids.txt|samplesheet.csv> <output.pdf>\n", call. = FALSE)
+  stop("\nUsage: Rscript plot_dystruct.R <input.theta> <sample_ids.txt|samplesheet.csv> <output.png>\n", call. = FALSE)
 }
 
 theta_file  <- args[1]
 sample_file <- args[2]
-output_pdf  <- args[3]
+output_png  <- args[3]
 
 if (!file.exists(theta_file)) stop(paste("Error: File not found -", theta_file))
 if (!file.exists(sample_file)) stop(paste("Error: File not found -", sample_file))
@@ -68,7 +69,7 @@ if (ncol(theta) < 2) {
 
 K <- ncol(theta)
 
-dir.create(dirname(output_pdf), recursive = TRUE, showWarnings = FALSE)
+dir.create(dirname(output_png), recursive = TRUE, showWarnings = FALSE)
 
 # Remove blank labels if present, but keep row alignment strict.
 if (any(sample_ids == "")) {
@@ -103,7 +104,7 @@ if (K <= 12) {
   my_colors <- grDevices::rainbow(K)
 }
 
-pdf(file = output_pdf, width = 10, height = 6)
+png(filename = output_png, width = 10, height = 6, res = 300, units = "in")
 par(mar = c(10, 4, 3, 1))
 
 bp <- barplot(
@@ -152,4 +153,4 @@ box()
 
 dev.off()
 
-cat("Success: Detected K =", K, "and saved plot to:", output_pdf, "\n")
+cat("Success: Detected K =", K, "and saved plot to:", output_png, "\n")

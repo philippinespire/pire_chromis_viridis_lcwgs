@@ -884,11 +884,17 @@ Found no SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-ang
 
 The [PCA](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf) plots don't show strong outlier individuals. Selected K=2 (one significant PC).
 
-The [weighted global FST is 0.0282](nf-pipelines/nf-angsd-selection/results/fst/Bali_neutral_hist_vs_mod.global_fst.txt). Low as expected. Same as 0.282 for [all snps after LD-pruning](nf-pipelines/nf-angsd-selection/results/fst/Bali_snps_pruned_hist_vs_mod.global_fst.txt). The [sliding window FST figure](nf-pipelines/nf-angsd-selection/results/fst/Bali_neutral_fst_manhattan.png) has some windows with high Fst. Could be evidence for selection in a handful of regions.
+The [weighted global FST is 0.0282](nf-pipelines/nf-angsd-selection/results/fst/Bali_neutral_hist_vs_mod.global_fst.txt). Low as expected. Same as 0.282 for [all snps after LD-pruning](nf-pipelines/nf-angsd-selection/results/fst/Bali_snps_pruned_hist_vs_mod.global_fst.txt). 
 
-The [plot of pi](nf-pipelines/nf-angsd-selection/results/diversity/pi_historic_vs_modern_Bali_neutral.png) shows declining diversity through time. The plots of pi for all snps or for pruned snps are not meaningful because they ignore monomorphic regions.
+The sliding window FST has some windows with high Fst, which could be evidence for selection in a handful of regions:
+![sliding window FST figure](nf-pipelines/nf-angsd-selection/results/fst/Bali_neutral_fst_manhattan.png)
 
-### 12.1 Compare to a previous run
+The pi plot shows declining diversity through time:
+![plot of pi](nf-pipelines/nf-angsd-selection/results/diversity/pi_historic_vs_modern_Bali_neutral.png)
+
+The plots of pi for all snps or for pruned snps are not meaningful because they ignore monomorphic regions.
+
+### 14.1 Compare to a previous run
 An earlier pipeline (`nf-angsd-diversity-generode`) didn't trim by maximum depth or minimum number of individuals, and didn't enforce using the same loci between historical and modern populations. Check how much the loci in that run differed between historical and modern eras:
 ```
 sbatch scripts/run_loci_comparison.sbatch
@@ -900,7 +906,7 @@ Shared loci:        451,583,420
 
 Less than 1% of loci differed between historical and modern. However, compare to the only 62M loci identified as callable by the `nf-angsd-selection pipeline`. The `nf-angsd-diversity-generode` run seems to have included a lot of loci that failed to pass quality filters in one era or the other (likely not enough individuals represented in the historic era, since these were low depth).
 
-### 12.2 Low depth and admixture
+### 14.2 Low depth and admixture
 Plotted admixture proportion vs. depth (latter from BAM_QC process):
 ```
 module load container_env R
@@ -909,7 +915,7 @@ crun Rscript scripts/plot_admix_depth.R nf-pipelines/nf-angsd-selection/results/
 Yes, the plot shows that low depth is associated with membership in Group 1 (the "green" group) from the [admixture plot](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf):
 ![admixture vs. depth plot](output/admix_vs_depth-selection.png)
 
-### 12.3 Dystruct
+### 14.3 Dystruct
 Manually made a generation time file for dystruct at `data/generation_times.txt` by assuming a one year generation time (roughly the age at maturity according to Jim Thorson's FishLife). The samples were collected in 1909 (gen 0) and 2022 (gen 113).
 
 Run dystruct script that reads in a beagle file and trims to a set of pruned & putatively neutral snps using K=1,2,3. It helps to use up to K cpus:
@@ -938,36 +944,41 @@ sbatch --time=96:00:00 --cpus-per-task=3 scripts/run_dystruct.sbatch \
   --generation-times data/generation_times.txt \
   -- --epochs 100 --hold-out-fraction 0.1
 ```
-See `output/dystruct/pruned_K*.*`. Hold-out log-likelihoods from [log files](logs/) (jobs 6683684, 6683685, 6683686) were:
+See `output/dystruct/Cvi_K*.*`. Hold-out log-likelihoods from [log files](logs/) (jobs 7476344, 7476345, 7476346) were:
 | K | LL |
 |---|----|
-| 1 | -3667.0 |
-| 2 | -3333.1 |
-| 3 | -3377.3 |
+| 1 | -38411 |
+| 2 | -30365 |
+| 3 | -31090 |
 
 This leaves K=2 as the best supported option.
 
 Plot the dystruct proportions for K=2 and K=3:
 ```
 module load container_env R
-crun Rscript scripts/plot_dystruct.R output/dystruct/pruned_K2.dystruct_theta nf-pipelines/nf-angsd-selection/inputfiles/samplesheet.csv output/dystruct/dystruct.selection.K2.pdf
+crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K2.dystruct_theta nf-pipelines/nf-angsd-selection/inputfiles/samplesheet.csv output/dystruct/dystruct.selection.K2.png
 
-crun Rscript scripts/plot_dystruct.R output/dystruct/pruned_K3.dystruct_theta nf-pipelines/nf-angsd-selection/inputfiles/samplesheet.csv output/dystruct/dystruct.selection.K3.pdf
+crun Rscript scripts/plot_dystruct.R output/dystruct/Cvi_K3.dystruct_theta nf-pipelines/nf-angsd-selection/inputfiles/samplesheet.csv output/dystruct/dystruct.selection.K3.png
 ```
 
-The [K=2 proportions plot](output/dystruct/dystruct.selection.K2.pdf) looks a lot like the [admixture plot](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf), though with greater membership in either group. K=3 just divides up historical more.
+The K=2 proportions plot looks a lot like the [admixture plot](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf), though with greater membership in the modern group:
+
+![K=2 dystruct plot](output/dystruct/dystruct.selection.K2.png)
+
+The K=3 plot divides up historical more:
+![K=3 dystruct plot](output/dystruct/dystruct.selection.K3.png)
 
 
-### Clean up
+### 14.4 Clean up
 Modify .gitignore to track results/, but keep ignoring results/large_data.
 
-Remove the 97G temporary directory:
+Remove the 20G temporary directory:
 ```
 du -h nf-pipelines/nf-angsd-selection/ --max-depth=1
 rm -r nf-pipelines/nf-angsd-selection/work/
 ```
 
-## 13 ANGSD with <10% softclipping
+## 15 ANGSD with <10% softclipping
 Malin, 2026 August. `Working in /archive/carpenterlab/pire/mpinsky/pire_chromis_viridis_lcwgs/nf-pipelines/nf-angsd-selection-10perc`.
 _Note: As of October 2026, not re-run with the re-mapped reads in #12._
 
@@ -1013,7 +1024,7 @@ The weighted global FST is [0.025795](nf-pipelines/nf-angsd-selection-10perc/res
 
 The [plot of pi](nf-pipelines/nf-angsd-selection-10perc/results/diversity/pi_historic_vs_modern_Bali.png) shows lower diversity in the modern samples. This contrasts with the [stable pi](nf-pipelines/nf-angsd-selection/results/diversity/pi_historic_vs_modern_Bali.png) when all individuals included. Likely because of the much larger coverage across the genome.
 
-### 13.1 Dystruct
+### 15.1 Dystruct
 Manually made a generation time file for dystruct at `data/generation_times-10perc.txt`.
 
 Run dystruct script and submit slurm jobs using K=1, 2, and 3 and long job times since 24 hrs wasn't enough:
@@ -1062,13 +1073,13 @@ crun Rscript scripts/plot_dystruct.R output/dystruct-10perc/Cvi_K3.dystruct_thet
 The [K=2 proportions plot](output/dystruct-10perc/dystruct.selection.K2.pdf) looks reasonably different from the [admixture plot](nf-pipelines/nf-angsd-selection-10perc/results/PCAngsd/Cvi.admixture.pdf), though both don't show clear divisions into two groups. K=3 just divides up historical and modern more.
 
 
-### 13.2 Clean up
+### 15.2 Clean up
 Remove the 900G temporary directory:
 ```
 rm -r nf-pipelines/nf-angsd-selection-10perc/work/
 ```
 
-## 15 Re-run ANGSD without soft-clipped reads
+## 16 Re-run ANGSD without soft-clipped reads
 As a sensitivity test, let's re-run `nf-angsd-selection` after stripping out all soft-clipped reads. Create a `temp/` directory and put the bams from `nf-trim-generode`'s `results-iridian` there after stripping out unmapped and reads with any soft-clipping:
 ```
 salloc
@@ -1080,7 +1091,7 @@ for bam in nf-pipelines/nf-trim-generode/results-iridian/data/bam_rescaled/*.bam
     crun samtools view -h -e '!flag.unmap && cigar !~ "S"' -b -@ 4 "$bam" > "temp/bams_noclip/${base}.bam"
     crun samtools index "temp/bams_noclip/${base}.bam"
 done
-for bam in nf-pipelines/nf-trim-generode/results-iridian/data/bam/*.bam; do # modern and un-rescaled historical reads
+for bam in nf-pipelines/nf-trim-generode/results-iridian/data/bam/CviCPal*.bam; do # modern and un-rescaled historical reads
     base=$(basename "$bam" .bam)
     crun samtools view -h -e '!flag.unmap && cigar !~ "S"' -b -@ 4 "$bam" > "temp/bams_noclip/${base}.bam"
     crun samtools index "temp/bams_noclip/${base}.bam"
@@ -1103,6 +1114,20 @@ Start nextflow:
 tmux a -t cviangsel
 nextflow run main-noclip.nf -profile wahab
 ```
+
+Found no SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-angsd-selection/results-noclip/selection/iteration_summary.tsv)). Manhattan Plot doesn't show any strong outlier loci:
+![chisq manhattan](nf-pipelines/nf-angsd-selection/results-noclip/selection/chisq_manhattan_Bali_final.png)
+
+The [PCA](nf-pipelines/nf-angsd-selection/results-noclip/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection/results-noclip/PCAngsd/Cvi.admixture.pdf) plots don't show strong outlier individuals except maybe CviAPal014. Selected K=2 (one significant PC).
+
+The [weighted global FST is 0.0221](nf-pipelines/nf-angsd-selection/results-noclip/fst/Bali_neutral_hist_vs_mod.global_fst.txt). Low as expected. Same as 0.221 for [all snps after LD-pruning](nf-pipelines/nf-angsd-selection/results-noclip/fst/Bali_snps_pruned_hist_vs_mod.global_fst.txt). 
+
+The sliding window FST has some windows with high Fst, which could be evidence for selection in a handful of regions:
+![sliding window FST figure](nf-pipelines/nf-angsd-selection/results-noclip/fst/Bali_neutral_fst_manhattan.png)
+
+The pi plot shows declining diversity through time:
+![plot of pi](nf-pipelines/nf-angsd-selection/results-noclip/diversity/pi_historic_vs_modern_Bali_neutral.png)
+
 
 ## Unused
 ### Continuity
