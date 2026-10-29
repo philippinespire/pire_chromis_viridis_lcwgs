@@ -884,13 +884,18 @@ Found no SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-ang
 
 The [PCA](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.admixture.pdf) plots don't show strong outlier individuals. Selected K=2 (one significant PC).
 
-The [weighted global FST is 0.0282](nf-pipelines/nf-angsd-selection/results/fst/Bali_neutral_hist_vs_mod.global_fst.txt). Low as expected. Same as 0.282 for [all snps after LD-pruning](nf-pipelines/nf-angsd-selection/results/fst/Bali_snps_pruned_hist_vs_mod.global_fst.txt). 
+The [weighted temporal FST is 0.0282](nf-pipelines/nf-angsd-selection/results/fst/Bali_neutral_hist_vs_mod.global_fst.txt). Low as expected. Same as 0.282 for [all snps after LD-pruning](nf-pipelines/nf-angsd-selection/results/fst/Bali_snps_pruned_hist_vs_mod.global_fst.txt). 
 
 The sliding window FST has some windows with high Fst, which could be evidence for selection in a handful of regions:
-![sliding window FST figure](nf-pipelines/nf-angsd-selection/results/fst/Bali_neutral_fst_manhattan.png)
+![sliding window FST figure](nf-pipelines/nf-angsd-selection/results/fst/Bali_all_snps_fst_manhattan.png)
+
+Trimming to only the unlinked SNPS:
+![sliding window neutral FST figure](nf-pipelines/nf-angsd-selection/results/fst/Bali_snps_pruned_fst_manhattan.png)
+Odd that divergence is now greater in some regions (above 0.4).
 
 The pi plot shows declining diversity through time:
 ![plot of pi](nf-pipelines/nf-angsd-selection/results/diversity/pi_historic_vs_modern_Bali_neutral.png)
+Lower diversity than in the plot with soft-clipped reads.
 
 The plots of pi for all snps or for pruned snps are not meaningful because they ignore monomorphic regions.
 
@@ -1118,12 +1123,12 @@ nextflow run main-noclip.nf -profile wahab
 Found no SNPs under selection (see [`iteration_summary.tsv`](nf-pipelines/nf-angsd-selection/results-noclip/selection/iteration_summary.tsv)). Manhattan Plot doesn't show any strong outlier loci:
 ![chisq manhattan](nf-pipelines/nf-angsd-selection/results-noclip/selection/chisq_manhattan_Bali_final.png)
 
-The [PCA](nf-pipelines/nf-angsd-selection/results-noclip/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection/results-noclip/PCAngsd/Cvi.admixture.pdf) plots don't show strong outlier individuals except maybe CviAPal014. Selected K=2 (one significant PC).
+The [PCA](nf-pipelines/nf-angsd-selection/results-noclip/PCAngsd/Cvi.pcangsd.plot.pdf) and [admixture](nf-pipelines/nf-angsd-selection/results-noclip/PCAngsd/Cvi.admixture.pdf) plots don't show strong outlier individuals except maybe CviAPal014. Selected K=2 (one significant PC). PC1 separates within historical individuals, as compared to [PC1 in the PCA with soft-clipped reads](nf-pipelines/nf-angsd-selection/results/PCAngsd/Cvi.pcangsd.plot.pdf) that differentiated by time.
 
-The [weighted global FST is 0.0221](nf-pipelines/nf-angsd-selection/results-noclip/fst/Bali_neutral_hist_vs_mod.global_fst.txt). Low as expected. Same as 0.221 for [all snps after LD-pruning](nf-pipelines/nf-angsd-selection/results-noclip/fst/Bali_snps_pruned_hist_vs_mod.global_fst.txt). 
+The [weighted temporal FST at neutral SNPs is 0.0221](nf-pipelines/nf-angsd-selection/results-noclip/fst/Bali_neutral_hist_vs_mod.global_fst.txt). Low as expected. Same as 0.221 for [all snps after LD-pruning](nf-pipelines/nf-angsd-selection/results-noclip/fst/Bali_snps_pruned_hist_vs_mod.global_fst.txt). Slightly lower than with soft-clipped reads (0.28).
 
-The sliding window FST has some windows with high Fst, which could be evidence for selection in a handful of regions:
-![sliding window FST figure](nf-pipelines/nf-angsd-selection/results-noclip/fst/Bali_neutral_fst_manhattan.png)
+The sliding window FST has some windows with high Fst (up to 0.15), which could be evidence for selection in a handful of regions:
+![sliding window FST figure](nf-pipelines/nf-angsd-selection/results-noclip/fst/Bali_all_snps_fst_manhattan.png)
 
 The pi plot shows declining diversity through time:
 ![plot of pi](nf-pipelines/nf-angsd-selection/results-noclip/diversity/pi_historic_vs_modern_Bali_neutral.png)
